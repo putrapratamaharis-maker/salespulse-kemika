@@ -30,7 +30,7 @@ const RANGE_OPTIONS = [
 ];
 
 export const MonthlyStats = ({ activities }: MonthlyStatsProps) => {
-  const [range, setRange] = useState('6');
+  const [range, setRange] = useState('3');
 
   const monthlyData = useMemo(() => {
     const count = parseInt(range, 10);
