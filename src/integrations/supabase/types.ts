@@ -14,16 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          region: string | null
+          segment: string | null
+          supervisor_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          region?: string | null
+          segment?: string | null
+          supervisor_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          region?: string | null
+          segment?: string | null
+          supervisor_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profiles_supervisor_id_fkey"
+            columns: ["supervisor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          org_role: Database["public"]["Enums"]["org_role"]
+          system_role: Database["public"]["Enums"]["system_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          org_role?: Database["public"]["Enums"]["org_role"]
+          system_role?: Database["public"]["Enums"]["system_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          org_role?: Database["public"]["Enums"]["org_role"]
+          system_role?: Database["public"]["Enums"]["system_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_org_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["org_role"]
+      }
+      get_user_system_role: {
+        Args: { _user_id: string }
+        Returns: Database["public"]["Enums"]["system_role"]
+      }
+      has_system_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["system_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      org_role:
+        | "sales_manager"
+        | "supervisor"
+        | "sales_person"
+        | "representative_management"
+      system_role: "super_admin" | "admin" | "staff" | "viewer"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +236,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      org_role: [
+        "sales_manager",
+        "supervisor",
+        "sales_person",
+        "representative_management",
+      ],
+      system_role: ["super_admin", "admin", "staff", "viewer"],
+    },
   },
 } as const

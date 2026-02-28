@@ -1,8 +1,10 @@
 import { useAppContext } from '@/context/AppContext';
+import { useAuth } from '@/context/AuthContext';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Filter } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar, Filter, LogOut } from 'lucide-react';
 import { DateRange, Segment } from '@/types/sales';
 
 const orgRoleLabels: Record<string, string> = {
@@ -21,6 +23,7 @@ const systemRoleLabels: Record<string, string> = {
 
 export function TopBar() {
   const { currentUser, dateRange, setDateRange, segmentFilter, setSegmentFilter } = useAppContext();
+  const { signOut, profile } = useAuth();
 
   return (
     <header className="filter-bar sticky top-0 z-30">
@@ -66,6 +69,11 @@ export function TopBar() {
             </SelectContent>
           </Select>
         </div>
+
+        <Button variant="ghost" size="sm" onClick={signOut} className="ml-2 h-8 text-xs gap-1.5">
+          <LogOut className="h-3.5 w-3.5" />
+          Logout
+        </Button>
       </div>
     </header>
   );
