@@ -7,6 +7,7 @@ import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil,
 import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { MonthlyStats } from '@/components/activities/MonthlyStats';
+import { OverdueReminders } from '@/components/activities/OverdueReminders';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -377,6 +378,9 @@ const MyActivities = () => {
           </Dialog>
         </div>
       </div>
+
+      {/* Overdue Reminders */}
+      <OverdueReminders activities={activities} accounts={accounts} />
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
