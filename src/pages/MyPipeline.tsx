@@ -1,12 +1,14 @@
+import { useState } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { getUserDeals, mockAccounts } from '@/data/mockData';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 
 const stageOrder = ['prospect', 'qualification', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
 const stageLabels: Record<string, string> = {
@@ -28,10 +30,16 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 
 const MyPipeline = () => {
   const { currentUser } = useAppContext();
-  const deals = getUserDeals(currentUser.id);
+  const [addedDeals, setAddedDeals] = useState<Deal[]>([]);
+
+  const deals = [...getUserDeals(currentUser.id), ...addedDeals];
 
   const getAccountName = (accountId: string) =>
     mockAccounts.find(a => a.id === accountId)?.name || accountId;
+
+  const handleAddDeal = (deal: Deal) => {
+    setAddedDeals(prev => [...prev, deal]);
+  };
 
   const activeDeals = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
   const pipelineValue = activeDeals.reduce((s, d) => s + d.value, 0);
@@ -40,16 +48,13 @@ const MyPipeline = () => {
     ? activeDeals.reduce((s, d) => s + d.probability, 0) / activeDeals.length
     : 0;
 
-  // Deals nearing close (within 30 days)
   const nearingClose = activeDeals.filter(d => {
     const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return days <= 30 && days >= 0;
   });
 
-  // Stale deals (in stage > 10 days)
   const staleDeals = activeDeals.filter(d => d.daysInStage > 10);
 
-  // Stage funnel
   const stageSummary = stageOrder.filter(s => s !== 'closed_lost').map(stage => {
     const stageDeals = deals.filter(d => d.stage === stage);
     return {
@@ -63,11 +68,16 @@ const MyPipeline = () => {
 
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
+  const accountOptions = mockAccounts.map(a => ({ id: a.id, name: a.name }));
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">My Pipeline & Forecast</h2>
-        <p className="text-sm text-muted-foreground">Deal pipeline & forecast — {currentUser.name}</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">My Leads & Forecast</h2>
+          <p className="text-sm text-muted-foreground">Lead pipeline & forecast — {currentUser.name}</p>
+        </div>
+        <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} />
       </div>
 
       {/* Pipeline KPIs */}

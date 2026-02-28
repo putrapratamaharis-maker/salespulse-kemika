@@ -22,7 +22,7 @@ const myPerformanceSubItems = [
   { title: 'My Sales Overview', url: '/my-performance', icon: BarChart3 },
   { title: "My KPI's & Scores", url: '/my-performance/kpis', icon: Target },
   { title: 'My Activities', url: '/my-performance/activities', icon: Activity },
-  { title: 'My Pipeline & Forecast', url: '/my-performance/pipeline', icon: GitBranch },
+  { title: 'My Leads & Forecast', url: '/my-performance/pipeline', icon: GitBranch },
 ];
 
 const navItems = [
