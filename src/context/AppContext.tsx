@@ -36,6 +36,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
 export function useAppContext() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
+  if (!ctx) {
+    // During auth loading/redirect, context may not be available yet
+    return {
+      currentUser: { id: '', name: '', email: '', orgRole: 'sales_person' as const, systemRole: 'viewer' as const, segment: 'B2B' as const, region: '' },
+      setCurrentUser: () => {},
+      dateRange: 'MTD' as const,
+      setDateRange: () => {},
+      segmentFilter: 'All' as const,
+      setSegmentFilter: () => {},
+      users: [],
+    } as AppContextType;
+  }
   return ctx;
 }
