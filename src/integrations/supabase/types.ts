@@ -14,6 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
+      accounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          region: string
+          sales_id: string
+          segment: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          region?: string
+          sales_id: string
+          segment?: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          region?: string
+          sales_id?: string
+          segment?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deals: {
+        Row: {
+          account_id: string
+          created_at: string
+          days_in_stage: number
+          expected_close_date: string
+          id: string
+          name: string
+          probability: number
+          sales_id: string
+          segment: string
+          stage: Database["public"]["Enums"]["deal_stage"]
+          updated_at: string
+          value: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          days_in_stage?: number
+          expected_close_date: string
+          id?: string
+          name: string
+          probability?: number
+          sales_id: string
+          segment?: string
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          value?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          days_in_stage?: number
+          expected_close_date?: string
+          id?: string
+          name?: string
+          probability?: number
+          sales_id?: string
+          segment?: string
+          stage?: Database["public"]["Enums"]["deal_stage"]
+          updated_at?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deals_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoices: {
+        Row: {
+          account_id: string
+          created_at: string
+          due_date: string
+          gross_profit: number
+          id: string
+          invoice_number: string
+          issue_date: string
+          net_sales: number
+          paid_date: string | null
+          sales_id: string
+          segment: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          due_date: string
+          gross_profit?: number
+          id?: string
+          invoice_number: string
+          issue_date: string
+          net_sales?: number
+          paid_date?: string | null
+          sales_id: string
+          segment?: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          due_date?: string
+          gross_profit?: number
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          net_sales?: number
+          paid_date?: string | null
+          sales_id?: string
+          segment?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -164,6 +300,36 @@ export type Database = {
           },
         ]
       }
+      targets: {
+        Row: {
+          created_at: string
+          id: string
+          margin_target: number
+          month: string
+          revenue_target: number
+          segment: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          margin_target?: number
+          month: string
+          revenue_target?: number
+          segment?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          margin_target?: number
+          month?: string
+          revenue_target?: number
+          segment?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -207,6 +373,13 @@ export type Database = {
       }
     }
     Enums: {
+      deal_stage:
+        | "prospect"
+        | "qualification"
+        | "proposal"
+        | "negotiation"
+        | "closed_won"
+        | "closed_lost"
       org_role:
         | "sales_manager"
         | "supervisor"
@@ -340,6 +513,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      deal_stage: [
+        "prospect",
+        "qualification",
+        "proposal",
+        "negotiation",
+        "closed_won",
+        "closed_lost",
+      ],
       org_role: [
         "sales_manager",
         "supervisor",
