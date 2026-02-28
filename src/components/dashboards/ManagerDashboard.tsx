@@ -118,7 +118,8 @@ export function ManagerDashboard() {
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Revenue by Segment + Revenue Trend side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Revenue by Segment</CardTitle>
@@ -142,47 +143,66 @@ export function ManagerDashboard() {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold">Revenue Trend by Segment (in Millions)</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={monthlyRevenueData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Bar dataKey="B2G" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="B2B" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="B2C" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Top 10 Customer */}
-      <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold flex items-center gap-2">
-            <Building2 className="h-4 w-4 text-accent" />
-            Top 10 Customer
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs w-8">#</TableHead>
-                <TableHead className="text-xs">Customer</TableHead>
-                <TableHead className="text-xs">Segment</TableHead>
-                <TableHead className="text-xs text-right">Revenue</TableHead>
-                <TableHead className="text-xs text-right">Kontribusi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {customerRevenue.map((c, i) => {
-                const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
-                return (
-                  <TableRow key={c.name}>
-                    <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
-                    <TableCell className="text-xs font-medium">{c.name}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
-                    <TableCell className="text-xs text-right font-semibold">{formatIDR(c.revenue)}</TableCell>
-                    <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Top 10 Products & Product Category — from database */}
+      {/* Top 10 Customer + Top 10 Produk side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Building2 className="h-4 w-4 text-accent" />
+              Top 10 Customer
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs w-8">#</TableHead>
+                  <TableHead className="text-xs">Customer</TableHead>
+                  <TableHead className="text-xs">Segment</TableHead>
+                  <TableHead className="text-xs text-right">Revenue</TableHead>
+                  <TableHead className="text-xs text-right">Kontribusi</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {customerRevenue.map((c, i) => {
+                  const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
+                  return (
+                    <TableRow key={c.name}>
+                      <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
+                      <TableCell className="text-xs font-medium">{c.name}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
+                      <TableCell className="text-xs text-right font-semibold">{formatIDR(c.revenue)}</TableCell>
+                      <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -219,92 +239,47 @@ export function ManagerDashboard() {
             )}
           </CardContent>
         </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Layers className="h-4 w-4 text-accent" />
-              Kategori Produk
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingProducts ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : categoryData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Belum ada data kategori.</p>
-            ) : (
-              <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={90}
-                      dataKey="revenue"
-                      nameKey="category"
-                      paddingAngle={3}
-                      stroke="hsl(var(--card))"
-                      strokeWidth={2}
-                    >
-                      {categoryData.map((_, idx) => (
-                        <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value: number) => formatIDR(value)}
-                      contentStyle={{
-                        backgroundColor: 'hsl(var(--card))',
-                        border: '1px solid hsl(var(--border))',
-                        borderRadius: '8px',
-                        fontSize: '12px',
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
-                  {categoryData.map((c, idx) => {
-                    const pct = totalCategoryRevenue > 0 ? (c.revenue / totalCategoryRevenue) * 100 : 0;
-                    return (
-                      <div key={c.category} className="flex items-center gap-2 text-xs">
-                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
-                        <span className="truncate">{c.category}</span>
-                        <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
+      {/* Kategori Produk */}
       <Card>
         <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-semibold">Revenue Trend by Segment (in Millions)</CardTitle>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Layers className="h-4 w-4 text-accent" />
+            Kategori Produk
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={monthlyRevenueData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <YAxis tick={{ fontSize: 12 }} stroke="hsl(var(--muted-foreground))" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '8px',
-                  fontSize: '12px',
-                }}
-              />
-              <Legend wrapperStyle={{ fontSize: '12px' }} />
-              <Bar dataKey="B2G" fill="hsl(var(--chart-1))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="B2B" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="B2C" fill="hsl(var(--chart-3))" radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {loadingProducts ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : categoryData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Belum ada data kategori.</p>
+          ) : (
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="revenue" nameKey="category" paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={2}>
+                    {categoryData.map((_, idx) => (
+                      <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
+                {categoryData.map((c, idx) => {
+                  const pct = totalCategoryRevenue > 0 ? (c.revenue / totalCategoryRevenue) * 100 : 0;
+                  return (
+                    <div key={c.category} className="flex items-center gap-2 text-xs">
+                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
+                      <span className="truncate">{c.category}</span>
+                      <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
