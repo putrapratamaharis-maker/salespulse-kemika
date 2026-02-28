@@ -44,6 +44,9 @@ function ProtectedRoutes() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/my-performance" element={<MyPerformance />} />
+          <Route path="/my-performance/kpis" element={<MyPerformance />} />
+          <Route path="/my-performance/activities" element={<MyPerformance />} />
+          <Route path="/my-performance/pipeline" element={<MyPerformance />} />
           <Route path="/team-performance" element={<TeamPerformance />} />
           <Route path="/segment-performance" element={<SegmentPerformance />} />
           <Route path="/pipeline" element={<Pipeline />} />
