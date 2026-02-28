@@ -8,6 +8,9 @@ import { AppProvider } from "@/context/AppContext";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import MyPerformance from "./pages/MyPerformance";
+import MyKPIs from "./pages/MyKPIs";
+import MyActivities from "./pages/MyActivities";
+import MyPipeline from "./pages/MyPipeline";
 import TeamPerformance from "./pages/TeamPerformance";
 import SegmentPerformance from "./pages/SegmentPerformance";
 import Pipeline from "./pages/Pipeline";
@@ -44,9 +47,9 @@ function ProtectedRoutes() {
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/my-performance" element={<MyPerformance />} />
-          <Route path="/my-performance/kpis" element={<MyPerformance />} />
-          <Route path="/my-performance/activities" element={<MyPerformance />} />
-          <Route path="/my-performance/pipeline" element={<MyPerformance />} />
+          <Route path="/my-performance/kpis" element={<MyKPIs />} />
+          <Route path="/my-performance/activities" element={<MyActivities />} />
+          <Route path="/my-performance/pipeline" element={<MyPipeline />} />
           <Route path="/team-performance" element={<TeamPerformance />} />
           <Route path="/segment-performance" element={<SegmentPerformance />} />
           <Route path="/pipeline" element={<Pipeline />} />
