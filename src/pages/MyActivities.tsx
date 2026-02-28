@@ -3,9 +3,16 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, Mail, MapPin, FileText, Clock, Loader2 } from 'lucide-react';
+import { Activity, Phone, Users, Mail, MapPin, FileText, Clock, Loader2, Plus } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
 interface SalesActivity {
@@ -40,33 +47,79 @@ const activityColors: Record<string, 'green' | 'yellow' | 'red'> = {
   proposal: 'yellow',
 };
 
+const ACTIVITY_TYPES = ['call', 'meeting', 'email', 'visit', 'proposal'] as const;
+
 const MyActivities = () => {
   const { user, profile } = useAuth();
+  const { toast } = useToast();
   const [activities, setActivities] = useState<SalesActivity[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // Form state
+  const [formType, setFormType] = useState<string>('call');
+  const [formDate, setFormDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [formAccountId, setFormAccountId] = useState<string>('');
+  const [formNotes, setFormNotes] = useState('');
+  const [formNextActionDate, setFormNextActionDate] = useState('');
+
+  const fetchData = async () => {
+    if (!user) return;
+    setLoading(true);
+    const [actRes, accRes] = await Promise.all([
+      supabase
+        .from('sales_activities')
+        .select('*')
+        .eq('sales_id', user.id)
+        .order('activity_date', { ascending: false }),
+      supabase.from('accounts').select('id, name'),
+    ]);
+
+    if (actRes.data) setActivities(actRes.data as SalesActivity[]);
+    if (accRes.data) setAccounts(accRes.data as Account[]);
+    setLoading(false);
+  };
 
   useEffect(() => {
     if (!user) return;
-    
-    const fetchData = async () => {
-      setLoading(true);
-      const [actRes, accRes] = await Promise.all([
-        supabase
-          .from('sales_activities')
-          .select('*')
-          .eq('sales_id', user.id)
-          .order('activity_date', { ascending: false }),
-        supabase.from('accounts').select('id, name'),
-      ]);
-
-      if (actRes.data) setActivities(actRes.data as SalesActivity[]);
-      if (accRes.data) setAccounts(accRes.data as Account[]);
-      setLoading(false);
-    };
-
     fetchData();
   }, [user]);
+
+  const resetForm = () => {
+    setFormType('call');
+    setFormDate(format(new Date(), 'yyyy-MM-dd'));
+    setFormAccountId('');
+    setFormNotes('');
+    setFormNextActionDate('');
+  };
+
+  const handleSubmit = async () => {
+    if (!user) return;
+    setSubmitting(true);
+
+    const { error } = await supabase.from('sales_activities').insert({
+      sales_id: user.id,
+      type: formType,
+      activity_date: formDate,
+      account_id: formAccountId || null,
+      notes: formNotes || null,
+      next_action_date: formNextActionDate || null,
+    });
+
+    setSubmitting(false);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Activity added', description: 'Your activity has been recorded.' });
+    resetForm();
+    setDialogOpen(false);
+    fetchData();
+  };
 
   const getAccountName = (accountId: string | null) => {
     if (!accountId) return '-';
@@ -97,11 +150,71 @@ const MyActivities = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">My Activities</h2>
-        <p className="text-sm text-muted-foreground">
-          Activity log & tracking — {profile?.full_name || user?.email}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">My Activities</h2>
+          <p className="text-sm text-muted-foreground">
+            Activity log & tracking — {profile?.full_name || user?.email}
+          </p>
+        </div>
+        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+          <DialogTrigger asChild>
+            <Button size="sm" className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              Add Activity
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Add New Activity</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label>Type</Label>
+                <Select value={formType} onValueChange={setFormType}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {ACTIVITY_TYPES.map(t => (
+                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Date</Label>
+                <Input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Account (optional)</Label>
+                <Select value={formAccountId} onValueChange={setFormAccountId}>
+                  <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                  <SelectContent>
+                    {accounts.map(a => (
+                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Notes</Label>
+                <Textarea
+                  placeholder="Brief description of the activity..."
+                  value={formNotes}
+                  onChange={e => setFormNotes(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Next Action Date (optional)</Label>
+                <Input type="date" value={formNextActionDate} onChange={e => setFormNextActionDate(e.target.value)} />
+              </div>
+              <Button onClick={handleSubmit} disabled={submitting || !formDate} className="w-full">
+                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                Save Activity
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       {/* Summary KPIs */}
@@ -126,7 +239,7 @@ const MyActivities = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-            {['call', 'meeting', 'email', 'visit', 'proposal'].map(type => {
+            {ACTIVITY_TYPES.map(type => {
               const Icon = activityIcons[type];
               const count = typeCounts[type] || 0;
               return (
@@ -148,7 +261,7 @@ const MyActivities = () => {
         </CardHeader>
         <CardContent>
           {activities.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No activities recorded yet.</p>
+            <p className="text-sm text-muted-foreground">No activities recorded yet. Click "Add Activity" to get started.</p>
           ) : (
             <Table>
               <TableHeader>
