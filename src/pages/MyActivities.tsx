@@ -369,6 +369,13 @@ const MyActivities = () => {
 
   const exportHeaders = ['Date', 'Type', 'Account/Customer', 'Purpose', 'Outcome', 'Notes', 'Cost (Rp.)', 'Evidence', 'Next Action'];
 
+  const getDateRangeLabel = () => {
+    if (filterDateFrom && filterDateTo) return `${format(new Date(filterDateFrom), 'dd MMM yyyy')} – ${format(new Date(filterDateTo), 'dd MMM yyyy')}`;
+    if (filterDateFrom) return `From ${format(new Date(filterDateFrom), 'dd MMM yyyy')}`;
+    if (filterDateTo) return `Until ${format(new Date(filterDateTo), 'dd MMM yyyy')}`;
+    return 'All Period';
+  };
+
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
     const salesName = profile?.full_name || 'N/A';
@@ -378,13 +385,14 @@ const MyActivities = () => {
     doc.setFontSize(10);
     doc.text(`Sales Person: ${salesName}`, 14, 23);
     doc.text(`Segment: ${salesSegment}`, 14, 29);
+    doc.text(`Period: ${getDateRangeLabel()}`, 14, 35);
     doc.setFontSize(9);
-    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 36);
+    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 42);
     const data = getExportData();
     autoTable(doc, {
       head: [exportHeaders],
       body: data.map(r => exportHeaders.map(h => String(r[h as keyof typeof r]))),
-      startY: 42,
+      startY: 48,
       styles: { fontSize: 7, cellPadding: 2 },
       headStyles: { fillColor: [59, 130, 246] },
       columnStyles: { 7: { cellWidth: 30 } },
@@ -399,6 +407,7 @@ const MyActivities = () => {
       { Date: 'My Activities Report' },
       { Date: `Sales Person: ${salesName}` },
       { Date: `Segment: ${salesSegment}` },
+      { Date: `Period: ${getDateRangeLabel()}` },
       { Date: `Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}` },
       {},
     ];
