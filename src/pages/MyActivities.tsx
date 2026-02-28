@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, Mail, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -33,22 +33,30 @@ interface Account {
 }
 
 const activityIcons: Record<string, React.ElementType> = {
-  call: Phone,
-  meeting: Users,
-  email: Mail,
+  call_chat: Phone,
   visit: MapPin,
-  proposal: FileText,
+  online_meeting: Monitor,
+  training: GraduationCap,
+  demo: Activity,
 };
 
 const activityColors: Record<string, 'green' | 'yellow' | 'red'> = {
-  call: 'green',
-  meeting: 'green',
-  email: 'yellow',
+  call_chat: 'green',
   visit: 'green',
-  proposal: 'yellow',
+  online_meeting: 'green',
+  training: 'yellow',
+  demo: 'yellow',
 };
 
-const ACTIVITY_TYPES = ['call', 'meeting', 'email', 'visit', 'proposal'] as const;
+const ACTIVITY_TYPES = ['call_chat', 'visit', 'online_meeting', 'training', 'demo'] as const;
+
+const activityLabels: Record<string, string> = {
+  call_chat: 'Call/Chat',
+  visit: 'Visit',
+  online_meeting: 'Online Meeting',
+  training: 'Training',
+  demo: 'Demo',
+};
 
 const MyActivities = () => {
   const { user, profile } = useAuth();
@@ -69,7 +77,7 @@ const MyActivities = () => {
   const [filterSearch, setFilterSearch] = useState('');
 
   // Form state
-  const [formType, setFormType] = useState<string>('call');
+  const [formType, setFormType] = useState<string>('call_chat');
   const [formDate, setFormDate] = useState(format(new Date(), 'yyyy-MM-dd'));
   const [formAccountId, setFormAccountId] = useState<string>('');
   const [formNotes, setFormNotes] = useState('');
@@ -98,7 +106,7 @@ const MyActivities = () => {
   }, [user]);
 
   const resetForm = () => {
-    setFormType('call');
+    setFormType('call_chat');
     setFormDate(format(new Date(), 'yyyy-MM-dd'));
     setFormAccountId('');
     setFormNotes('');
@@ -245,7 +253,7 @@ const MyActivities = () => {
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {ACTIVITY_TYPES.map(t => (
-                      <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                      <SelectItem key={t} value={t}>{activityLabels[t]}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -298,7 +306,7 @@ const MyActivities = () => {
           icon={Clock}
           autoFitText
         />
-        <KPICard label="Meetings" value={String(typeCounts['meeting'] || 0)} icon={Users} autoFitText />
+        <KPICard label="Online Meetings" value={String(typeCounts['online_meeting'] || 0)} icon={Users} autoFitText />
         <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText />
       </div>
 
@@ -316,7 +324,7 @@ const MyActivities = () => {
                 <div key={type} className="flex flex-col items-center p-3 rounded-lg bg-secondary/50">
                   <Icon className="h-5 w-5 text-muted-foreground mb-1" />
                   <span className="text-lg font-bold text-foreground">{count}</span>
-                  <span className="text-xs text-muted-foreground capitalize">{type}</span>
+                  <span className="text-xs text-muted-foreground">{activityLabels[type]}</span>
                 </div>
               );
             })}
@@ -353,7 +361,7 @@ const MyActivities = () => {
               <SelectContent>
                 <SelectItem value="all">All types</SelectItem>
                 {ACTIVITY_TYPES.map(t => (
-                  <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                  <SelectItem key={t} value={t}>{activityLabels[t]}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -412,7 +420,7 @@ const MyActivities = () => {
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                          <StatusBadge status={activityColors[act.type] || 'green'} label={act.type} />
+                          <StatusBadge status={activityColors[act.type] || 'green'} label={activityLabels[act.type] || act.type} />
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">{getAccountName(act.account_id)}</TableCell>
@@ -451,7 +459,7 @@ const MyActivities = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Activity</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this {deleteTarget?.type} activity
+              Are you sure you want to delete this {deleteTarget ? (activityLabels[deleteTarget.type] || deleteTarget.type) : ''} activity
               {deleteTarget?.activity_date ? ` from ${format(new Date(deleteTarget.activity_date), 'dd MMM yyyy')}` : ''}?
               This action cannot be undone.
             </AlertDialogDescription>
