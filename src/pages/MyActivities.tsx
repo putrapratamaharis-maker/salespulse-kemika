@@ -3,7 +3,10 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -218,6 +221,40 @@ const MyActivities = () => {
 
   const minWeeklyTarget = 5;
 
+  const getExportData = () =>
+    filteredActivities.map(a => ({
+      Date: format(new Date(a.activity_date), 'dd MMM yyyy'),
+      Type: activityLabels[a.type] || a.type,
+      Account: getAccountName(a.account_id),
+      Notes: a.notes || '-',
+      'Next Action': a.next_action_date ? format(new Date(a.next_action_date), 'dd MMM yyyy') : '-',
+    }));
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(14);
+    doc.text('My Activities Report', 14, 15);
+    doc.setFontSize(9);
+    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 22);
+    const data = getExportData();
+    autoTable(doc, {
+      head: [['Date', 'Type', 'Account', 'Notes', 'Next Action']],
+      body: data.map(r => [r.Date, r.Type, r.Account, r.Notes, r['Next Action']]),
+      startY: 28,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    doc.save('my-activities.pdf');
+  };
+
+  const exportExcel = () => {
+    const data = getExportData();
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Activities');
+    XLSX.writeFile(wb, 'my-activities.xlsx');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[300px]">
@@ -235,13 +272,22 @@ const MyActivities = () => {
             Activity log & tracking — {profile?.full_name || user?.email}
           </p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              Add Activity
-            </Button>
-          </DialogTrigger>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
+            <Download className="h-4 w-4" />
+            PDF
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportExcel}>
+            <Download className="h-4 w-4" />
+            Excel
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1.5">
+                <Plus className="h-4 w-4" />
+                Add Activity
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>{editingActivity ? 'Edit Activity' : 'Add New Activity'}</DialogTitle>
@@ -292,7 +338,8 @@ const MyActivities = () => {
               </Button>
             </div>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary KPIs */}
