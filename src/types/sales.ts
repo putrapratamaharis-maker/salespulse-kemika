@@ -90,6 +90,10 @@ export interface CoachingNote {
   note: string;
 }
 
+export function formatIDRFull(value: number): string {
+  return `Rp ${value.toLocaleString('id-ID')}`;
+}
+
 export function formatIDR(value: number): string {
   if (value >= 1_000_000_000) {
     return `Rp ${(value / 1_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} M`;

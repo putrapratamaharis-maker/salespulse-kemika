@@ -9,9 +9,10 @@ interface KPICardProps {
   status?: 'green' | 'yellow' | 'red';
   icon?: LucideIcon;
   className?: string;
+  autoFitText?: boolean;
 }
 
-export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className }: KPICardProps) {
+export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText }: KPICardProps) {
   return (
     <div className={cn('kpi-card animate-fade-in', className)}>
       <div className="flex items-start justify-between mb-3">
@@ -34,7 +35,10 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
           </div>
         )}
       </div>
-      <div className="text-2xl font-bold text-foreground tracking-tight">{value}</div>
+      <div className={cn(
+        "font-bold text-foreground tracking-tight",
+        autoFitText ? "text-base sm:text-lg lg:text-xl break-all leading-tight" : "text-2xl"
+      )}>{value}</div>
       {(change !== undefined || changeLabel) && (
         <div className="flex items-center gap-1 mt-1.5">
           {change !== undefined && (
