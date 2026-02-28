@@ -3,7 +3,18 @@
 export type SystemRole = 'super_admin' | 'admin' | 'staff' | 'viewer';
 export type OrgRole = 'sales_manager' | 'supervisor' | 'sales_person' | 'representative_management';
 export type Segment = 'B2G' | 'B2B' | 'B2C';
-export type DealStage = 'prospect' | 'qualification' | 'proposal' | 'negotiation' | 'closed_won' | 'closed_lost';
+export type DealStage = 'prospect' | 'quotation' | 'negotiation' | 'po_secured' | 'invoice_issued' | 'canceled' | 'lost';
+
+export interface DealProduct {
+  id: string;
+  category: string;
+  productName: string;
+  unit: string;
+  qty: number;
+  pricePerUnit: number;
+  otherCost: number;
+}
+
 export type DateRange = 'MTD' | 'QTD' | 'YTD' | 'custom';
 
 export interface User {
@@ -40,7 +51,12 @@ export interface Deal {
   createdAt: string;
   updatedAt: string;
   daysInStage: number;
+  location?: string;
+  notes?: string;
+  expectedMargin?: number;
+  products?: DealProduct[];
 }
+
 
 export interface Invoice {
   id: string;
@@ -62,7 +78,10 @@ export interface Account {
   region: string;
   salesId: string;
   type: string;
+  picContact?: string;
+  picEmail?: string;
 }
+
 
 export interface SalesActivity {
   id: string;
