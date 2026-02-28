@@ -301,22 +301,40 @@ export function ManagerDashboard() {
                 regionMap.set(region, (regionMap.get(region) || 0) + inv.netSales);
               });
               const regionData = Array.from(regionMap, ([region, revenue]) => ({ region, revenue })).sort((a, b) => b.revenue - a.revenue);
+              const totalRegionRevenue = regionData.reduce((s, r) => s + r.revenue, 0);
               const REGION_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
 
               return (
-                <ResponsiveContainer width="100%" height={280}>
-                  <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
-                    <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
-                    <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                    <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
-                      {regionData.map((_, idx) => (
-                        <Cell key={idx} fill={REGION_COLORS[idx % REGION_COLORS.length]} />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                      <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
+                      <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
+                      <Tooltip formatter={(value: number) => {
+                        const pct = totalRegionRevenue > 0 ? (Number(value) / totalRegionRevenue) * 100 : 0;
+                        return [`${formatIDR(Number(value))} (${formatPercent(pct)})`, 'Revenue'];
+                      }} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                      <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+                        {regionData.map((_, idx) => (
+                          <Cell key={idx} fill={REGION_COLORS[idx % REGION_COLORS.length]} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
+                    {regionData.map((r, idx) => {
+                      const pct = totalRegionRevenue > 0 ? (r.revenue / totalRegionRevenue) * 100 : 0;
+                      return (
+                        <div key={r.region} className="flex items-center gap-2 text-xs">
+                          <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: REGION_COLORS[idx % REGION_COLORS.length] }} />
+                          <span className="truncate">{r.region}</span>
+                          <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })()}
           </CardContent>
