@@ -1,6 +1,6 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatPercent, formatDate } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { mockDeals, mockAccounts } from '@/data/mockData';
 import { TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,9 +36,9 @@ const Pipeline = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard label="Total Pipeline" value={formatIDR(totalPipeline)} icon={BarChart3} />
-        <KPICard label="Weighted Forecast" value={formatIDR(weightedForecast)} change={8.5} changeLabel="reliability" icon={TrendingUp} />
-        <KPICard label="Stuck Deals" value={String(stuckDeals.length)} status={stuckDeals.length > 0 ? 'yellow' : 'green'} icon={AlertTriangle} />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={TrendingUp} autoFitText />
+        <KPICard label="Stuck Deals" value={String(stuckDeals.length)} status={stuckDeals.length > 0 ? 'yellow' : 'green'} icon={AlertTriangle} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

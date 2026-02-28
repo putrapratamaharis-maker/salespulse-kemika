@@ -1,6 +1,6 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
 import { mockInvoices, mockDeals, mockAccounts } from '@/data/mockData';
 import { DollarSign, Target, Percent, MapPin, TrendingDown, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,10 +38,10 @@ export function RepManagementDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Revenue" value={formatIDR(totalRevenue)} change={11.4} changeLabel="vs last month" icon={DollarSign} />
-        <KPICard label="Total Outstanding" value={formatIDR(totalOutstanding)} icon={CreditCard} />
-        <KPICard label="Total Pipeline" value={formatIDR(totalPipeline)} icon={TrendingDown} />
-        <KPICard label="Active Regions" value={String(regions.length)} icon={MapPin} />
+        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} change={11.4} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingDown} autoFitText />
+        <KPICard label="Active Regions" value={String(regions.length)} icon={MapPin} autoFitText />
       </div>
 
       <Card>

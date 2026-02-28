@@ -1,7 +1,7 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
 import { getSubordinates, getUserInvoices, getUserDeals, getUserTarget, getUserActivities, mockAccounts } from '@/data/mockData';
 import { Users, Target, DollarSign, TrendingUp, AlertTriangle, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -49,10 +49,10 @@ export function SupervisorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Team Revenue MTD" value={formatIDR(totalRevenue)} change={15.3} changeLabel="vs last month" icon={DollarSign} />
-        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} />
-        <KPICard label="Total Pipeline" value={formatIDR(totalPipeline)} icon={TrendingUp} />
-        <KPICard label="Stuck Deals" value={String(stuckCount)} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} />
+        <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} change={15.3} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText />
+        <KPICard label="Stuck Deals" value={String(stuckCount)} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText />
       </div>
 
       <Card>

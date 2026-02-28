@@ -1,6 +1,6 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatPercent } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { mockInvoices } from '@/data/mockData';
 import { DollarSign, Percent, TrendingUp, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,10 +28,10 @@ const Revenue = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Revenue" value={formatIDR(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} />
-        <KPICard label="Gross Profit" value={formatIDR(totalGP)} icon={TrendingUp} />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} />
-        <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} />
+        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
+        <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} autoFitText />
       </div>
 
       <Card>
