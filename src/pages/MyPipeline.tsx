@@ -2,14 +2,16 @@ import { useState } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { Deal, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { getUserDeals, mockAccounts } from '@/data/mockData';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
+import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
+import { useToast } from '@/hooks/use-toast';
 
 const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
@@ -34,14 +36,45 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 const MyPipeline = () => {
   const { currentUser } = useAppContext();
   const [addedDeals, setAddedDeals] = useState<Deal[]>([]);
+  const [editedDeals, setEditedDeals] = useState<Record<string, Deal>>({});
+  const [deletedDealIds, setDeletedDealIds] = useState<Set<string>>(new Set());
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  const deals = [...getUserDeals(currentUser.id), ...addedDeals];
+  const baseDeals = getUserDeals(currentUser.id);
+  const deals = [...baseDeals, ...addedDeals]
+    .filter(d => !deletedDealIds.has(d.id))
+    .map(d => editedDeals[d.id] || d);
 
   const getAccountName = (accountId: string) =>
     mockAccounts.find(a => a.id === accountId)?.name || accountId;
 
   const handleAddDeal = (deal: Deal) => {
     setAddedDeals(prev => [...prev, deal]);
+  };
+
+  const handleEditDeal = (deal: Deal) => {
+    setEditingDeal(deal);
+    setEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = (updatedDeal: Deal) => {
+    setEditedDeals(prev => ({ ...prev, [updatedDeal.id]: updatedDeal }));
+  };
+
+  const handleDeleteDeal = (dealId: string) => {
+    setDeletedDealIds(prev => new Set(prev).add(dealId));
+    toast({ title: 'Deal berhasil dihapus' });
+  };
+
+  const handleStageChange = (dealId: string, newStage: DealStage) => {
+    const deal = deals.find(d => d.id === dealId);
+    if (deal) {
+      const updated = { ...deal, stage: newStage, daysInStage: 0, updatedAt: new Date().toISOString().split('T')[0] };
+      setEditedDeals(prev => ({ ...prev, [dealId]: updated }));
+      toast({ title: `Deal dipindahkan ke ${newStage.replace('_', ' ')}` });
+    }
   };
 
   const activeDeals = deals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
@@ -107,7 +140,13 @@ const MyPipeline = () => {
       </div>
 
       {/* Kanban Board */}
-      <KanbanBoard deals={deals} getAccountName={getAccountName} />
+      <KanbanBoard
+        deals={deals}
+        getAccountName={getAccountName}
+        onEdit={handleEditDeal}
+        onDelete={handleDeleteDeal}
+        onStageChange={handleStageChange}
+      />
 
       {/* Stage Funnel */}
       <Card>
@@ -238,6 +277,15 @@ const MyPipeline = () => {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Edit Deal Dialog */}
+      <EditDealDialog
+        deal={editingDeal}
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        onSave={handleSaveEdit}
+        accountOptions={accountOptions}
+      />
     </div>
   );
 };
