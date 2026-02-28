@@ -1,9 +1,10 @@
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
-  Package, CreditCard, Settings, ChevronDown
+  Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
+import { useLocation } from 'react-router-dom';
 import { mockUsers } from '@/data/mockData';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -11,12 +12,21 @@ import {
   SidebarHeader, SidebarFooter, useSidebar,
 } from '@/components/ui/sidebar';
 import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
+const myPerformanceSubItems = [
+  { title: 'My Sales Overview', url: '/my-performance', icon: BarChart3 },
+  { title: "My KPI's & Scores", url: '/my-performance/kpis', icon: Target },
+  { title: 'My Activities', url: '/my-performance/activities', icon: Activity },
+  { title: 'My Pipeline & Forecast', url: '/my-performance/pipeline', icon: GitBranch },
+];
+
 const navItems = [
   { title: 'Dashboard', url: '/', icon: LayoutDashboard },
-  { title: 'My Performance', url: '/my-performance', icon: User },
   { title: 'Team Performance', url: '/team-performance', icon: Users },
   { title: 'Segment Performance', url: '/segment-performance', icon: PieChart },
   { title: 'Pipeline & Forecast', url: '/pipeline', icon: TrendingUp },
@@ -40,14 +50,20 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === 'collapsed';
   const { currentUser, setCurrentUser } = useAppContext();
+  const location = useLocation();
 
   const hasTeam = ['sales_manager', 'supervisor'].includes(currentUser.orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(currentUser.systemRole);
+  const isMyPerfActive = location.pathname.startsWith('/my-performance');
 
   const visibleNav = navItems.filter(item => {
     if (item.url === '/team-performance' && !hasTeam) return false;
     return true;
   });
+
+  // Split nav: Dashboard first, then My Performance collapsible, then rest
+  const dashboardItem = visibleNav.find(i => i.url === '/');
+  const restNav = visibleNav.filter(i => i.url !== '/');
 
   return (
     <Sidebar collapsible="icon">
@@ -72,7 +88,61 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-sidebar-muted text-[10px] uppercase tracking-widest">Navigation</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {visibleNav.map((item) => (
+              {/* Dashboard */}
+              {dashboardItem && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to={dashboardItem.url}
+                      end
+                      className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <dashboardItem.icon className="mr-2 h-4 w-4 shrink-0" />
+                      {!collapsed && <span>{dashboardItem.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {/* My Performance — collapsible */}
+              <SidebarMenuItem>
+                <Collapsible defaultOpen={isMyPerfActive}>
+                  <CollapsibleTrigger className={`flex items-center w-full gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent/50 text-sidebar-foreground ${isMyPerfActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''}`}>
+                    <User className="h-4 w-4 shrink-0" />
+                    {!collapsed && (
+                      <>
+                        <span className="flex-1 text-left">My Performance</span>
+                        <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                      </>
+                    )}
+                  </CollapsibleTrigger>
+                  {!collapsed && (
+                    <CollapsibleContent>
+                      <SidebarMenu className="ml-4 mt-0.5 border-l border-sidebar-border pl-2">
+                        {myPerformanceSubItems.map((sub) => (
+                          <SidebarMenuItem key={sub.title}>
+                            <SidebarMenuButton asChild>
+                              <NavLink
+                                to={sub.url}
+                                end
+                                className="hover:bg-sidebar-accent/50 text-sidebar-foreground text-xs"
+                                activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                              >
+                                <sub.icon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                                <span>{sub.title}</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                          </SidebarMenuItem>
+                        ))}
+                      </SidebarMenu>
+                    </CollapsibleContent>
+                  )}
+                </Collapsible>
+              </SidebarMenuItem>
+
+              {/* Rest of nav */}
+              {restNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild>
                     <NavLink
