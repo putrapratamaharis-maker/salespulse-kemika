@@ -622,7 +622,11 @@ const MyActivities = () => {
                       Account/Customer {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                     </span>
                   </TableHead>
+                  <TableHead className="text-xs">Purpose</TableHead>
+                  <TableHead className="text-xs">Outcome</TableHead>
                   <TableHead className="text-xs">Notes</TableHead>
+                  <TableHead className="text-xs">Cost (Rp.)</TableHead>
+                  <TableHead className="text-xs">Evidence</TableHead>
                   <TableHead className="text-xs">Next Action</TableHead>
                   <TableHead className="text-xs w-[80px]">Actions</TableHead>
                 </TableRow>
@@ -644,7 +648,19 @@ const MyActivities = () => {
                         </div>
                       </TableCell>
                       <TableCell className="text-sm font-medium">{getAccountName(act.account_id)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.purpose || '-'}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.outcome || '-'}</TableCell>
                       <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{act.notes || '-'}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {act.cost != null ? `Rp ${act.cost.toLocaleString('id-ID')}` : '-'}
+                      </TableCell>
+                      <TableCell className="text-sm">
+                        {act.evidence_url ? (
+                          <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
+                            View File
+                          </a>
+                        ) : '-'}
+                      </TableCell>
                       <TableCell className="text-sm text-muted-foreground">
                         {act.next_action_date ? format(new Date(act.next_action_date), 'dd MMM yyyy') : '-'}
                       </TableCell>
