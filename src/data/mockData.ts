@@ -24,29 +24,31 @@ export const mockTargets: Target[] = [
 
 // ---- ACCOUNTS ----
 export const mockAccounts: Account[] = [
-  { id: 'a1', name: 'Kementerian Kesehatan RI', segment: 'B2G', region: 'Jabodetabek', salesId: 'u4', type: 'Government' },
-  { id: 'a2', name: 'Dinas Pendidikan Jatim', segment: 'B2G', region: 'Jawa Timur', salesId: 'u5', type: 'Government' },
-  { id: 'a3', name: 'PT Astra International', segment: 'B2B', region: 'Jabodetabek', salesId: 'u7', type: 'Corporate' },
-  { id: 'a4', name: 'PT Telkom Indonesia', segment: 'B2B', region: 'Jawa Barat', salesId: 'u6', type: 'Corporate' },
-  { id: 'a5', name: 'PT Unilever Indonesia', segment: 'B2B', region: 'Jabodetabek', salesId: 'u7', type: 'Corporate' },
-  { id: 'a6', name: 'Tokopedia Marketplace', segment: 'B2C', region: 'Jabodetabek', salesId: 'u8', type: 'E-Commerce' },
-  { id: 'a7', name: 'Shopee Indonesia', segment: 'B2C', region: 'Jabodetabek', salesId: 'u8', type: 'E-Commerce' },
-  { id: 'a8', name: 'RSUD Dr. Soetomo', segment: 'B2G', region: 'Jawa Timur', salesId: 'u5', type: 'Government' },
-  { id: 'a9', name: 'PT Bank Mandiri', segment: 'B2B', region: 'Jabodetabek', salesId: 'u6', type: 'Corporate' },
+  { id: 'a1', name: 'Kementerian Kesehatan RI', segment: 'B2G', region: 'Jabodetabek', salesId: 'u4', type: 'Government', picContact: 'Dr. Ahmad Fauzi', picEmail: 'ahmad.fauzi@kemkes.go.id' },
+  { id: 'a2', name: 'Dinas Pendidikan Jatim', segment: 'B2G', region: 'Jawa Timur', salesId: 'u5', type: 'Government', picContact: 'Ir. Slamet Riyadi', picEmail: 'slamet@disdik.jatim.go.id' },
+  { id: 'a3', name: 'PT Astra International', segment: 'B2B', region: 'Jabodetabek', salesId: 'u7', type: 'Corporate', picContact: 'Michael Hartono', picEmail: 'michael.h@astra.co.id' },
+  { id: 'a4', name: 'PT Telkom Indonesia', segment: 'B2B', region: 'Jawa Barat', salesId: 'u6', type: 'Corporate', picContact: 'Rini Soemarno', picEmail: 'rini.s@telkom.co.id' },
+  { id: 'a5', name: 'PT Unilever Indonesia', segment: 'B2B', region: 'Jabodetabek', salesId: 'u7', type: 'Corporate', picContact: 'James Tan', picEmail: 'james.tan@unilever.com' },
+  { id: 'a6', name: 'Tokopedia Marketplace', segment: 'B2C', region: 'Jabodetabek', salesId: 'u8', type: 'E-Commerce', picContact: 'Lisa Permata', picEmail: 'lisa.p@tokopedia.com' },
+  { id: 'a7', name: 'Shopee Indonesia', segment: 'B2C', region: 'Jabodetabek', salesId: 'u8', type: 'E-Commerce', picContact: 'Kevin Susanto', picEmail: 'kevin.s@shopee.co.id' },
+  { id: 'a8', name: 'RSUD Dr. Soetomo', segment: 'B2G', region: 'Jawa Timur', salesId: 'u5', type: 'Government', picContact: 'Dr. Bambang W.', picEmail: 'bambang@rsudsoetomo.go.id' },
+  { id: 'a9', name: 'PT Bank Mandiri', segment: 'B2B', region: 'Jabodetabek', salesId: 'u6', type: 'Corporate', picContact: 'Anita Dewi', picEmail: 'anita.dewi@mandiri.co.id' },
 ];
+
 
 // ---- DEALS ----
 export const mockDeals: Deal[] = [
   { id: 'd1', accountId: 'a1', salesId: 'u4', name: 'Medical Equipment Tender 2026', segment: 'B2G', stage: 'negotiation', value: 1_200_000_000, probability: 75, expectedCloseDate: '2026-03-15', createdAt: '2026-01-10', updatedAt: '2026-02-20', daysInStage: 8 },
-  { id: 'd2', accountId: 'a2', salesId: 'u5', name: 'School Lab Equipment', segment: 'B2G', stage: 'proposal', value: 800_000_000, probability: 50, expectedCloseDate: '2026-03-30', createdAt: '2026-01-20', updatedAt: '2026-02-15', daysInStage: 13 },
-  { id: 'd3', accountId: 'a3', salesId: 'u7', name: 'Fleet Management System', segment: 'B2B', stage: 'qualification', value: 650_000_000, probability: 30, expectedCloseDate: '2026-04-20', createdAt: '2026-02-01', updatedAt: '2026-02-22', daysInStage: 6 },
-  { id: 'd4', accountId: 'a4', salesId: 'u6', name: 'Network Infrastructure', segment: 'B2B', stage: 'closed_won', value: 950_000_000, probability: 100, expectedCloseDate: '2026-02-10', createdAt: '2025-12-05', updatedAt: '2026-02-10', daysInStage: 0 },
+  { id: 'd2', accountId: 'a2', salesId: 'u5', name: 'School Lab Equipment', segment: 'B2G', stage: 'quotation', value: 800_000_000, probability: 50, expectedCloseDate: '2026-03-30', createdAt: '2026-01-20', updatedAt: '2026-02-15', daysInStage: 13 },
+  { id: 'd3', accountId: 'a3', salesId: 'u7', name: 'Fleet Management System', segment: 'B2B', stage: 'prospect', value: 650_000_000, probability: 30, expectedCloseDate: '2026-04-20', createdAt: '2026-02-01', updatedAt: '2026-02-22', daysInStage: 6 },
+  { id: 'd4', accountId: 'a4', salesId: 'u6', name: 'Network Infrastructure', segment: 'B2B', stage: 'po_secured', value: 950_000_000, probability: 100, expectedCloseDate: '2026-02-10', createdAt: '2025-12-05', updatedAt: '2026-02-10', daysInStage: 0 },
   { id: 'd5', accountId: 'a5', salesId: 'u7', name: 'Supply Chain Platform', segment: 'B2B', stage: 'negotiation', value: 420_000_000, probability: 60, expectedCloseDate: '2026-03-05', createdAt: '2026-01-15', updatedAt: '2026-02-25', daysInStage: 3 },
   { id: 'd6', accountId: 'a1', salesId: 'u4', name: 'Hospital IT System Phase 2', segment: 'B2G', stage: 'prospect', value: 2_100_000_000, probability: 15, expectedCloseDate: '2026-06-30', createdAt: '2026-02-20', updatedAt: '2026-02-20', daysInStage: 8 },
-  { id: 'd7', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Q2 Campaign', segment: 'B2C', stage: 'proposal', value: 350_000_000, probability: 55, expectedCloseDate: '2026-03-20', createdAt: '2026-02-05', updatedAt: '2026-02-18', daysInStage: 10 },
-  { id: 'd8', accountId: 'a8', salesId: 'u5', name: 'Hospital Bed Procurement', segment: 'B2G', stage: 'closed_won', value: 600_000_000, probability: 100, expectedCloseDate: '2026-02-05', createdAt: '2025-11-15', updatedAt: '2026-02-05', daysInStage: 0 },
+  { id: 'd7', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Q2 Campaign', segment: 'B2C', stage: 'quotation', value: 350_000_000, probability: 55, expectedCloseDate: '2026-03-20', createdAt: '2026-02-05', updatedAt: '2026-02-18', daysInStage: 10 },
+  { id: 'd8', accountId: 'a8', salesId: 'u5', name: 'Hospital Bed Procurement', segment: 'B2G', stage: 'po_secured', value: 600_000_000, probability: 100, expectedCloseDate: '2026-02-05', createdAt: '2025-11-15', updatedAt: '2026-02-05', daysInStage: 0 },
   { id: 'd9', accountId: 'a9', salesId: 'u6', name: 'Data Center Upgrade', segment: 'B2B', stage: 'negotiation', value: 1_100_000_000, probability: 70, expectedCloseDate: '2026-03-10', createdAt: '2026-01-08', updatedAt: '2026-02-26', daysInStage: 2 },
 ];
+
 
 // ---- INVOICES ----
 export const mockInvoices: Invoice[] = [

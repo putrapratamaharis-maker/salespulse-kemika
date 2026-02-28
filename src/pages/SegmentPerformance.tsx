@@ -13,11 +13,11 @@ function SegmentKPIs({ segment }: { segment: 'B2G' | 'B2B' | 'B2C' }) {
   const revenue = invoices.reduce((s, i) => s + i.netSales, 0);
   const grossProfit = invoices.reduce((s, i) => s + i.grossProfit, 0);
   const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-  const closedWon = deals.filter(d => d.stage === 'closed_won').length;
-  const closedLost = deals.filter(d => d.stage === 'closed_lost').length;
+  const closedWon = deals.filter(d => d.stage === 'po_secured').length;
+  const closedLost = deals.filter(d => d.stage === 'lost').length;
   const totalClosed = closedWon + closedLost;
   const winRate = totalClosed > 0 ? (closedWon / totalClosed) * 100 : 0;
-  const avgDealSize = closedWon > 0 ? deals.filter(d => d.stage === 'closed_won').reduce((s, d) => s + d.value, 0) / closedWon : 0;
+  const avgDealSize = closedWon > 0 ? deals.filter(d => d.stage === 'po_secured').reduce((s, d) => s + d.value, 0) / closedWon : 0;
   const paidInvoices = invoices.filter(i => i.paidDate).length;
   const totalInvoices = invoices.length;
   const conversionRate = totalInvoices > 0 ? (paidInvoices / totalInvoices) * 100 : 0;

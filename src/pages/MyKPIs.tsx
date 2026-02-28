@@ -62,7 +62,7 @@ function computeKPIValue(
 
     case 'win_rate': {
       const total = deals.length;
-      const won = deals.filter(d => d.stage === 'closed_won').length;
+      const won = deals.filter(d => d.stage === 'po_secured').length;
       return total > 0 ? (won / total) * 100 : 0;
     }
 
@@ -333,8 +333,8 @@ const MyKPIs = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {(() => {
             const deals = getUserDeals(currentUser.id);
-            const won = deals.filter(d => d.stage === 'closed_won').length;
-            const lost = deals.filter(d => d.stage === 'closed_lost').length;
+             const won = deals.filter(d => d.stage === 'po_secured').length;
+             const lost = deals.filter(d => d.stage === 'lost').length;
             const active = deals.length - won - lost;
             return (
               <>

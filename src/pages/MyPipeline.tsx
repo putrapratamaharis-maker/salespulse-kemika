@@ -10,22 +10,24 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Progress } from '@/components/ui/progress';
 import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 
-const stageOrder = ['prospect', 'qualification', 'proposal', 'negotiation', 'closed_won', 'closed_lost'];
+const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
   prospect: 'Prospect',
-  qualification: 'Qualification',
-  proposal: 'Proposal',
+  quotation: 'Quotation',
   negotiation: 'Negotiation',
-  closed_won: 'Closed Won',
-  closed_lost: 'Closed Lost',
+  po_secured: 'PO Secured/Won',
+  invoice_issued: 'Invoice Issued',
+  canceled: 'Canceled',
+  lost: 'Lost',
 };
 const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
   prospect: 'red',
-  qualification: 'yellow',
-  proposal: 'yellow',
-  negotiation: 'green',
-  closed_won: 'green',
-  closed_lost: 'red',
+  quotation: 'yellow',
+  negotiation: 'yellow',
+  po_secured: 'green',
+  invoice_issued: 'green',
+  canceled: 'red',
+  lost: 'red',
 };
 
 const MyPipeline = () => {
@@ -41,7 +43,7 @@ const MyPipeline = () => {
     setAddedDeals(prev => [...prev, deal]);
   };
 
-  const activeDeals = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
+  const activeDeals = deals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
   const pipelineValue = activeDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = activeDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
   const avgProbability = activeDeals.length > 0
@@ -55,7 +57,7 @@ const MyPipeline = () => {
 
   const staleDeals = activeDeals.filter(d => d.daysInStage > 10);
 
-  const stageSummary = stageOrder.filter(s => s !== 'closed_lost').map(stage => {
+  const stageSummary = stageOrder.filter(s => !['canceled', 'lost'].includes(s)).map(stage => {
     const stageDeals = deals.filter(d => d.stage === stage);
     return {
       stage,
@@ -68,7 +70,7 @@ const MyPipeline = () => {
 
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
-  const accountOptions = mockAccounts.map(a => ({ id: a.id, name: a.name }));
+  const accountOptions = mockAccounts.map(a => ({ id: a.id, name: a.name, picContact: a.picContact, picEmail: a.picEmail }));
 
   return (
     <div className="space-y-6">
