@@ -92,19 +92,19 @@ export interface CoachingNote {
 
 export function formatIDR(value: number): string {
   if (value >= 1_000_000_000) {
-    return `Rp ${(value / 1_000_000_000).toFixed(1)}B`;
+    return `Rp ${(value / 1_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} M`;
   }
   if (value >= 1_000_000) {
-    return `Rp ${(value / 1_000_000).toFixed(1)}M`;
+    return `Rp ${(value / 1_000_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Jt`;
   }
   if (value >= 1_000) {
-    return `Rp ${(value / 1_000).toFixed(1)}K`;
+    return `Rp ${(value / 1_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Rb`;
   }
   return `Rp ${value.toLocaleString('id-ID')}`;
 }
 
 export function formatPercent(value: number): string {
-  return `${value.toFixed(1)}%`;
+  return `${value.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 }
 
 export function getAchievementStatus(pct: number): 'green' | 'yellow' | 'red' {
