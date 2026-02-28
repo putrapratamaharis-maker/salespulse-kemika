@@ -82,6 +82,34 @@ export const mockCoachingNotes: CoachingNote[] = [
   { id: 'cn3', salesId: 'u6', supervisorId: 'u3', date: '2026-02-22', note: 'Excellent Q1 close rate. Work on expanding account base in Jawa Barat.' },
 ];
 
+// ---- TOP PRODUCTS ----
+export interface ProductSales {
+  name: string;
+  category: string;
+  revenue: number;
+  unitsSold: number;
+}
+
+export const mockTopProducts: ProductSales[] = [
+  { name: 'Hospital Bed Electric', category: 'Medical Equipment', revenue: 1_450_000_000, unitsSold: 120 },
+  { name: 'Patient Monitor PM-7000', category: 'Medical Equipment', revenue: 950_000_000, unitsSold: 85 },
+  { name: 'Network Switch 48-Port', category: 'IT Infrastructure', revenue: 820_000_000, unitsSold: 340 },
+  { name: 'Lab Microscope XR-200', category: 'Lab Equipment', revenue: 680_000_000, unitsSold: 95 },
+  { name: 'Server Rack 42U', category: 'IT Infrastructure', revenue: 620_000_000, unitsSold: 45 },
+  { name: 'Surgical Light LED-500', category: 'Medical Equipment', revenue: 580_000_000, unitsSold: 60 },
+  { name: 'UPS 10kVA Online', category: 'IT Infrastructure', revenue: 520_000_000, unitsSold: 110 },
+  { name: 'Ventilator ICU-300', category: 'Medical Equipment', revenue: 490_000_000, unitsSold: 35 },
+  { name: 'Office Chair Ergonomic', category: 'Office Supplies', revenue: 385_000_000, unitsSold: 1200 },
+  { name: 'Printer MFP A3 Color', category: 'Office Supplies', revenue: 350_000_000, unitsSold: 180 },
+];
+
+export const mockProductCategories = [
+  { category: 'Medical Equipment', revenue: 3_470_000_000, products: 4 },
+  { category: 'IT Infrastructure', revenue: 1_960_000_000, products: 3 },
+  { category: 'Lab Equipment', revenue: 680_000_000, products: 1 },
+  { category: 'Office Supplies', revenue: 735_000_000, products: 2 },
+];
+
 // Revenue trend data for charts
 export const monthlyRevenueData = [
   { month: 'Sep', B2G: 1800, B2B: 2200, B2C: 600 },

@@ -1,10 +1,11 @@
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDR, formatPercent, getAchievementStatus } from '@/types/sales';
-import { mockInvoices, mockDeals, mockTargets, monthlyRevenueData } from '@/data/mockData';
-import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3 } from 'lucide-react';
+import { mockInvoices, mockDeals, mockTargets, monthlyRevenueData, mockTopProducts, mockProductCategories } from '@/data/mockData';
+import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 
 export function ManagerDashboard() {
   const totalRevenue = mockInvoices.reduce((s, i) => s + i.netSales, 0);
@@ -37,6 +38,8 @@ export function ManagerDashboard() {
     segment: seg,
     revenue: mockInvoices.filter(i => i.segment === seg).reduce((s, i) => s + i.netSales, 0),
   }));
+  const CATEGORY_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
+  const totalCategoryRevenue = mockProductCategories.reduce((s, c) => s + c.revenue, 0);
 
   return (
     <div className="space-y-6">
@@ -83,6 +86,94 @@ export function ManagerDashboard() {
                   </div>
                 );
               })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Top 10 Products & Product Category */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Package className="h-4 w-4 text-accent" />
+              Top 10 Produk
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs w-8">#</TableHead>
+                  <TableHead className="text-xs">Produk</TableHead>
+                  <TableHead className="text-xs">Kategori</TableHead>
+                  <TableHead className="text-xs text-right">Revenue</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {mockTopProducts.map((p, i) => (
+                  <TableRow key={p.name}>
+                    <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
+                    <TableCell className="text-xs font-medium">{p.name}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{p.category}</TableCell>
+                    <TableCell className="text-xs text-right font-semibold">{formatIDR(p.revenue)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Layers className="h-4 w-4 text-accent" />
+              Kategori Produk
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie
+                    data={mockProductCategories}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={55}
+                    outerRadius={90}
+                    dataKey="revenue"
+                    nameKey="category"
+                    paddingAngle={3}
+                    stroke="hsl(var(--card))"
+                    strokeWidth={2}
+                  >
+                    {mockProductCategories.map((_, idx) => (
+                      <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    formatter={(value: number) => formatIDR(value)}
+                    contentStyle={{
+                      backgroundColor: 'hsl(var(--card))',
+                      border: '1px solid hsl(var(--border))',
+                      borderRadius: '8px',
+                      fontSize: '12px',
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
+                {mockProductCategories.map((c, idx) => {
+                  const pct = totalCategoryRevenue > 0 ? (c.revenue / totalCategoryRevenue) * 100 : 0;
+                  return (
+                    <div key={c.category} className="flex items-center gap-2 text-xs">
+                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
+                      <span className="truncate">{c.category}</span>
+                      <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </CardContent>
         </Card>
