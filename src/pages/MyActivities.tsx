@@ -1,11 +1,12 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
+import { MonthlyStats } from '@/components/activities/MonthlyStats';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -91,6 +92,21 @@ const MyActivities = () => {
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+
+  // Sort state
+  type SortKey = 'activity_date' | 'type' | 'account';
+  const [sortKey, setSortKey] = useState<SortKey>('activity_date');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  const toggleSort = useCallback((key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortKey(key);
+      setSortDir(key === 'activity_date' ? 'desc' : 'asc');
+    }
+    setCurrentPage(1);
+  }, [sortKey]);
 
   const fetchData = async () => {
     if (!user) return;
@@ -196,10 +212,10 @@ const MyActivities = () => {
     return accounts.find(a => a.id === accountId)?.name || accountId;
   };
 
-  // Filtered activities — reset page on filter change
+  // Filtered & sorted activities
   const filteredActivities = useMemo(() => {
     setCurrentPage(1);
-    return activities.filter(a => {
+    const filtered = activities.filter(a => {
       if (filterType !== 'all' && a.type !== filterType) return false;
       if (filterAccount !== 'all' && a.account_id !== filterAccount) return false;
       if (filterDateFrom && a.activity_date < filterDateFrom) return false;
@@ -213,7 +229,19 @@ const MyActivities = () => {
       }
       return true;
     });
-  }, [activities, filterType, filterAccount, filterDateFrom, filterDateTo, filterSearch, accounts]);
+
+    return [...filtered].sort((a, b) => {
+      let cmp = 0;
+      if (sortKey === 'activity_date') {
+        cmp = a.activity_date.localeCompare(b.activity_date);
+      } else if (sortKey === 'type') {
+        cmp = (activityLabels[a.type] || a.type).localeCompare(activityLabels[b.type] || b.type);
+      } else if (sortKey === 'account') {
+        cmp = getAccountName(a.account_id).localeCompare(getAccountName(b.account_id));
+      }
+      return sortDir === 'asc' ? cmp : -cmp;
+    });
+  }, [activities, filterType, filterAccount, filterDateFrom, filterDateTo, filterSearch, accounts, sortKey, sortDir]);
 
   const typeCounts = activities.reduce((acc, a) => {
     acc[a.type] = (acc[a.type] || 0) + 1;
@@ -390,6 +418,9 @@ const MyActivities = () => {
       {/* Weekly Trend Chart */}
       <WeeklyTrendChart activities={activities} />
 
+      {/* Monthly Statistics */}
+      <MonthlyStats activities={activities} />
+
       {/* Activity Log */}
       <Card>
         <CardHeader className="pb-3">
@@ -459,9 +490,21 @@ const MyActivities = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Date</TableHead>
-                  <TableHead className="text-xs">Type</TableHead>
-                  <TableHead className="text-xs">Account</TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('activity_date')}>
+                    <span className="inline-flex items-center gap-1">
+                      Date {sortKey === 'activity_date' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                    </span>
+                  </TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                    <span className="inline-flex items-center gap-1">
+                      Type {sortKey === 'type' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                    </span>
+                  </TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('account')}>
+                    <span className="inline-flex items-center gap-1">
+                      Account {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                    </span>
+                  </TableHead>
                   <TableHead className="text-xs">Notes</TableHead>
                   <TableHead className="text-xs">Next Action</TableHead>
                   <TableHead className="text-xs w-[80px]">Actions</TableHead>
