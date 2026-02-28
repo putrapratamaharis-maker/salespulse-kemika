@@ -150,6 +150,86 @@ export type Database = {
           },
         ]
       }
+      kpi_definitions: {
+        Row: {
+          created_at: string
+          data_source: Database["public"]["Enums"]["kpi_data_source"]
+          default_target: number
+          default_weight: number
+          description: string | null
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          org_role: Database["public"]["Enums"]["org_role"]
+        }
+        Insert: {
+          created_at?: string
+          data_source: Database["public"]["Enums"]["kpi_data_source"]
+          default_target?: number
+          default_weight?: number
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          org_role: Database["public"]["Enums"]["org_role"]
+        }
+        Update: {
+          created_at?: string
+          data_source?: Database["public"]["Enums"]["kpi_data_source"]
+          default_target?: number
+          default_weight?: number
+          description?: string | null
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          org_role?: Database["public"]["Enums"]["org_role"]
+        }
+        Relationships: []
+      }
+      kpi_user_configs: {
+        Row: {
+          created_at: string
+          id: string
+          kpi_definition_id: string
+          month: string
+          target: number | null
+          updated_at: string
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kpi_definition_id: string
+          month: string
+          target?: number | null
+          updated_at?: string
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kpi_definition_id?: string
+          month?: string
+          target?: number | null
+          updated_at?: string
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_user_configs_kpi_definition_id_fkey"
+            columns: ["kpi_definition_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_definitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_categories: {
         Row: {
           created_at: string
@@ -380,6 +460,19 @@ export type Database = {
         | "negotiation"
         | "closed_won"
         | "closed_lost"
+      kpi_data_source:
+        | "revenue_achievement"
+        | "margin_compliance"
+        | "win_rate"
+        | "pipeline_health"
+        | "activity_count"
+        | "team_activity_compliance"
+        | "coaching_notes_given"
+        | "rep_coverage"
+        | "deal_volume"
+        | "avg_deal_size"
+        | "collection_rate"
+        | "segment_specific"
       org_role:
         | "sales_manager"
         | "supervisor"
@@ -520,6 +613,20 @@ export const Constants = {
         "negotiation",
         "closed_won",
         "closed_lost",
+      ],
+      kpi_data_source: [
+        "revenue_achievement",
+        "margin_compliance",
+        "win_rate",
+        "pipeline_health",
+        "activity_count",
+        "team_activity_compliance",
+        "coaching_notes_given",
+        "rep_coverage",
+        "deal_volume",
+        "avg_deal_size",
+        "collection_rate",
+        "segment_specific",
       ],
       org_role: [
         "sales_manager",
