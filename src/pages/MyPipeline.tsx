@@ -4,11 +4,12 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { getUserDeals, mockAccounts } from '@/data/mockData';
-import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle } from 'lucide-react';
+import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
 import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
+import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 
 const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
@@ -55,7 +56,16 @@ const MyPipeline = () => {
     return days <= 30 && days >= 0;
   });
 
+  const nextMonthClose = activeDeals.filter(d => {
+    const closeDate = new Date(d.expectedCloseDate);
+    const now = new Date();
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    const nextMonthEnd = new Date(now.getFullYear(), now.getMonth() + 2, 0);
+    return closeDate >= nextMonth && closeDate <= nextMonthEnd;
+  });
+
   const staleDeals = activeDeals.filter(d => d.daysInStage > 10);
+  const stuckDeals14 = activeDeals.filter(d => d.daysInStage > 14);
 
   const stageSummary = stageOrder.filter(s => !['canceled', 'lost'].includes(s)).map(stage => {
     const stageDeals = deals.filter(d => d.stage === stage);
@@ -89,6 +99,15 @@ const MyPipeline = () => {
         <KPICard label="Active Deals" value={String(activeDeals.length)} icon={GitBranch} autoFitText />
         <KPICard label="Avg Probability" value={formatPercent(avgProbability)} status={avgProbability >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
       </div>
+
+      {/* Row 2 KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} change={nextMonthClose.reduce((s, d) => s + d.value, 0) > 0 ? undefined : undefined} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText />
+        <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
+      </div>
+
+      {/* Kanban Board */}
+      <KanbanBoard deals={deals} getAccountName={getAccountName} />
 
       {/* Stage Funnel */}
       <Card>
