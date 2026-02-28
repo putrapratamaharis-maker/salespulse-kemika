@@ -31,6 +31,10 @@ interface SalesActivity {
   account_id: string | null;
   notes: string | null;
   next_action_date: string | null;
+  cost: number | null;
+  purpose: string | null;
+  outcome: string | null;
+  evidence_url: string | null;
   created_at: string;
 }
 
@@ -89,6 +93,11 @@ const MyActivities = () => {
   const [formAccountId, setFormAccountId] = useState<string>('');
   const [formNotes, setFormNotes] = useState('');
   const [formNextActionDate, setFormNextActionDate] = useState('');
+  const [formCost, setFormCost] = useState('');
+  const [formPurpose, setFormPurpose] = useState('');
+  const [formOutcome, setFormOutcome] = useState('');
+  const [formEvidenceFile, setFormEvidenceFile] = useState<File | null>(null);
+  const [uploadingEvidence, setUploadingEvidence] = useState(false);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -137,6 +146,10 @@ const MyActivities = () => {
     setFormAccountId('');
     setFormNotes('');
     setFormNextActionDate('');
+    setFormCost('');
+    setFormPurpose('');
+    setFormOutcome('');
+    setFormEvidenceFile(null);
     setEditingActivity(null);
   };
 
@@ -147,12 +160,63 @@ const MyActivities = () => {
     setFormAccountId(act.account_id || '');
     setFormNotes(act.notes || '');
     setFormNextActionDate(act.next_action_date || '');
+    setFormCost(act.cost != null ? String(act.cost) : '');
+    setFormPurpose(act.purpose || '');
+    setFormOutcome(act.outcome || '');
+    setFormEvidenceFile(null);
     setDialogOpen(true);
   };
 
+  const ALLOWED_EVIDENCE_TYPES = [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'application/vnd.ms-excel',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'image/png',
+    'image/jpeg',
+    'text/plain',
+  ];
+  const MAX_EVIDENCE_SIZE = 5 * 1024 * 1024; // 5MB
+
   const handleSubmit = async () => {
     if (!user) return;
+    if (!formPurpose.trim()) {
+      toast({ title: 'Validation', description: 'Purpose/Tujuan wajib diisi.', variant: 'destructive' });
+      return;
+    }
+    if (!formOutcome.trim()) {
+      toast({ title: 'Validation', description: 'Outcome/Hasil wajib diisi.', variant: 'destructive' });
+      return;
+    }
     setSubmitting(true);
+
+    // Upload evidence file if present
+    let evidenceUrl: string | null = editingActivity?.evidence_url ?? null;
+    if (formEvidenceFile) {
+      if (!ALLOWED_EVIDENCE_TYPES.includes(formEvidenceFile.type)) {
+        toast({ title: 'Invalid file', description: 'Format file tidak didukung. Gunakan PDF, Word, Excel, PNG, JPEG, atau TXT.', variant: 'destructive' });
+        setSubmitting(false);
+        return;
+      }
+      if (formEvidenceFile.size > MAX_EVIDENCE_SIZE) {
+        toast({ title: 'File too large', description: 'Ukuran file maksimal 5MB.', variant: 'destructive' });
+        setSubmitting(false);
+        return;
+      }
+      setUploadingEvidence(true);
+      const ext = formEvidenceFile.name.split('.').pop();
+      const filePath = `${user.id}/${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('activity-evidence').upload(filePath, formEvidenceFile);
+      setUploadingEvidence(false);
+      if (uploadError) {
+        toast({ title: 'Upload error', description: uploadError.message, variant: 'destructive' });
+        setSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('activity-evidence').getPublicUrl(filePath);
+      evidenceUrl = urlData.publicUrl;
+    }
 
     const payload = {
       type: formType,
@@ -160,6 +224,10 @@ const MyActivities = () => {
       account_id: formAccountId || null,
       notes: formNotes || null,
       next_action_date: formNextActionDate || null,
+      cost: formCost ? parseFloat(formCost) : null,
+      purpose: formPurpose || null,
+      outcome: formOutcome || null,
+      evidence_url: evidenceUrl,
     };
 
     let error;
@@ -325,7 +393,7 @@ const MyActivities = () => {
                 Add Activity
               </Button>
             </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingActivity ? 'Edit Activity' : 'Add New Activity'}</DialogTitle>
             </DialogHeader>
@@ -346,15 +414,24 @@ const MyActivities = () => {
                 <Input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Account (optional)</Label>
+                <Label>Account/Customer <span className="text-muted-foreground text-xs">(optional)</span></Label>
                 <Select value={formAccountId} onValueChange={setFormAccountId}>
-                  <SelectTrigger><SelectValue placeholder="Select account" /></SelectTrigger>
+                  <SelectTrigger><SelectValue placeholder="Select account/customer" /></SelectTrigger>
                   <SelectContent>
                     {accounts.map(a => (
                       <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Purpose/Tujuan <span className="text-destructive">*</span></Label>
+                <Textarea
+                  placeholder="Tujuan aktivitas ini..."
+                  value={formPurpose}
+                  onChange={e => setFormPurpose(e.target.value)}
+                  maxLength={500}
+                />
               </div>
               <div className="space-y-2">
                 <Label>Notes</Label>
@@ -366,12 +443,48 @@ const MyActivities = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Next Action Date (optional)</Label>
+                <Label>Outcome/Hasil <span className="text-destructive">*</span></Label>
+                <Textarea
+                  placeholder="Hasil dari aktivitas ini..."
+                  value={formOutcome}
+                  onChange={e => setFormOutcome(e.target.value)}
+                  maxLength={500}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Activity Cost/Budget (Rp.) <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input
+                  type="number"
+                  min={0}
+                  placeholder="0"
+                  value={formCost}
+                  onChange={e => setFormCost(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Evidence of Activity <span className="text-muted-foreground text-xs">(optional, max 5MB)</span></Label>
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpeg,.jpg,.txt"
+                  onChange={e => setFormEvidenceFile(e.target.files?.[0] || null)}
+                />
+                {editingActivity?.evidence_url && !formEvidenceFile && (
+                  <p className="text-xs text-muted-foreground">
+                    File tersimpan:{' '}
+                    <a href={editingActivity.evidence_url} target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                      Lihat file
+                    </a>
+                  </p>
+                )}
+                <p className="text-xs text-muted-foreground">Format: PDF, Word, Excel, PNG, JPEG, JPG, TXT</p>
+              </div>
+              <div className="space-y-2">
+                <Label>Next Action Date <span className="text-muted-foreground text-xs">(optional)</span></Label>
                 <Input type="date" value={formNextActionDate} onChange={e => setFormNextActionDate(e.target.value)} />
               </div>
-              <Button onClick={handleSubmit} disabled={submitting || !formDate} className="w-full">
-                {submitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                {editingActivity ? 'Update Activity' : 'Save Activity'}
+              <Button onClick={handleSubmit} disabled={submitting || uploadingEvidence || !formDate} className="w-full">
+                {(submitting || uploadingEvidence) ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+                {uploadingEvidence ? 'Uploading...' : editingActivity ? 'Update Activity' : 'Save Activity'}
               </Button>
             </div>
           </DialogContent>
@@ -506,7 +619,7 @@ const MyActivities = () => {
                   </TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('account')}>
                     <span className="inline-flex items-center gap-1">
-                      Account {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                      Account/Customer {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
                     </span>
                   </TableHead>
                   <TableHead className="text-xs">Notes</TableHead>

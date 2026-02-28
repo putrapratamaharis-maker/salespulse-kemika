@@ -384,10 +384,14 @@ export type Database = {
         Row: {
           account_id: string | null
           activity_date: string
+          cost: number | null
           created_at: string
+          evidence_url: string | null
           id: string
           next_action_date: string | null
           notes: string | null
+          outcome: string | null
+          purpose: string | null
           sales_id: string
           type: string
           updated_at: string
@@ -395,10 +399,14 @@ export type Database = {
         Insert: {
           account_id?: string | null
           activity_date?: string
+          cost?: number | null
           created_at?: string
+          evidence_url?: string | null
           id?: string
           next_action_date?: string | null
           notes?: string | null
+          outcome?: string | null
+          purpose?: string | null
           sales_id: string
           type?: string
           updated_at?: string
@@ -406,10 +414,14 @@ export type Database = {
         Update: {
           account_id?: string | null
           activity_date?: string
+          cost?: number | null
           created_at?: string
+          evidence_url?: string | null
           id?: string
           next_action_date?: string | null
           notes?: string | null
+          outcome?: string | null
+          purpose?: string | null
           sales_id?: string
           type?: string
           updated_at?: string
