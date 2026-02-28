@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { getUserDeals, mockAccounts } from '@/data/mockData';
-import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert } from 'lucide-react';
+import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
@@ -40,6 +40,8 @@ const MyPipeline = () => {
   const [deletedDealIds, setDeletedDealIds] = useState<Set<string>>(new Set());
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [sortKey, setSortKey] = useState<'value' | 'probability' | 'expectedCloseDate' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
 
   const baseDeals = getUserDeals(currentUser.id);
@@ -246,37 +248,69 @@ const MyPipeline = () => {
       </div>
 
       {/* All Deals Table */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">All Deals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Deal</TableHead>
-                <TableHead className="text-xs">Account</TableHead>
-                <TableHead className="text-xs">Stage</TableHead>
-                <TableHead className="text-xs">Value</TableHead>
-                <TableHead className="text-xs">Probability</TableHead>
-                <TableHead className="text-xs">Expected Close</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {deals.map(d => (
-                <TableRow key={d.id}>
-                  <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                  <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
-                  <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
-                  <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
-                  <TableCell className="text-sm">{d.probability}%</TableCell>
-                  <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      {(() => {
+        const toggleSort = (key: 'value' | 'probability' | 'expectedCloseDate') => {
+          if (sortKey === key) {
+            setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+          } else {
+            setSortKey(key);
+            setSortDir('desc');
+          }
+        };
+        const SortIcon = ({ col }: { col: string }) => {
+          if (sortKey !== col) return <ArrowUpDown className="inline h-3 w-3 ml-1 text-muted-foreground" />;
+          return sortDir === 'asc'
+            ? <ArrowUp className="inline h-3 w-3 ml-1 text-primary" />
+            : <ArrowDown className="inline h-3 w-3 ml-1 text-primary" />;
+        };
+        const sortedDeals = [...deals].sort((a, b) => {
+          if (!sortKey) return 0;
+          let cmp = 0;
+          if (sortKey === 'value') cmp = a.value - b.value;
+          else if (sortKey === 'probability') cmp = a.probability - b.probability;
+          else cmp = new Date(a.expectedCloseDate).getTime() - new Date(b.expectedCloseDate).getTime();
+          return sortDir === 'asc' ? cmp : -cmp;
+        });
+        return (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-sm font-semibold">All Deals</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs">Deal</TableHead>
+                    <TableHead className="text-xs">Account</TableHead>
+                    <TableHead className="text-xs">Stage</TableHead>
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>
+                      Value <SortIcon col="value" />
+                    </TableHead>
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>
+                      Probability <SortIcon col="probability" />
+                    </TableHead>
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>
+                      Expected Close <SortIcon col="expectedCloseDate" />
+                    </TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedDeals.map(d => (
+                    <TableRow key={d.id}>
+                      <TableCell className="text-sm font-medium">{d.name}</TableCell>
+                      <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
+                      <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
+                      <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                      <TableCell className="text-sm">{d.probability}%</TableCell>
+                      <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        );
+      })()}
 
       {/* Edit Deal Dialog */}
       <EditDealDialog
