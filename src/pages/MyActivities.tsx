@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown, Settings2 } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown, Settings2, Eye, ExternalLink } from 'lucide-react';
 import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { MonthlyStats } from '@/components/activities/MonthlyStats';
@@ -81,6 +81,7 @@ const MyActivities = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingActivity, setEditingActivity] = useState<SalesActivity | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<SalesActivity | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Filter state
   const [filterType, setFilterType] = useState<string>('all');
@@ -734,9 +735,14 @@ const MyActivities = () => {
                       {visibleColumns.has('evidence') && (
                         <TableCell className="text-sm">
                           {act.evidence_url ? (
-                            <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
-                              View File
-                            </a>
+                            <div className="flex items-center gap-1">
+                              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-primary gap-1" onClick={() => setPreviewUrl(act.evidence_url)}>
+                                <Eye className="h-3 w-3" /> Preview
+                              </Button>
+                              <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                                <ExternalLink className="h-3 w-3" />
+                              </a>
+                            </div>
                           ) : '-'}
                         </TableCell>
                       )}
@@ -791,6 +797,48 @@ const MyActivities = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Evidence Preview Modal */}
+      <Dialog open={!!previewUrl} onOpenChange={(open) => { if (!open) setPreviewUrl(null); }}>
+        <DialogContent className="sm:max-w-3xl max-h-[90vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>Evidence Preview</span>
+              {previewUrl && (
+                <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                    <ExternalLink className="h-3.5 w-3.5" /> Open in new tab
+                  </Button>
+                </a>
+              )}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex-1 min-h-0 overflow-auto">
+            {previewUrl && (() => {
+              const lower = previewUrl.toLowerCase();
+              const isImage = /\.(png|jpe?g|gif|webp)(\?|$)/i.test(lower);
+              const isPdf = /\.pdf(\?|$)/i.test(lower);
+              if (isImage) {
+                return <img src={previewUrl} alt="Evidence" className="max-w-full h-auto rounded-md mx-auto" />;
+              }
+              if (isPdf) {
+                return <iframe src={previewUrl} className="w-full h-[70vh] rounded-md border" title="PDF Preview" />;
+              }
+              return (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                  <FileText className="h-12 w-12 text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Preview tidak tersedia untuk format file ini.</p>
+                  <a href={previewUrl} target="_blank" rel="noopener noreferrer">
+                    <Button variant="outline" size="sm" className="gap-1.5">
+                      <Download className="h-4 w-4" /> Download File
+                    </Button>
+                  </a>
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
