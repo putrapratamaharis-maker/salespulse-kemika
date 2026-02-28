@@ -1,10 +1,12 @@
-import { useState, useRef, DragEvent } from 'react';
-import { Deal, DealStage, formatIDR } from '@/types/sales';
+import { useState, useRef, useMemo, DragEvent } from 'react';
+import { Deal, DealStage, Segment, formatIDR } from '@/types/sales';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Pencil, Trash2, GripVertical } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Pencil, Trash2, GripVertical, Search, Filter, X } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -54,13 +56,51 @@ interface KanbanBoardProps {
   onStageChange?: (dealId: string, newStage: DealStage) => void;
 }
 
+const segmentOptions: { value: string; label: string }[] = [
+  { value: 'all', label: 'All Segments' },
+  { value: 'B2G', label: 'B2G' },
+  { value: 'B2B', label: 'B2B' },
+  { value: 'B2C', label: 'B2C/e-Commerce' },
+];
+
+const valueRanges = [
+  { value: 'all', label: 'All Values' },
+  { value: 'under50', label: '< Rp 50 Jt' },
+  { value: '50to200', label: 'Rp 50–200 Jt' },
+  { value: 'above200', label: '> Rp 200 Jt' },
+];
+
 export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageChange }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [segmentFilter, setSegmentFilter] = useState('all');
+  const [valueFilter, setValueFilter] = useState('all');
   const dragDealId = useRef<string | null>(null);
 
+  const filteredDeals = useMemo(() => {
+    return deals.filter(d => {
+      // Search by deal name or account name
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const matchName = d.name.toLowerCase().includes(q);
+        const matchAccount = getAccountName(d.accountId).toLowerCase().includes(q);
+        if (!matchName && !matchAccount) return false;
+      }
+      // Segment filter
+      if (segmentFilter !== 'all' && d.segment !== segmentFilter) return false;
+      // Value range filter
+      if (valueFilter === 'under50' && d.value >= 50_000_000) return false;
+      if (valueFilter === '50to200' && (d.value < 50_000_000 || d.value > 200_000_000)) return false;
+      if (valueFilter === 'above200' && d.value <= 200_000_000) return false;
+      return true;
+    });
+  }, [deals, searchQuery, segmentFilter, valueFilter, getAccountName]);
+
+  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all';
+
   const kanbanData = stageOrder.map(stage => {
-    const stageDeals = deals.filter(d => d.stage === stage);
+    const stageDeals = filteredDeals.filter(d => d.stage === stage);
     const totalValue = stageDeals.reduce((s, d) => s + d.value, 0);
     return { stage, label: stageLabels[stage], color: stageColors[stage], deals: stageDeals, totalValue };
   });
@@ -98,7 +138,46 @@ export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageCh
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">Pipeline Kanban</CardTitle>
+          <div className="flex flex-col gap-3">
+            <CardTitle className="text-sm font-semibold">Pipeline Kanban</CardTitle>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="relative flex-1 min-w-[180px] max-w-xs">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                <Input
+                  placeholder="Search deal or account..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  className="h-8 pl-8 text-xs"
+                />
+              </div>
+              <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {segmentOptions.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={valueFilter} onValueChange={setValueFilter}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {valueRanges.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); }}>
+                  <X className="h-3 w-3 mr-1" /> Clear
+                </Button>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
