@@ -1,7 +1,8 @@
-import { useMemo } from 'react';
-import { format, parseISO, startOfMonth, subMonths } from 'date-fns';
+import { useMemo, useState } from 'react';
+import { format, startOfMonth, subMonths } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 interface SalesActivity {
@@ -22,11 +23,20 @@ interface MonthlyStatsProps {
   activities: SalesActivity[];
 }
 
+const RANGE_OPTIONS = [
+  { value: '3', label: 'Last 3 Months' },
+  { value: '6', label: 'Last 6 Months' },
+  { value: '12', label: 'Last 12 Months' },
+];
+
 export const MonthlyStats = ({ activities }: MonthlyStatsProps) => {
+  const [range, setRange] = useState('6');
+
   const monthlyData = useMemo(() => {
+    const count = parseInt(range, 10);
     const now = new Date();
     const months: { key: string; label: string }[] = [];
-    for (let i = 5; i >= 0; i--) {
+    for (let i = count - 1; i >= 0; i--) {
       const d = subMonths(startOfMonth(now), i);
       months.push({ key: format(d, 'yyyy-MM'), label: format(d, 'MMM yyyy') });
     }
@@ -50,14 +60,26 @@ export const MonthlyStats = ({ activities }: MonthlyStatsProps) => {
       const prevTotal = prevKey ? Object.values(grouped[prevKey]).reduce((s, v) => s + v, 0) : null;
       return { ...m, types, total, prevTotal };
     });
-  }, [activities]);
+  }, [activities, range]);
 
   const types = Object.keys(activityLabels);
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm font-semibold">Monthly Statistics (Last 6 Months)</CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-semibold">Monthly Statistics</CardTitle>
+          <Select value={range} onValueChange={setRange}>
+            <SelectTrigger className="w-[150px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {RANGE_OPTIONS.map(opt => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="overflow-x-auto">
