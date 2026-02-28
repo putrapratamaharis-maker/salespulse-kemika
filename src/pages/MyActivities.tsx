@@ -1,11 +1,28 @@
-import { StatusBadge } from '@/components/StatusBadge';
+import { useEffect, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
-import { useAppContext } from '@/context/AppContext';
-import { formatDate } from '@/types/sales';
-import { getUserActivities, mockAccounts } from '@/data/mockData';
-import { Activity, Phone, Users, Mail, MapPin, FileText, Clock } from 'lucide-react';
+import { StatusBadge } from '@/components/StatusBadge';
+import { Activity, Phone, Users, Mail, MapPin, FileText, Clock, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { format } from 'date-fns';
+
+interface SalesActivity {
+  id: string;
+  sales_id: string;
+  type: string;
+  activity_date: string;
+  account_id: string | null;
+  notes: string | null;
+  next_action_date: string | null;
+  created_at: string;
+}
+
+interface Account {
+  id: string;
+  name: string;
+}
 
 const activityIcons: Record<string, React.ElementType> = {
   call: Phone,
@@ -24,20 +41,45 @@ const activityColors: Record<string, 'green' | 'yellow' | 'red'> = {
 };
 
 const MyActivities = () => {
-  const { currentUser } = useAppContext();
-  const activities = getUserActivities(currentUser.id);
+  const { user, profile } = useAuth();
+  const [activities, setActivities] = useState<SalesActivity[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const getAccountName = (accountId: string) =>
-    mockAccounts.find(a => a.id === accountId)?.name || accountId;
+  useEffect(() => {
+    if (!user) return;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      const [actRes, accRes] = await Promise.all([
+        supabase
+          .from('sales_activities')
+          .select('*')
+          .eq('sales_id', user.id)
+          .order('activity_date', { ascending: false }),
+        supabase.from('accounts').select('id, name'),
+      ]);
 
-  // Activity summary
+      if (actRes.data) setActivities(actRes.data as SalesActivity[]);
+      if (accRes.data) setAccounts(accRes.data as Account[]);
+      setLoading(false);
+    };
+
+    fetchData();
+  }, [user]);
+
+  const getAccountName = (accountId: string | null) => {
+    if (!accountId) return '-';
+    return accounts.find(a => a.id === accountId)?.name || accountId;
+  };
+
   const typeCounts = activities.reduce((acc, a) => {
     acc[a.type] = (acc[a.type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
   const thisWeek = activities.filter(a => {
-    const d = new Date(a.date);
+    const d = new Date(a.activity_date);
     const now = new Date();
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     return d >= weekAgo;
@@ -45,21 +87,26 @@ const MyActivities = () => {
 
   const minWeeklyTarget = 5;
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-foreground">My Activities</h2>
-        <p className="text-sm text-muted-foreground">Activity log & tracking — {currentUser.name}</p>
+        <p className="text-sm text-muted-foreground">
+          Activity log & tracking — {profile?.full_name || user?.email}
+        </p>
       </div>
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          label="Total Activities"
-          value={String(activities.length)}
-          icon={Activity}
-          autoFitText
-        />
+        <KPICard label="Total Activities" value={String(activities.length)} icon={Activity} autoFitText />
         <KPICard
           label="This Week"
           value={String(thisWeek.length)}
@@ -68,18 +115,8 @@ const MyActivities = () => {
           icon={Clock}
           autoFitText
         />
-        <KPICard
-          label="Meetings"
-          value={String(typeCounts['meeting'] || 0)}
-          icon={Users}
-          autoFitText
-        />
-        <KPICard
-          label="Visits"
-          value={String(typeCounts['visit'] || 0)}
-          icon={MapPin}
-          autoFitText
-        />
+        <KPICard label="Meetings" value={String(typeCounts['meeting'] || 0)} icon={Users} autoFitText />
+        <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText />
       </div>
 
       {/* Activity Type Breakdown */}
@@ -111,7 +148,7 @@ const MyActivities = () => {
         </CardHeader>
         <CardContent>
           {activities.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No activities recorded.</p>
+            <p className="text-sm text-muted-foreground">No activities recorded yet.</p>
           ) : (
             <Table>
               <TableHeader>
@@ -120,6 +157,7 @@ const MyActivities = () => {
                   <TableHead className="text-xs">Type</TableHead>
                   <TableHead className="text-xs">Account</TableHead>
                   <TableHead className="text-xs">Notes</TableHead>
+                  <TableHead className="text-xs">Next Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,15 +165,20 @@ const MyActivities = () => {
                   const Icon = activityIcons[act.type] || Activity;
                   return (
                     <TableRow key={act.id}>
-                      <TableCell className="text-sm">{formatDate(act.date)}</TableCell>
+                      <TableCell className="text-sm">
+                        {format(new Date(act.activity_date), 'dd MMM yyyy')}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-1.5">
                           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
                           <StatusBadge status={activityColors[act.type] || 'green'} label={act.type} />
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm font-medium">{getAccountName(act.accountId)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{act.notes}</TableCell>
+                      <TableCell className="text-sm font-medium">{getAccountName(act.account_id)}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">{act.notes || '-'}</TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {act.next_action_date ? format(new Date(act.next_action_date), 'dd MMM yyyy') : '-'}
+                      </TableCell>
                     </TableRow>
                   );
                 })}
