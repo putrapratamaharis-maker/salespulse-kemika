@@ -4,6 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download } from 'lucide-react';
+import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
+import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -85,6 +87,10 @@ const MyActivities = () => {
   const [formAccountId, setFormAccountId] = useState<string>('');
   const [formNotes, setFormNotes] = useState('');
   const [formNextActionDate, setFormNextActionDate] = useState('');
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const fetchData = async () => {
     if (!user) return;
@@ -180,6 +186,7 @@ const MyActivities = () => {
     setFilterDateFrom('');
     setFilterDateTo('');
     setFilterSearch('');
+    setCurrentPage(1);
   };
 
   const hasActiveFilters = filterType !== 'all' || filterAccount !== 'all' || filterDateFrom || filterDateTo || filterSearch;
@@ -189,8 +196,9 @@ const MyActivities = () => {
     return accounts.find(a => a.id === accountId)?.name || accountId;
   };
 
-  // Filtered activities
+  // Filtered activities — reset page on filter change
   const filteredActivities = useMemo(() => {
+    setCurrentPage(1);
     return activities.filter(a => {
       if (filterType !== 'all' && a.type !== filterType) return false;
       if (filterAccount !== 'all' && a.account_id !== filterAccount) return false;
@@ -379,6 +387,9 @@ const MyActivities = () => {
         </CardContent>
       </Card>
 
+      {/* Weekly Trend Chart */}
+      <WeeklyTrendChart activities={activities} />
+
       {/* Activity Log */}
       <Card>
         <CardHeader className="pb-3">
@@ -457,7 +468,9 @@ const MyActivities = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredActivities.map(act => {
+                {filteredActivities
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map(act => {
                   const Icon = activityIcons[act.type] || Activity;
                   return (
                     <TableRow key={act.id}>
@@ -492,11 +505,13 @@ const MyActivities = () => {
             </Table>
           )}
 
-          {hasActiveFilters && activities.length > 0 && (
-            <p className="text-xs text-muted-foreground text-center">
-              Showing {filteredActivities.length} of {activities.length} activities
-            </p>
-          )}
+          <ActivityPagination
+            currentPage={currentPage}
+            totalItems={filteredActivities.length}
+            pageSize={pageSize}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={setPageSize}
+          />
         </CardContent>
       </Card>
 
