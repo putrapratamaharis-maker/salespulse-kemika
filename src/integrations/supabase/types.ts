@@ -380,6 +380,50 @@ export type Database = {
           },
         ]
       }
+      sales_activities: {
+        Row: {
+          account_id: string | null
+          activity_date: string
+          created_at: string
+          id: string
+          next_action_date: string | null
+          notes: string | null
+          sales_id: string
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: string | null
+          activity_date?: string
+          created_at?: string
+          id?: string
+          next_action_date?: string | null
+          notes?: string | null
+          sales_id: string
+          type?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string | null
+          activity_date?: string
+          created_at?: string
+          id?: string
+          next_action_date?: string | null
+          notes?: string | null
+          sales_id?: string
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_activities_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       targets: {
         Row: {
           created_at: string
