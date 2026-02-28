@@ -1,14 +1,24 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useAppContext } from '@/context/AppContext';
+import { SalesPersonDashboard } from '@/components/dashboards/SalesPersonDashboard';
+import { SupervisorDashboard } from '@/components/dashboards/SupervisorDashboard';
+import { ManagerDashboard } from '@/components/dashboards/ManagerDashboard';
+import { RepManagementDashboard } from '@/components/dashboards/RepManagementDashboard';
 
 const Index = () => {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const { currentUser } = useAppContext();
+
+  switch (currentUser.orgRole) {
+    case 'sales_person':
+      return <SalesPersonDashboard />;
+    case 'supervisor':
+      return <SupervisorDashboard />;
+    case 'sales_manager':
+      return <ManagerDashboard />;
+    case 'representative_management':
+      return <RepManagementDashboard />;
+    default:
+      return <ManagerDashboard />;
+  }
 };
 
 export default Index;
