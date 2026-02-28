@@ -78,9 +78,9 @@ export default function Auth() {
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold" style={{ color: 'hsl(174, 60%, 50%)' }}>
-              SalesPulse
+              KEMIKA SalesPulse
             </CardTitle>
-            <CardDescription>Reset password Anda</CardDescription>
+            <CardDescription>Sales Performance Control System Dashboard</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleResetPassword} className="space-y-4">
@@ -113,10 +113,10 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold" style={{ color: 'hsl(174, 60%, 50%)' }}>
-            SalesPulse
-          </CardTitle>
-          <CardDescription>Performance Control System</CardDescription>
+            <CardTitle className="text-2xl font-bold" style={{ color: 'hsl(174, 60%, 50%)' }}>
+              KEMIKA SalesPulse
+            </CardTitle>
+            <CardDescription>Sales Performance Control System Dashboard</CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">

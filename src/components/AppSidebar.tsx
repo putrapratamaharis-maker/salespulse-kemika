@@ -55,14 +55,14 @@ export function AppSidebar() {
         {!collapsed && (
           <div>
             <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight" style={{ color: 'hsl(174, 60%, 50%)' }}>
-              SalesPulse
+              KEMIKA SalesPulse
             </h1>
-            <p className="text-xs text-sidebar-muted mt-0.5">Performance Control System</p>
+            <p className="text-[9px] text-sidebar-muted mt-0.5 whitespace-nowrap">Sales Performance Control System Dashboard</p>
           </div>
         )}
         {collapsed && (
           <div className="flex justify-center">
-            <span className="text-lg font-bold" style={{ color: 'hsl(174, 60%, 50%)' }}>SP</span>
+            <span className="text-lg font-bold" style={{ color: 'hsl(174, 60%, 50%)' }}>KS</span>
           </div>
         )}
       </SidebarHeader>
