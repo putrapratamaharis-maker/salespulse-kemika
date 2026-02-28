@@ -413,14 +413,6 @@ const MyActivities = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportPDF}>
-            <Download className="h-4 w-4" />
-            PDF
-          </Button>
-          <Button variant="outline" size="sm" className="gap-1.5" onClick={exportExcel}>
-            <Download className="h-4 w-4" />
-            Excel
-          </Button>
           <Dialog open={dialogOpen} onOpenChange={(open) => { setDialogOpen(open); if (!open) resetForm(); }}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1.5">
@@ -567,18 +559,22 @@ const MyActivities = () => {
         </CardContent>
       </Card>
 
-      {/* Weekly Trend Chart */}
-      <WeeklyTrendChart activities={activities} />
-
-      {/* Monthly Statistics */}
-      <MonthlyStats activities={activities} />
-
-      {/* Activity Log */}
+      {/* Activity Log - Row 3 */}
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">Full Activity Log</CardTitle>
             <div className="flex items-center gap-2">
+              <Select onValueChange={(val) => { if (val === 'pdf') exportPDF(); if (val === 'excel') exportExcel(); }}>
+                <SelectTrigger className="h-7 w-auto gap-1.5 text-xs px-2.5">
+                  <Download className="h-3.5 w-3.5" />
+                  <SelectValue placeholder="Download Report" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="pdf">Export PDF</SelectItem>
+                  <SelectItem value="excel">Export Excel</SelectItem>
+                </SelectContent>
+              </Select>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs">
@@ -608,6 +604,7 @@ const MyActivities = () => {
             </div>
           </div>
         </CardHeader>
+
         <CardContent className="space-y-4">
           {/* Filters */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -777,6 +774,12 @@ const MyActivities = () => {
           />
         </CardContent>
       </Card>
+
+      {/* Weekly Trend Chart */}
+      <WeeklyTrendChart activities={activities} />
+
+      {/* Monthly Statistics */}
+      <MonthlyStats activities={activities} />
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}>
