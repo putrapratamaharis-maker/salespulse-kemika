@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown, Settings2 } from 'lucide-react';
 import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { MonthlyStats } from '@/components/activities/MonthlyStats';
@@ -20,6 +20,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 
@@ -107,6 +109,31 @@ const MyActivities = () => {
   type SortKey = 'activity_date' | 'type' | 'account';
   const [sortKey, setSortKey] = useState<SortKey>('activity_date');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Column visibility state
+  type ColumnKey = 'date' | 'type' | 'account' | 'purpose' | 'outcome' | 'notes' | 'cost' | 'evidence' | 'next_action';
+  const allColumns: { key: ColumnKey; label: string }[] = [
+    { key: 'date', label: 'Date' },
+    { key: 'type', label: 'Type' },
+    { key: 'account', label: 'Account/Customer' },
+    { key: 'purpose', label: 'Purpose' },
+    { key: 'outcome', label: 'Outcome' },
+    { key: 'notes', label: 'Notes' },
+    { key: 'cost', label: 'Cost (Rp.)' },
+    { key: 'evidence', label: 'Evidence' },
+    { key: 'next_action', label: 'Next Action' },
+  ];
+  const [visibleColumns, setVisibleColumns] = useState<Set<ColumnKey>>(
+    new Set(['date', 'type', 'account', 'purpose', 'outcome', 'notes', 'cost', 'evidence', 'next_action'])
+  );
+  const toggleColumn = (key: ColumnKey) => {
+    setVisibleColumns(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) { if (next.size > 2) next.delete(key); } // keep at least 2
+      else next.add(key);
+      return next;
+    });
+  };
 
   const toggleSort = useCallback((key: SortKey) => {
     if (sortKey === key) {
@@ -330,24 +357,31 @@ const MyActivities = () => {
     filteredActivities.map(a => ({
       Date: format(new Date(a.activity_date), 'dd MMM yyyy'),
       Type: activityLabels[a.type] || a.type,
-      Account: getAccountName(a.account_id),
+      'Account/Customer': getAccountName(a.account_id),
+      Purpose: a.purpose || '-',
+      Outcome: a.outcome || '-',
       Notes: a.notes || '-',
+      'Cost (Rp.)': a.cost != null ? a.cost : '-',
+      Evidence: a.evidence_url || '-',
       'Next Action': a.next_action_date ? format(new Date(a.next_action_date), 'dd MMM yyyy') : '-',
     }));
 
+  const exportHeaders = ['Date', 'Type', 'Account/Customer', 'Purpose', 'Outcome', 'Notes', 'Cost (Rp.)', 'Evidence', 'Next Action'];
+
   const exportPDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF({ orientation: 'landscape' });
     doc.setFontSize(14);
     doc.text('My Activities Report', 14, 15);
     doc.setFontSize(9);
     doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 22);
     const data = getExportData();
     autoTable(doc, {
-      head: [['Date', 'Type', 'Account', 'Notes', 'Next Action']],
-      body: data.map(r => [r.Date, r.Type, r.Account, r.Notes, r['Next Action']]),
+      head: [exportHeaders],
+      body: data.map(r => exportHeaders.map(h => String(r[h as keyof typeof r]))),
       startY: 28,
-      styles: { fontSize: 8 },
+      styles: { fontSize: 7, cellPadding: 2 },
       headStyles: { fillColor: [59, 130, 246] },
+      columnStyles: { 7: { cellWidth: 30 } },
     });
     doc.save('my-activities.pdf');
   };
@@ -543,11 +577,34 @@ const MyActivities = () => {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">Full Activity Log</CardTitle>
-            {hasActiveFilters && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-xs h-7">
-                <X className="h-3 w-3" /> Clear filters
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-1.5 h-7 text-xs">
+                    <Settings2 className="h-3.5 w-3.5" /> Columns
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-52 p-3">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Toggle columns</p>
+                  <div className="space-y-2">
+                    {allColumns.map(col => (
+                      <label key={col.key} className="flex items-center gap-2 text-sm cursor-pointer">
+                        <Checkbox
+                          checked={visibleColumns.has(col.key)}
+                          onCheckedChange={() => toggleColumn(col.key)}
+                        />
+                        {col.label}
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-1 text-xs h-7">
+                  <X className="h-3 w-3" /> Clear filters
+                </Button>
+              )}
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -607,27 +664,33 @@ const MyActivities = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('activity_date')}>
-                    <span className="inline-flex items-center gap-1">
-                      Date {sortKey === 'activity_date' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('type')}>
-                    <span className="inline-flex items-center gap-1">
-                      Type {sortKey === 'type' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('account')}>
-                    <span className="inline-flex items-center gap-1">
-                      Account/Customer {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
-                    </span>
-                  </TableHead>
-                  <TableHead className="text-xs">Purpose</TableHead>
-                  <TableHead className="text-xs">Outcome</TableHead>
-                  <TableHead className="text-xs">Notes</TableHead>
-                  <TableHead className="text-xs">Cost (Rp.)</TableHead>
-                  <TableHead className="text-xs">Evidence</TableHead>
-                  <TableHead className="text-xs">Next Action</TableHead>
+                  {visibleColumns.has('date') && (
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('activity_date')}>
+                      <span className="inline-flex items-center gap-1">
+                        Date {sortKey === 'activity_date' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                      </span>
+                    </TableHead>
+                  )}
+                  {visibleColumns.has('type') && (
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                      <span className="inline-flex items-center gap-1">
+                        Type {sortKey === 'type' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                      </span>
+                    </TableHead>
+                  )}
+                  {visibleColumns.has('account') && (
+                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('account')}>
+                      <span className="inline-flex items-center gap-1">
+                        Account/Customer {sortKey === 'account' ? (sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />) : <ArrowUpDown className="h-3 w-3 text-muted-foreground" />}
+                      </span>
+                    </TableHead>
+                  )}
+                  {visibleColumns.has('purpose') && <TableHead className="text-xs">Purpose</TableHead>}
+                  {visibleColumns.has('outcome') && <TableHead className="text-xs">Outcome</TableHead>}
+                  {visibleColumns.has('notes') && <TableHead className="text-xs">Notes</TableHead>}
+                  {visibleColumns.has('cost') && <TableHead className="text-xs">Cost (Rp.)</TableHead>}
+                  {visibleColumns.has('evidence') && <TableHead className="text-xs">Evidence</TableHead>}
+                  {visibleColumns.has('next_action') && <TableHead className="text-xs">Next Action</TableHead>}
                   <TableHead className="text-xs w-[80px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -638,32 +701,50 @@ const MyActivities = () => {
                   const Icon = activityIcons[act.type] || Activity;
                   return (
                     <TableRow key={act.id}>
-                      <TableCell className="text-sm">
-                        {format(new Date(act.activity_date), 'dd MMM yyyy')}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5">
-                          <Icon className="h-3.5 w-3.5 text-muted-foreground" />
-                          <StatusBadge status={activityColors[act.type] || 'green'} label={activityLabels[act.type] || act.type} />
-                        </div>
-                      </TableCell>
-                      <TableCell className="text-sm font-medium">{getAccountName(act.account_id)}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.purpose || '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.outcome || '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{act.notes || '-'}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {act.cost != null ? `Rp ${act.cost.toLocaleString('id-ID')}` : '-'}
-                      </TableCell>
-                      <TableCell className="text-sm">
-                        {act.evidence_url ? (
-                          <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
-                            View File
-                          </a>
-                        ) : '-'}
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">
-                        {act.next_action_date ? format(new Date(act.next_action_date), 'dd MMM yyyy') : '-'}
-                      </TableCell>
+                      {visibleColumns.has('date') && (
+                        <TableCell className="text-sm">
+                          {format(new Date(act.activity_date), 'dd MMM yyyy')}
+                        </TableCell>
+                      )}
+                      {visibleColumns.has('type') && (
+                        <TableCell>
+                          <div className="flex items-center gap-1.5">
+                            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                            <StatusBadge status={activityColors[act.type] || 'green'} label={activityLabels[act.type] || act.type} />
+                          </div>
+                        </TableCell>
+                      )}
+                      {visibleColumns.has('account') && (
+                        <TableCell className="text-sm font-medium">{getAccountName(act.account_id)}</TableCell>
+                      )}
+                      {visibleColumns.has('purpose') && (
+                        <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.purpose || '-'}</TableCell>
+                      )}
+                      {visibleColumns.has('outcome') && (
+                        <TableCell className="text-sm text-muted-foreground max-w-[180px] truncate">{act.outcome || '-'}</TableCell>
+                      )}
+                      {visibleColumns.has('notes') && (
+                        <TableCell className="text-sm text-muted-foreground max-w-[200px] truncate">{act.notes || '-'}</TableCell>
+                      )}
+                      {visibleColumns.has('cost') && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {act.cost != null ? `Rp ${act.cost.toLocaleString('id-ID')}` : '-'}
+                        </TableCell>
+                      )}
+                      {visibleColumns.has('evidence') && (
+                        <TableCell className="text-sm">
+                          {act.evidence_url ? (
+                            <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-xs">
+                              View File
+                            </a>
+                          ) : '-'}
+                        </TableCell>
+                      )}
+                      {visibleColumns.has('next_action') && (
+                        <TableCell className="text-sm text-muted-foreground">
+                          {act.next_action_date ? format(new Date(act.next_action_date), 'dd MMM yyyy') : '-'}
+                        </TableCell>
+                      )}
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditDialog(act)}>
