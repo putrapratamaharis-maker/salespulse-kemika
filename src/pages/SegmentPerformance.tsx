@@ -1,7 +1,7 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatPercent } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { mockInvoices, mockDeals } from '@/data/mockData';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,12 +25,12 @@ function SegmentKPIs({ segment }: { segment: 'B2G' | 'B2B' | 'B2C' }) {
   if (segment === 'B2G') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} />
-        <KPICard label="Avg Deal Size" value={formatIDR(avgDealSize)} icon={DollarSign} />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} />
-        <KPICard label="Revenue MTD" value={formatIDR(revenue)} change={9.2} changeLabel="vs last month" icon={TrendingUp} />
-        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} />
-        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} />
+        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText />
+        <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={DollarSign} autoFitText />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} change={9.2} changeLabel="vs last month" icon={TrendingUp} autoFitText />
+        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} autoFitText />
+        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} autoFitText />
       </div>
     );
   }
@@ -38,26 +38,26 @@ function SegmentKPIs({ segment }: { segment: 'B2G' | 'B2B' | 'B2C' }) {
   if (segment === 'B2B') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Revenue MTD" value={formatIDR(revenue)} change={15.1} changeLabel="vs last month" icon={DollarSign} />
-        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} />
-        <KPICard label="Avg Order Value" value={formatIDR(avgDealSize)} icon={ShoppingCart} />
-        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} />
-        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} change={15.1} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText />
+        <KPICard label="Avg Order Value" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText />
+        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} autoFitText />
+        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} autoFitText />
       </div>
     );
   }
 
   // B2C
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <KPICard label="Revenue MTD" value={formatIDR(revenue)} change={5.8} changeLabel="vs last month" icon={DollarSign} />
-      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} />
-      <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} />
-      <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} />
-      <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} />
-      <KPICard label="Marketplaces" value="2 Active" icon={Users} />
-    </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} change={5.8} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} autoFitText />
+        <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} autoFitText />
+        <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} autoFitText />
+        <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} autoFitText />
+        <KPICard label="Marketplaces" value="2 Active" icon={Users} autoFitText />
+      </div>
   );
 }
 

@@ -1,7 +1,7 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
 import { getUserInvoices, getUserDeals, getUserTarget, getUserActivities } from '@/data/mockData';
 import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -37,15 +37,15 @@ export function SalesPersonDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Revenue MTD" value={formatIDR(revenue)} change={12.5} changeLabel="vs last month" icon={DollarSign} />
-        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} />
-        <KPICard label="Pipeline Value" value={formatIDR(pipelineValue)} icon={BarChart3} />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} change={12.5} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
+        <KPICard label="Pipeline Value" value={formatIDRFull(pipelineValue)} icon={BarChart3} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <KPICard label="Weighted Forecast" value={formatIDR(weightedForecast)} change={8.2} changeLabel="confidence" icon={TrendingUp} />
-        <KPICard label="Weekly Activities" value={String(activities.length)} changeLabel={`${activities.length >= 5 ? 'On track' : 'Below minimum'}`} status={activities.length >= 5 ? 'green' : 'red'} icon={Clock} />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.2} changeLabel="confidence" icon={TrendingUp} autoFitText />
+        <KPICard label="Weekly Activities" value={String(activities.length)} changeLabel={`${activities.length >= 5 ? 'On track' : 'Below minimum'}`} status={activities.length >= 5 ? 'green' : 'red'} icon={Clock} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">

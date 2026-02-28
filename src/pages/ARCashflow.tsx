@@ -1,6 +1,6 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatDate } from '@/types/sales';
+import { formatIDR, formatIDRFull, formatDate } from '@/types/sales';
 import { mockInvoices } from '@/data/mockData';
 import { CreditCard, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,10 +35,10 @@ const ARCashflow = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Outstanding" value={formatIDR(totalOutstanding)} icon={CreditCard} />
-        <KPICard label="Total Overdue" value={formatIDR(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} />
-        <KPICard label="Collected MTD" value={formatIDR(totalPaid)} icon={CheckCircle} />
-        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} />
+        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText />
+        <KPICard label="Total Overdue" value={formatIDRFull(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText />
+        <KPICard label="Collected MTD" value={formatIDRFull(totalPaid)} icon={CheckCircle} autoFitText />
+        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
