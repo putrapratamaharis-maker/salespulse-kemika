@@ -371,15 +371,20 @@ const MyActivities = () => {
 
   const exportPDF = () => {
     const doc = new jsPDF({ orientation: 'landscape' });
+    const salesName = profile?.full_name || 'N/A';
+    const salesSegment = profile?.segment || 'N/A';
     doc.setFontSize(14);
     doc.text('My Activities Report', 14, 15);
+    doc.setFontSize(10);
+    doc.text(`Sales Person: ${salesName}`, 14, 23);
+    doc.text(`Segment: ${salesSegment}`, 14, 29);
     doc.setFontSize(9);
-    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 22);
+    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}`, 14, 36);
     const data = getExportData();
     autoTable(doc, {
       head: [exportHeaders],
       body: data.map(r => exportHeaders.map(h => String(r[h as keyof typeof r]))),
-      startY: 28,
+      startY: 42,
       styles: { fontSize: 7, cellPadding: 2 },
       headStyles: { fillColor: [59, 130, 246] },
       columnStyles: { 7: { cellWidth: 30 } },
@@ -388,8 +393,17 @@ const MyActivities = () => {
   };
 
   const exportExcel = () => {
+    const salesName = profile?.full_name || 'N/A';
+    const salesSegment = profile?.segment || 'N/A';
+    const headerRows = [
+      { Date: 'My Activities Report' },
+      { Date: `Sales Person: ${salesName}` },
+      { Date: `Segment: ${salesSegment}` },
+      { Date: `Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')}` },
+      {},
+    ];
     const data = getExportData();
-    const ws = XLSX.utils.json_to_sheet(data);
+    const ws = XLSX.utils.json_to_sheet([...headerRows, ...data]);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Activities');
     XLSX.writeFile(wb, 'my-activities.xlsx');
