@@ -25,6 +25,7 @@ export function ManagerDashboard() {
   const [topProducts, setTopProducts] = useState<ProductWithCategory[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryRevenue[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [categoryView, setCategoryView] = useState<'donut' | 'bar'>('donut');
 
   // Existing mock data calculations
   const totalRevenue = mockInvoices.reduce((s, i) => s + i.netSales, 0);
@@ -241,79 +242,77 @@ export function ManagerDashboard() {
         </Card>
       </div>
 
-      {/* Kategori Produk — Donut + Bar side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
+      {/* Kategori Produk — Toggle Donut / Bar */}
+      <Card>
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <Layers className="h-4 w-4 text-accent" />
-              Kategori Produk — Donut
+              Kategori Produk
             </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingProducts ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : categoryData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Belum ada data kategori.</p>
-            ) : (
-              <div className="flex flex-col items-center">
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="revenue" nameKey="category" paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={2}>
-                      {categoryData.map((_, idx) => (
-                        <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
-                  {categoryData.map((c, idx) => {
-                    const pct = totalCategoryRevenue > 0 ? (c.revenue / totalCategoryRevenue) * 100 : 0;
-                    return (
-                      <div key={c.category} className="flex items-center gap-2 text-xs">
-                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
-                        <span className="truncate">{c.category}</span>
-                        <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Layers className="h-4 w-4 text-accent" />
-              Kategori Produk — Bar
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loadingProducts ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : categoryData.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-6">Belum ada data kategori.</p>
-            ) : (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={categoryData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
-                  <YAxis type="category" dataKey="category" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
-                  <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                  <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+            <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-0.5">
+              <button
+                onClick={() => setCategoryView('donut')}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${categoryView === 'donut' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Donut
+              </button>
+              <button
+                onClick={() => setCategoryView('bar')}
+                className={`px-2.5 py-1 text-xs font-medium rounded transition-colors ${categoryView === 'bar' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+              >
+                Bar
+              </button>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {loadingProducts ? (
+            <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : categoryData.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Belum ada data kategori.</p>
+          ) : categoryView === 'donut' ? (
+            <div className="flex flex-col items-center">
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={categoryData} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="revenue" nameKey="category" paddingAngle={3} stroke="hsl(var(--card))" strokeWidth={2}>
                     {categoryData.map((_, idx) => (
                       <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
                     ))}
-                  </Bar>
-                </BarChart>
+                  </Pie>
+                  <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                </PieChart>
               </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
+                {categoryData.map((c, idx) => {
+                  const pct = totalCategoryRevenue > 0 ? (c.revenue / totalCategoryRevenue) * 100 : 0;
+                  return (
+                    <div key={c.category} className="flex items-center gap-2 text-xs">
+                      <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: CATEGORY_COLORS[idx % CATEGORY_COLORS.length] }} />
+                      <span className="truncate">{c.category}</span>
+                      <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={280}>
+              <BarChart data={categoryData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
+                <YAxis type="category" dataKey="category" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
+                <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+                  {categoryData.map((_, idx) => (
+                    <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
