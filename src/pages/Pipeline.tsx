@@ -12,6 +12,11 @@ import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 
 const Pipeline = () => {
   const [salesFilter, setSalesFilter] = useState<string>('all');
+  const [localDeals, setLocalDeals] = useState(mockDeals);
+
+  const handleStageChange = (dealId: string, newStage: DealStage) => {
+    setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0 } : d));
+  };
 
   // Get sales users who have deals
   const salesWithDeals = useMemo(() => {
@@ -29,8 +34,8 @@ const Pipeline = () => {
 
   // Company-wide pipeline — aggregates deals from ALL sales users (or filtered)
   const allDeals = salesFilter === 'all'
-    ? mockDeals
-    : mockDeals.filter(d => d.salesId === salesFilter);
+    ? localDeals
+    : localDeals.filter(d => d.salesId === salesFilter);
   const openDeals = allDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
@@ -53,7 +58,7 @@ const Pipeline = () => {
 
   // Sales comparison data — always from ALL deals (ignores filter)
   const salesComparisonData = useMemo(() => {
-    const allOpen = mockDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
+    const allOpen = localDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
     const salesIds = [...new Set(allOpen.map(d => d.salesId))];
     return salesIds.map(id => {
       const userDeals = allOpen.filter(d => d.salesId === id);
@@ -64,7 +69,7 @@ const Pipeline = () => {
         deals: userDeals.length,
       };
     }).sort((a, b) => b.pipeline - a.pipeline);
-  }, []);
+  }, [localDeals]);
 
   const filterLabel = salesFilter === 'all' ? 'all sales team' : getSalesName(salesFilter);
 
@@ -133,6 +138,7 @@ const Pipeline = () => {
         deals={allDeals}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
+        onStageChange={handleStageChange}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
