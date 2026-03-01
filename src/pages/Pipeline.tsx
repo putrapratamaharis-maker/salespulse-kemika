@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 
 const Pipeline = () => {
   const [salesFilter, setSalesFilter] = useState<string>('all');
@@ -22,6 +23,9 @@ const Pipeline = () => {
 
   const getSalesName = (salesId: string) =>
     mockUsers.find(u => u.id === salesId)?.name || salesId;
+
+  const getAccountName = (accountId: string) =>
+    mockAccounts.find(a => a.id === accountId)?.name || accountId;
 
   // Company-wide pipeline — aggregates deals from ALL sales users (or filtered)
   const allDeals = salesFilter === 'all'
@@ -124,6 +128,11 @@ const Pipeline = () => {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+      {/* Kanban Board — read-only view */}
+      <KanbanBoard
+        deals={allDeals}
+        getAccountName={getAccountName}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
