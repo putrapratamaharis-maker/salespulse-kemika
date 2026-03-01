@@ -1,38 +1,43 @@
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { mockDeals, mockAccounts } from '@/data/mockData';
 import { TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 
-const STAGE_COLORS: Record<string, string> = {
-  prospect: 'hsl(var(--chart-5))',
-  qualification: 'hsl(var(--chart-3))',
-  proposal: 'hsl(var(--chart-4))',
-  negotiation: 'hsl(var(--chart-2))',
-  closed_won: 'hsl(var(--chart-1))',
-};
+
+
 
 const Pipeline = () => {
-  const openDeals = mockDeals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
+  // Company-wide pipeline — aggregates deals from ALL sales users
+  const allDeals = mockDeals;
+  const openDeals = allDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
   const stuckDeals = openDeals.filter(d => d.daysInStage > 10);
 
   // Stage breakdown
-  const stages = ['prospect', 'qualification', 'proposal', 'negotiation'];
+  const stages: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
+  const STAGE_COLORS: Record<string, string> = {
+    prospect: 'hsl(var(--chart-5))',
+    quotation: 'hsl(var(--chart-3))',
+    negotiation: 'hsl(var(--chart-4))',
+    po_secured: 'hsl(var(--chart-2))',
+    invoice_issued: 'hsl(var(--chart-1))',
+  };
   const stageData = stages.map(stage => ({
-    name: stage.charAt(0).toUpperCase() + stage.slice(1),
+    name: stage.replace('_', ' ').replace(/\b\w/g, c => c.toUpperCase()),
     value: openDeals.filter(d => d.stage === stage).reduce((s, d) => s + d.value, 0),
+    color: STAGE_COLORS[stage],
   })).filter(s => s.value > 0);
 
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-bold text-foreground">Pipeline & Forecast</h2>
-        <p className="text-sm text-muted-foreground">{openDeals.length} open deals in pipeline</p>
+        <p className="text-sm text-muted-foreground">Company-wide — {openDeals.length} open deals from all sales team</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -50,8 +55,8 @@ const Pipeline = () => {
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie data={stageData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {stageData.map((_, i) => (
-                    <Cell key={i} fill={Object.values(STAGE_COLORS)[i % Object.values(STAGE_COLORS).length]} />
+                  {stageData.map((entry, i) => (
+                    <Cell key={i} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip formatter={(val: number) => formatIDR(val)} />

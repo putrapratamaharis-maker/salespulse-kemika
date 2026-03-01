@@ -3,7 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
-import { getUserDeals, mockAccounts, mockDeals, getAllDownstreamIds } from '@/data/mockData';
+import { getUserDeals, mockAccounts } from '@/data/mockData';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -44,16 +44,8 @@ const MyPipeline = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const { toast } = useToast();
 
-  const baseDeals = useMemo(() => {
-    const ownDeals = getUserDeals(currentUser.id);
-    if (ownDeals.length > 0) return ownDeals;
-    // If manager/supervisor with no own deals, show downstream deals
-    const downstreamIds = getAllDownstreamIds(currentUser.id);
-    if (downstreamIds.length > 0) {
-      return mockDeals.filter(d => downstreamIds.includes(d.salesId));
-    }
-    return ownDeals;
-  }, [currentUser.id]);
+  // Personal only — show only the logged-in user's own deals
+  const baseDeals = useMemo(() => getUserDeals(currentUser.id), [currentUser.id]);
   const deals = [...baseDeals, ...addedDeals]
     .filter(d => !deletedDealIds.has(d.id))
     .map(d => editedDeals[d.id] || d);
