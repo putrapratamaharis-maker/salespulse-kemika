@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
@@ -14,7 +15,8 @@ import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend
 } from 'recharts';
-import { useNavigate } from 'react-router-dom';
+
+
 import {
   getUserInvoices, getUserDeals, getUserTarget, getUserActivities
 } from '@/data/mockData';
@@ -77,6 +79,13 @@ const MyPerformance = () => {
   const [target, setTarget] = useState<TargetRow | null>(null);
   const [activities, setActivities] = useState<ActivityRow[]>([]);
   const [useMock, setUseMock] = useState(false);
+
+  // Redirect non-sales_person to KPIs page
+  useEffect(() => {
+    if (currentUser.orgRole !== 'sales_person') {
+      navigate('/my-performance/kpis', { replace: true });
+    }
+  }, [currentUser.orgRole, navigate]);
 
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
