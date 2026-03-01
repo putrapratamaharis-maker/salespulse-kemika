@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -53,6 +53,8 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const [page, setPage] = useState(1);
+  const perPage = 5;
 
   const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || dateFrom || dateTo;
 
@@ -62,7 +64,15 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
     setSegmentFilter('all');
     setDateFrom(undefined);
     setDateTo(undefined);
+    setPage(1);
   };
+
+  // Reset page when filters change
+  const setSearchAndReset = (v: string) => { setSearch(v); setPage(1); };
+  const setStageAndReset = (v: string) => { setStageFilter(v); setPage(1); };
+  const setSegmentAndReset = (v: string) => { setSegmentFilter(v); setPage(1); };
+  const setDateFromAndReset = (v: Date | undefined) => { setDateFrom(v); setPage(1); };
+  const setDateToAndReset = (v: Date | undefined) => { setDateTo(v); setPage(1); };
 
   const filteredAndSorted = useMemo(() => {
     let result = deals.filter(d => !['canceled', 'lost'].includes(d.stage));
@@ -98,6 +108,9 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
     return result;
   }, [deals, search, stageFilter, segmentFilter, dateFrom, dateTo, sortKey, sortDir, getSalesName, getAccountName]);
 
+  const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / perPage));
+  const paginatedDeals = filteredAndSorted.slice((page - 1) * perPage, page * perPage);
+
   const handleSort = (key: string) => {
     if (sortKey === key) {
       setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
@@ -121,11 +134,11 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
               <Input
                 placeholder="Search deal, account, or sales..."
                 value={search}
-                onChange={e => setSearch(e.target.value)}
+                onChange={e => setSearchAndReset(e.target.value)}
                 className="h-8 pl-8 text-xs"
               />
             </div>
-            <Select value={stageFilter} onValueChange={setStageFilter}>
+            <Select value={stageFilter} onValueChange={setStageAndReset}>
               <SelectTrigger className="h-8 w-[130px] text-xs">
                 <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
                 <SelectValue />
@@ -136,7 +149,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
                 ))}
               </SelectContent>
             </Select>
-            <Select value={segmentFilter} onValueChange={setSegmentFilter}>
+            <Select value={segmentFilter} onValueChange={setSegmentAndReset}>
               <SelectTrigger className="h-8 w-[130px] text-xs">
                 <SelectValue />
               </SelectTrigger>
@@ -156,7 +169,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dateFrom} onSelect={setDateFrom} initialFocus className={cn("p-3 pointer-events-auto")} />
+                <Calendar mode="single" selected={dateFrom} onSelect={setDateFromAndReset} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
 
@@ -169,7 +182,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={dateTo} onSelect={setDateTo} initialFocus className={cn("p-3 pointer-events-auto")} />
+                <Calendar mode="single" selected={dateTo} onSelect={setDateToAndReset} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
 
@@ -212,7 +225,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAndSorted.map(d => (
+              paginatedDeals.map(d => (
                 <TableRow key={d.id}>
                   <TableCell>
                     <div className="text-sm font-medium">{d.name}</div>
@@ -236,6 +249,46 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
             )}
           </TableBody>
         </Table>
+
+        {/* Pagination */}
+        {filteredAndSorted.length > perPage && (
+          <div className="flex items-center justify-between pt-4 border-t mt-4">
+            <span className="text-xs text-muted-foreground">
+              Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, filteredAndSorted.length)} of {filteredAndSorted.length} deals
+            </span>
+            <div className="flex items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0"
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+              >
+                <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                <Button
+                  key={p}
+                  variant={p === page ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 w-7 p-0 text-xs"
+                  onClick={() => setPage(p)}
+                >
+                  {p}
+                </Button>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-7 w-7 p-0"
+                disabled={page >= totalPages}
+                onClick={() => setPage(p => p + 1)}
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
