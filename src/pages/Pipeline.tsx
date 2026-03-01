@@ -1,18 +1,32 @@
+import { useState, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
-import { mockDeals, mockAccounts } from '@/data/mockData';
-import { TrendingUp, BarChart3, AlertTriangle } from 'lucide-react';
+import { mockDeals, mockAccounts, mockUsers } from '@/data/mockData';
+import { TrendingUp, BarChart3, AlertTriangle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-
-
-
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Pipeline = () => {
-  // Company-wide pipeline — aggregates deals from ALL sales users
-  const allDeals = mockDeals;
+  const [salesFilter, setSalesFilter] = useState<string>('all');
+
+  // Get sales users who have deals
+  const salesWithDeals = useMemo(() => {
+    const salesIds = [...new Set(mockDeals.map(d => d.salesId))];
+    return salesIds
+      .map(id => mockUsers.find(u => u.id === id))
+      .filter(Boolean) as typeof mockUsers;
+  }, []);
+
+  const getSalesName = (salesId: string) =>
+    mockUsers.find(u => u.id === salesId)?.name || salesId;
+
+  // Company-wide pipeline — aggregates deals from ALL sales users (or filtered)
+  const allDeals = salesFilter === 'all'
+    ? mockDeals
+    : mockDeals.filter(d => d.salesId === salesFilter);
   const openDeals = allDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
@@ -33,11 +47,29 @@ const Pipeline = () => {
     color: STAGE_COLORS[stage],
   })).filter(s => s.value > 0);
 
+  const filterLabel = salesFilter === 'all' ? 'all sales team' : getSalesName(salesFilter);
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Pipeline & Forecast</h2>
-        <p className="text-sm text-muted-foreground">Company-wide — {openDeals.length} open deals from all sales team</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Pipeline & Forecast</h2>
+          <p className="text-sm text-muted-foreground">Company-wide — {openDeals.length} open deals from {filterLabel}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+          <Select value={salesFilter} onValueChange={setSalesFilter}>
+            <SelectTrigger className="w-[200px] h-9 text-xs">
+              <SelectValue placeholder="All Sales Person" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all" className="text-xs">All Sales Person</SelectItem>
+              {salesWithDeals.map(u => (
+                <SelectItem key={u.id} value={u.id} className="text-xs">{u.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -74,6 +106,7 @@ const Pipeline = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Sales</TableHead>
                   <TableHead className="text-xs">Value</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
                   <TableHead className="text-xs">Prob.</TableHead>
@@ -87,6 +120,7 @@ const Pipeline = () => {
                       <div className="text-sm font-medium">{d.name}</div>
                       <div className="text-xs text-muted-foreground">{mockAccounts.find(a => a.id === d.accountId)?.name}</div>
                     </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
                     <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
                     <TableCell>
                       <StatusBadge
