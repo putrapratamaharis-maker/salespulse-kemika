@@ -51,6 +51,7 @@ const stageBgColors: Record<string, string> = {
 interface KanbanBoardProps {
   deals: Deal[];
   getAccountName: (accountId: string) => string;
+  getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
   onStageChange?: (dealId: string, newStage: DealStage) => void;
@@ -70,7 +71,7 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
-export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageChange }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDelete, onStageChange }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -230,9 +231,15 @@ export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageCh
                             </div>
                           </div>
                           <p className="text-[10px] text-muted-foreground truncate">{getAccountName(d.accountId)}</p>
+                          {getSalesName && (
+                            <p className="text-[10px] text-muted-foreground truncate">Sales: {getSalesName(d.salesId)}</p>
+                          )}
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-bold text-foreground">{formatIDR(d.value)}</span>
-                            <span className="text-[10px] text-muted-foreground">{d.probability}%</span>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground">{d.segment}</span>
+                              <span className="text-[10px] text-muted-foreground">{d.probability}%</span>
+                            </div>
                           </div>
                         </div>
                       ))
