@@ -11,6 +11,7 @@ import { Progress } from '@/components/ui/progress';
 import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
+import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { useToast } from '@/hooks/use-toast';
 
 const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
@@ -42,6 +43,7 @@ const MyPipeline = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [sortKey, setSortKey] = useState<'value' | 'probability' | 'expectedCloseDate' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
 
   // Personal only — show only the logged-in user's own deals
@@ -297,7 +299,7 @@ const MyPipeline = () => {
                 </TableHeader>
                 <TableBody>
                   {sortedDeals.map(d => (
-                    <TableRow key={d.id}>
+                    <TableRow key={d.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailDeal(d)}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
@@ -320,6 +322,13 @@ const MyPipeline = () => {
         onOpenChange={setEditDialogOpen}
         onSave={handleSaveEdit}
         accountOptions={accountOptions}
+      />
+
+      <DealDetailDialog
+        deal={detailDeal}
+        open={!!detailDeal}
+        onOpenChange={(open) => !open && setDetailDeal(null)}
+        getAccountName={getAccountName}
       />
     </div>
   );
