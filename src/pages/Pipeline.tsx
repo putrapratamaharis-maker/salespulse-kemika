@@ -6,7 +6,7 @@ import { mockDeals, mockAccounts, mockUsers } from '@/data/mockData';
 import { TrendingUp, BarChart3, AlertTriangle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const Pipeline = () => {
@@ -47,6 +47,21 @@ const Pipeline = () => {
     color: STAGE_COLORS[stage],
   })).filter(s => s.value > 0);
 
+  // Sales comparison data — always from ALL deals (ignores filter)
+  const salesComparisonData = useMemo(() => {
+    const allOpen = mockDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
+    const salesIds = [...new Set(allOpen.map(d => d.salesId))];
+    return salesIds.map(id => {
+      const userDeals = allOpen.filter(d => d.salesId === id);
+      return {
+        name: (mockUsers.find(u => u.id === id)?.name || id).split(' ')[0],
+        pipeline: userDeals.reduce((s, d) => s + d.value, 0),
+        forecast: userDeals.reduce((s, d) => s + d.value * d.probability / 100, 0),
+        deals: userDeals.length,
+      };
+    }).sort((a, b) => b.pipeline - a.pipeline);
+  }, []);
+
   const filterLabel = salesFilter === 'all' ? 'all sales team' : getSalesName(salesFilter);
 
   return (
@@ -77,6 +92,26 @@ const Pipeline = () => {
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={TrendingUp} autoFitText />
         <KPICard label="Stuck Deals" value={String(stuckDeals.length)} status={stuckDeals.length > 0 ? 'yellow' : 'green'} icon={AlertTriangle} autoFitText />
       </div>
+
+      {/* Sales Comparison Bar Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">Pipeline Comparison per Sales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={salesComparisonData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tickFormatter={(v: number) => formatIDR(v)} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={90} />
+              <Tooltip formatter={(val: number) => formatIDR(val)} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="pipeline" name="Pipeline Value" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="forecast" name="Weighted Forecast" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
