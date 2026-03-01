@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
@@ -36,6 +37,7 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 
 const MyPipeline = () => {
   const { currentUser } = useAppContext();
+  const navigate = useNavigate();
   const [addedDeals, setAddedDeals] = useState<Deal[]>([]);
   const [editedDeals, setEditedDeals] = useState<Record<string, Deal>>({});
   const [deletedDealIds, setDeletedDealIds] = useState<Set<string>>(new Set());
@@ -45,6 +47,13 @@ const MyPipeline = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
+
+  // Redirect non-sales_person to KPIs page
+  useEffect(() => {
+    if (currentUser.orgRole !== 'sales_person') {
+      navigate('/my-performance/kpis', { replace: true });
+    }
+  }, [currentUser.orgRole, navigate]);
 
   // Personal only — show only the logged-in user's own deals
   const baseDeals = useMemo(() => getUserDeals(currentUser.id), [currentUser.id]);
