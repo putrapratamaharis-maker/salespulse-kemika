@@ -19,7 +19,7 @@ interface AllOpenDealsTableProps {
   salesPersons?: { id: string; name: string }[];
 }
 
-const perPageOptions = [10, 25, 50, 100];
+const perPageOptions = [5, 10, 25, 50, 100];
 
 const stageOptions = [
   { value: 'all', label: 'All Stages' },
@@ -58,7 +58,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
-  const [perPage, setPerPage] = useState(10);
+  const [perPage, setPerPage] = useState(5);
 
   const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || salesFilter !== 'all' || dateFrom || dateTo;
 
