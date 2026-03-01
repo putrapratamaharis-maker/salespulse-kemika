@@ -141,65 +141,63 @@ const Pipeline = () => {
         onStageChange={handleStageChange}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Pipeline by Stage</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={stageData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  {stageData.map((entry, i) => (
-                    <Cell key={i} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip formatter={(val: number) => formatIDR(val)} />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold">All Open Deals</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Sales</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
-                  <TableHead className="text-xs">Stage</TableHead>
-                  <TableHead className="text-xs">Prob.</TableHead>
-                  <TableHead className="text-xs">Close</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {openDeals.map(d => (
-                  <TableRow key={d.id}>
-                    <TableCell>
-                      <div className="text-sm font-medium">{d.name}</div>
-                      <div className="text-xs text-muted-foreground">{mockAccounts.find(a => a.id === d.accountId)?.name}</div>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
-                    <TableCell>
-                      <StatusBadge
-                        status={d.daysInStage > 14 ? 'red' : d.daysInStage > 7 ? 'yellow' : 'green'}
-                        label={d.stage.replace('_', ' ')}
-                      />
-                    </TableCell>
-                    <TableCell className="text-sm">{d.probability}%</TableCell>
-                    <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
-                  </TableRow>
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">Pipeline by Stage</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={stageData} cx="50%" cy="50%" outerRadius={90} dataKey="value" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+                {stageData.map((entry, i) => (
+                  <Cell key={i} fill={entry.color} />
                 ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-      </div>
+              </Pie>
+              <Tooltip formatter={(val: number) => formatIDR(val)} />
+            </PieChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm font-semibold">All Open Deals</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead className="text-xs">Deal</TableHead>
+                <TableHead className="text-xs">Sales</TableHead>
+                <TableHead className="text-xs">Value</TableHead>
+                <TableHead className="text-xs">Stage</TableHead>
+                <TableHead className="text-xs">Prob.</TableHead>
+                <TableHead className="text-xs">Close</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {openDeals.map(d => (
+                <TableRow key={d.id}>
+                  <TableCell>
+                    <div className="text-sm font-medium">{d.name}</div>
+                    <div className="text-xs text-muted-foreground">{mockAccounts.find(a => a.id === d.accountId)?.name}</div>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
+                  <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                  <TableCell>
+                    <StatusBadge
+                      status={d.daysInStage > 14 ? 'red' : d.daysInStage > 7 ? 'yellow' : 'green'}
+                      label={d.stage.replace('_', ' ')}
+                    />
+                  </TableCell>
+                  <TableCell className="text-sm">{d.probability}%</TableCell>
+                  <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </div>
   );
 };
