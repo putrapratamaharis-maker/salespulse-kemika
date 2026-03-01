@@ -16,7 +16,10 @@ interface AllOpenDealsTableProps {
   deals: Deal[];
   getSalesName: (salesId: string) => string;
   getAccountName: (accountId: string) => string;
+  salesPersons?: { id: string; name: string }[];
 }
+
+const perPageOptions = [10, 25, 50, 100];
 
 const stageOptions = [
   { value: 'all', label: 'All Stages' },
@@ -45,23 +48,25 @@ const sortColumns = [
 
 const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
 
-export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOpenDealsTableProps) {
+export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [segmentFilter, setSegmentFilter] = useState('all');
+  const [salesFilter, setSalesFilter] = useState('all');
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
-  const perPage = 5;
+  const [perPage, setPerPage] = useState(10);
 
-  const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || dateFrom || dateTo;
+  const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || salesFilter !== 'all' || dateFrom || dateTo;
 
   const clearFilters = () => {
     setSearch('');
     setStageFilter('all');
     setSegmentFilter('all');
+    setSalesFilter('all');
     setDateFrom(undefined);
     setDateTo(undefined);
     setPage(1);
@@ -73,6 +78,8 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
   const setSegmentAndReset = (v: string) => { setSegmentFilter(v); setPage(1); };
   const setDateFromAndReset = (v: Date | undefined) => { setDateFrom(v); setPage(1); };
   const setDateToAndReset = (v: Date | undefined) => { setDateTo(v); setPage(1); };
+  const setSalesAndReset = (v: string) => { setSalesFilter(v); setPage(1); };
+  const setPerPageAndReset = (v: string) => { setPerPage(Number(v)); setPage(1); };
 
   const filteredAndSorted = useMemo(() => {
     let result = deals.filter(d => !['canceled', 'lost'].includes(d.stage));
@@ -87,6 +94,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
     }
     if (stageFilter !== 'all') result = result.filter(d => d.stage === stageFilter);
     if (segmentFilter !== 'all') result = result.filter(d => d.segment === segmentFilter);
+    if (salesFilter !== 'all') result = result.filter(d => d.salesId === salesFilter);
     if (dateFrom) result = result.filter(d => new Date(d.expectedCloseDate) >= dateFrom);
     if (dateTo) result = result.filter(d => new Date(d.expectedCloseDate) <= dateTo);
 
@@ -106,7 +114,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
     }
 
     return result;
-  }, [deals, search, stageFilter, segmentFilter, dateFrom, dateTo, sortKey, sortDir, getSalesName, getAccountName]);
+  }, [deals, search, stageFilter, segmentFilter, salesFilter, dateFrom, dateTo, sortKey, sortDir, getSalesName, getAccountName]);
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / perPage));
   const paginatedDeals = filteredAndSorted.slice((page - 1) * perPage, page * perPage);
@@ -159,6 +167,19 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
                 ))}
               </SelectContent>
             </Select>
+            {salesPersons.length > 0 && (
+              <Select value={salesFilter} onValueChange={setSalesAndReset}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Sales</SelectItem>
+                  {salesPersons.map(s => (
+                    <SelectItem key={s.id} value={s.id} className="text-xs">{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
 
             {/* Date From */}
             <Popover>
@@ -253,40 +274,51 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName }: AllOp
         {/* Pagination */}
         {filteredAndSorted.length > perPage && (
           <div className="flex items-center justify-between pt-4 border-t mt-4">
-            <span className="text-xs text-muted-foreground">
-              Showing {(page - 1) * perPage + 1}–{Math.min(page * perPage, filteredAndSorted.length)} of {filteredAndSorted.length} deals
-            </span>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 p-0"
-                disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
-              >
-                <ChevronLeft className="h-3.5 w-3.5" />
-              </Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <Button
-                  key={p}
-                  variant={p === page ? 'default' : 'outline'}
-                  size="sm"
-                  className="h-7 w-7 p-0 text-xs"
-                  onClick={() => setPage(p)}
-                >
-                  {p}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 w-7 p-0"
-                disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
-              >
-                <ChevronRight className="h-3.5 w-3.5" />
-              </Button>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Show</span>
+              <Select value={String(perPage)} onValueChange={setPerPageAndReset}>
+                <SelectTrigger className="h-7 w-[70px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {perPageOptions.map(n => (
+                    <SelectItem key={n} value={String(n)} className="text-xs">{n}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <span className="text-xs text-muted-foreground">
+                — Showing {Math.min((page - 1) * perPage + 1, filteredAndSorted.length)}–{Math.min(page * perPage, filteredAndSorted.length)} of {filteredAndSorted.length}
+              </span>
             </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - page) <= 1)
+                  .map((p, idx, arr) => {
+                    const prev = arr[idx - 1];
+                    const showEllipsis = prev && p - prev > 1;
+                    return (
+                      <span key={p} className="inline-flex items-center">
+                        {showEllipsis && <span className="text-xs text-muted-foreground px-1">…</span>}
+                        <Button
+                          variant={p === page ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 w-7 p-0 text-xs"
+                          onClick={() => setPage(p)}
+                        >
+                          {p}
+                        </Button>
+                      </span>
+                    );
+                  })}
+                <Button variant="outline" size="sm" className="h-7 w-7 p-0" disabled={page >= totalPages} onClick={() => setPage(p => p + 1)}>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )}
           </div>
         )}
       </CardContent>

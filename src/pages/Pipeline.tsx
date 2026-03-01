@@ -168,6 +168,7 @@ const Pipeline = () => {
         deals={allDeals}
         getSalesName={getSalesName}
         getAccountName={getAccountName}
+        salesPersons={salesWithDeals.map(u => ({ id: u.id, name: u.name }))}
       />
     </div>
   );
