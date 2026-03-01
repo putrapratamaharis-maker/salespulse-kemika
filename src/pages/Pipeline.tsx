@@ -3,18 +3,18 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { mockDeals, mockAccounts, mockUsers } from '@/data/mockData';
-import { TrendingUp, BarChart3, AlertTriangle, Users, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { TrendingUp, BarChart3, AlertTriangle, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
+import { AllOpenDealsTable } from '@/components/pipeline/AllOpenDealsTable';
 
 const Pipeline = () => {
   const [salesFilter, setSalesFilter] = useState<string>('all');
   const [localDeals, setLocalDeals] = useState(mockDeals);
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+
 
   const handleStageChange = (dealId: string, newStage: DealStage) => {
     setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0 } : d));
@@ -43,23 +43,8 @@ const Pipeline = () => {
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
   const stuckDeals = openDeals.filter(d => d.daysInStage > 10);
 
-  const sortedOpenDeals = useMemo(() => {
-    if (!sortKey) return openDeals;
-    const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
-    return [...openDeals].sort((a, b) => {
-      let cmp = 0;
-      switch (sortKey) {
-        case 'value': cmp = a.value - b.value; break;
-        case 'probability': cmp = a.probability - b.probability; break;
-        case 'stage': cmp = stageOrd.indexOf(a.stage) - stageOrd.indexOf(b.stage); break;
-        case 'segment': cmp = a.segment.localeCompare(b.segment); break;
-        case 'sales': cmp = getSalesName(a.salesId).localeCompare(getSalesName(b.salesId)); break;
-        case 'close': cmp = a.expectedCloseDate.localeCompare(b.expectedCloseDate); break;
-        default: cmp = 0;
-      }
-      return sortDir === 'asc' ? cmp : -cmp;
-    });
-  }, [openDeals, sortKey, sortDir]);
+
+
 
   // Stage breakdown
   const stages: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
@@ -179,73 +164,11 @@ const Pipeline = () => {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold">All Open Deals</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Deal</TableHead>
-                {[
-                  { key: 'sales', label: 'Sales' },
-                  { key: 'value', label: 'Value' },
-                  { key: 'stage', label: 'Stage' },
-                  { key: 'segment', label: 'Segment' },
-                  { key: 'probability', label: 'Prob.' },
-                  { key: 'close', label: 'Close' },
-                ].map(col => (
-                  <TableHead
-                    key={col.key}
-                    className="text-xs cursor-pointer select-none hover:text-foreground transition-colors"
-                    onClick={() => {
-                      if (sortKey === col.key) {
-                        setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
-                      } else {
-                        setSortKey(col.key);
-                        setSortDir('asc');
-                      }
-                    }}
-                  >
-                    <span className="inline-flex items-center gap-1">
-                      {col.label}
-                      {sortKey === col.key ? (
-                        sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                      ) : (
-                        <ArrowUpDown className="h-3 w-3 opacity-30" />
-                      )}
-                    </span>
-                  </TableHead>
-                ))}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedOpenDeals.map(d => (
-                <TableRow key={d.id}>
-                  <TableCell>
-                    <div className="text-sm font-medium">{d.name}</div>
-                    <div className="text-xs text-muted-foreground">{mockAccounts.find(a => a.id === d.accountId)?.name}</div>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
-                  <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
-                  <TableCell>
-                    <StatusBadge
-                      status={d.daysInStage > 14 ? 'red' : d.daysInStage > 7 ? 'yellow' : 'green'}
-                      label={d.stage.replace('_', ' ')}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <span className="text-[11px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{d.segment}</span>
-                  </TableCell>
-                  <TableCell className="text-sm">{d.probability}%</TableCell>
-                  <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+      <AllOpenDealsTable
+        deals={allDeals}
+        getSalesName={getSalesName}
+        getAccountName={getAccountName}
+      />
     </div>
   );
 };
