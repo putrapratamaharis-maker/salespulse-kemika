@@ -18,11 +18,11 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 
-const myPerformanceSubItems = [
-  { title: 'My Sales Overview', url: '/my-performance', icon: BarChart3 },
-  { title: "My KPI's & Scores", url: '/my-performance/kpis', icon: Target },
-  { title: 'My Activities', url: '/my-performance/activities', icon: Activity },
-  { title: 'My Leads & Forecast', url: '/my-performance/pipeline', icon: GitBranch },
+const allMyPerformanceSubItems = [
+  { title: 'My Sales Overview', url: '/my-performance', icon: BarChart3, salesOnly: true },
+  { title: "My KPI's & Scores", url: '/my-performance/kpis', icon: Target, salesOnly: false },
+  { title: 'My Activities', url: '/my-performance/activities', icon: Activity, salesOnly: false },
+  { title: 'My Leads & Forecast', url: '/my-performance/pipeline', icon: GitBranch, salesOnly: true },
 ];
 
 const navItems = [
@@ -52,6 +52,8 @@ export function AppSidebar() {
   const { currentUser, setCurrentUser } = useAppContext();
   const location = useLocation();
 
+  const isSalesPerson = currentUser.orgRole === 'sales_person';
+  const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => isSalesPerson || !item.salesOnly);
   const hasTeam = ['sales_manager', 'supervisor'].includes(currentUser.orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(currentUser.systemRole);
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
