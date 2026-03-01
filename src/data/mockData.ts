@@ -47,6 +47,18 @@ export const mockDeals: Deal[] = [
   { id: 'd7', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Q2 Campaign', segment: 'B2C', stage: 'quotation', value: 350_000_000, probability: 55, expectedCloseDate: '2026-03-20', createdAt: '2026-02-05', updatedAt: '2026-02-18', daysInStage: 10 },
   { id: 'd8', accountId: 'a8', salesId: 'u5', name: 'Hospital Bed Procurement', segment: 'B2G', stage: 'po_secured', value: 600_000_000, probability: 100, expectedCloseDate: '2026-02-05', createdAt: '2025-11-15', updatedAt: '2026-02-05', daysInStage: 0 },
   { id: 'd9', accountId: 'a9', salesId: 'u6', name: 'Data Center Upgrade', segment: 'B2B', stage: 'negotiation', value: 1_100_000_000, probability: 70, expectedCloseDate: '2026-03-10', createdAt: '2026-01-08', updatedAt: '2026-02-26', daysInStage: 2 },
+  // Invoice Issued
+  { id: 'd10', accountId: 'a4', salesId: 'u6', name: 'Telkom Cloud Migration', segment: 'B2B', stage: 'invoice_issued', value: 780_000_000, probability: 100, expectedCloseDate: '2026-02-01', createdAt: '2025-10-15', updatedAt: '2026-02-12', daysInStage: 0 },
+  { id: 'd11', accountId: 'a1', salesId: 'u4', name: 'Kemkes SIMRS License', segment: 'B2G', stage: 'invoice_issued', value: 450_000_000, probability: 100, expectedCloseDate: '2026-01-20', createdAt: '2025-09-10', updatedAt: '2026-01-25', daysInStage: 0 },
+  // Canceled
+  { id: 'd12', accountId: 'a7', salesId: 'u8', name: 'Shopee Loyalty Program', segment: 'B2C', stage: 'canceled', value: 280_000_000, probability: 0, expectedCloseDate: '2026-02-28', createdAt: '2026-01-05', updatedAt: '2026-02-15', daysInStage: 0 },
+  { id: 'd13', accountId: 'a2', salesId: 'u5', name: 'Disdik E-Learning Platform', segment: 'B2G', stage: 'canceled', value: 520_000_000, probability: 0, expectedCloseDate: '2026-03-15', createdAt: '2025-12-01', updatedAt: '2026-02-10', daysInStage: 0 },
+  // Lost
+  { id: 'd14', accountId: 'a3', salesId: 'u7', name: 'Astra ERP Integration', segment: 'B2B', stage: 'lost', value: 1_500_000_000, probability: 0, expectedCloseDate: '2026-02-15', createdAt: '2025-11-01', updatedAt: '2026-02-08', daysInStage: 0 },
+  { id: 'd15', accountId: 'a9', salesId: 'u6', name: 'Mandiri ATM Monitoring', segment: 'B2B', stage: 'lost', value: 380_000_000, probability: 0, expectedCloseDate: '2026-01-30', createdAt: '2025-10-20', updatedAt: '2026-01-28', daysInStage: 0 },
+  // Additional
+  { id: 'd16', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Seller Analytics', segment: 'B2C', stage: 'prospect', value: 190_000_000, probability: 20, expectedCloseDate: '2026-05-15', createdAt: '2026-02-18', updatedAt: '2026-02-18', daysInStage: 10 },
+  { id: 'd17', accountId: 'a5', salesId: 'u7', name: 'Unilever IoT Sensors', segment: 'B2B', stage: 'quotation', value: 720_000_000, probability: 45, expectedCloseDate: '2026-04-10', createdAt: '2026-02-10', updatedAt: '2026-02-22', daysInStage: 6 },
 ];
 
 
