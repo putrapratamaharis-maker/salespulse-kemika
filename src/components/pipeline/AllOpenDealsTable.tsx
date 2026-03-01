@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { Deal, DealStage, formatIDR, formatDate } from '@/types/sales';
+import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -59,6 +60,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(5);
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
 
   const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || salesFilter !== 'all' || dateFrom || dateTo;
 
@@ -129,6 +131,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
   };
 
   return (
+    <>
     <Card>
       <CardHeader className="pb-3">
         <div className="flex flex-col gap-3">
@@ -247,7 +250,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
               </TableRow>
             ) : (
               paginatedDeals.map(d => (
-                <TableRow key={d.id}>
+                <TableRow key={d.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailDeal(d)}>
                   <TableCell>
                     <div className="text-sm font-medium">{d.name}</div>
                     <div className="text-xs text-muted-foreground">{getAccountName(d.accountId)}</div>
@@ -323,5 +326,14 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
         )}
       </CardContent>
     </Card>
+
+    <DealDetailDialog
+      deal={detailDeal}
+      open={!!detailDeal}
+      onOpenChange={(open) => !open && setDetailDeal(null)}
+      getAccountName={getAccountName}
+      getSalesName={getSalesName}
+    />
+    </>
   );
 }

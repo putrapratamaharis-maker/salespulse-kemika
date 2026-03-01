@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDR } from '@/types/sales';
+import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -74,6 +75,7 @@ const valueRanges = [
 export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDelete, onStageChange }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
+  const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [valueFilter, setValueFilter] = useState('all');
@@ -211,6 +213,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                           draggable
                           onDragStart={(e) => handleDragStart(e, d.id)}
                           className="bg-card rounded-md border shadow-sm p-2.5 space-y-1 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group"
+                          onClick={() => setDetailDeal(d)}
                         >
                           <div className="flex items-start justify-between gap-1">
                             <div className="flex items-center gap-1 flex-1 min-w-0">
@@ -277,6 +280,14 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <DealDetailDialog
+        deal={detailDeal}
+        open={!!detailDeal}
+        onOpenChange={(open) => !open && setDetailDeal(null)}
+        getAccountName={getAccountName}
+        getSalesName={getSalesName}
+      />
     </>
   );
 }
