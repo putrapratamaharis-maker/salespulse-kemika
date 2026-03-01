@@ -180,8 +180,8 @@ export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageCh
           </div>
         </CardHeader>
         <CardContent className="p-0 pb-4">
-          <ScrollArea className="w-full">
-            <div className="flex gap-3 px-6 min-w-max">
+          <div className="w-full overflow-x-auto">
+            <div className="flex gap-3 px-6 pb-2 min-w-max">
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
@@ -241,7 +241,7 @@ export function KanbanBoard({ deals, getAccountName, onEdit, onDelete, onStageCh
                 </div>
               ))}
             </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
 
