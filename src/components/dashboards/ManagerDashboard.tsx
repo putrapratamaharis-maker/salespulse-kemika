@@ -5,6 +5,7 @@ import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@
 import { mockInvoices, mockDeals, mockTargets, monthlyRevenueData, mockAccounts } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
+import { SalesRevenueRanking } from './SalesRevenueRanking';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
@@ -118,6 +119,9 @@ export function ManagerDashboard() {
         <KPICard label="Actual Revenue" value={formatIDRFull(totalRevenue)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
       </div>
+
+      {/* Sales Revenue Ranking MTD & YTD */}
+      <SalesRevenueRanking />
 
       {/* Revenue by Segment + Revenue Trend side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
