@@ -240,6 +240,56 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_monthly_targets: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          kpi_id: string
+          month: number
+          source: Database["public"]["Enums"]["kpi_target_source"]
+          target_pct: number | null
+          target_value: number | null
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          kpi_id: string
+          month: number
+          source?: Database["public"]["Enums"]["kpi_target_source"]
+          target_pct?: number | null
+          target_value?: number | null
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          kpi_id?: string
+          month?: number
+          source?: Database["public"]["Enums"]["kpi_target_source"]
+          target_pct?: number | null
+          target_value?: number | null
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_monthly_targets_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_template_items: {
         Row: {
           baseline_annual_target_pct: number | null
@@ -693,6 +743,7 @@ export type Database = {
         | "avg_deal_size"
         | "collection_rate"
         | "segment_specific"
+      kpi_target_source: "MANUAL" | "IMPORT" | "AUTO"
       org_role:
         | "sales_manager"
         | "supervisor"
@@ -848,6 +899,7 @@ export const Constants = {
         "collection_rate",
         "segment_specific",
       ],
+      kpi_target_source: ["MANUAL", "IMPORT", "AUTO"],
       org_role: [
         "sales_manager",
         "supervisor",
