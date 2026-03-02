@@ -120,9 +120,6 @@ export function ManagerDashboard() {
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
       </div>
 
-      {/* Sales Revenue Ranking MTD & YTD */}
-      <SalesRevenueRanking />
-
       {/* Revenue by Segment + Revenue Trend side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
@@ -169,6 +166,9 @@ export function ManagerDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Sales Revenue Ranking MTD & YTD */}
+      <SalesRevenueRanking />
 
       {/* Top 10 Customer + Top 10 Produk side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
