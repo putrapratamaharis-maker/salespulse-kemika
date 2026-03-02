@@ -11,7 +11,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Pencil, Copy, Loader2, Search, Trash2, ArrowLeft, Scale } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Plus, Pencil, Copy, Loader2, Search, Trash2, ArrowLeft, Scale, ChevronsUpDown } from 'lucide-react';
 
 // Types
 interface Position {
@@ -55,6 +57,9 @@ const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - 1 + i);
 
 export function KPITemplateManagement() {
+  // KPI picker popover
+  const [kpiPickerOpen, setKpiPickerOpen] = useState(false);
+
   const { toast } = useToast();
 
   // Data
@@ -439,20 +444,37 @@ export function KPITemplateManagement() {
                 <Button variant="outline" size="sm" onClick={normalizeWeights} disabled={items.length === 0}>
                   <Scale className="h-3.5 w-3.5 mr-1" /> Normalisasi Bobot
                 </Button>
-                <Select onValueChange={addKpiItem}>
-                  <SelectTrigger className="h-8 text-xs w-52">
-                    <SelectValue placeholder="+ Tambah KPI..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availableKpis.length === 0 ? (
-                      <SelectItem value="_none" disabled className="text-xs text-muted-foreground">Semua KPI sudah ditambahkan</SelectItem>
-                    ) : (
-                      availableKpis.map(k => (
-                        <SelectItem key={k.id} value={k.id} className="text-xs">{k.kpi_code} — {k.kpi_name}</SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                <Popover open={kpiPickerOpen} onOpenChange={setKpiPickerOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 text-xs w-52 justify-between">
+                      <span>+ Tambah KPI...</span>
+                      <ChevronsUpDown className="h-3 w-3 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-72 p-0" align="end">
+                    <Command>
+                      <CommandInput placeholder="Cari KPI..." className="text-xs" />
+                      <CommandList>
+                        <CommandEmpty className="text-xs py-4 text-center">Tidak ditemukan.</CommandEmpty>
+                        <CommandGroup>
+                          {availableKpis.map(k => (
+                            <CommandItem
+                              key={k.id}
+                              value={`${k.kpi_code} ${k.kpi_name}`}
+                              onSelect={() => {
+                                addKpiItem(k.id);
+                                setKpiPickerOpen(false);
+                              }}
+                              className="text-xs"
+                            >
+                              {k.kpi_code} — {k.kpi_name}
+                            </CommandItem>
+                          ))}
+                        </CommandGroup>
+                      </CommandList>
+                    </Command>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
