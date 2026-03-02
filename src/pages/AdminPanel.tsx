@@ -5,9 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Users, Sliders, Loader2, Target } from 'lucide-react';
+import { Shield, Users, Sliders, Loader2, Target, FileText } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIMasterManagement } from '@/components/admin/KPIMasterManagement';
+import { KPITemplateManagement } from '@/components/admin/KPITemplateManagement';
 import { useToast } from '@/hooks/use-toast';
 import { Constants } from '@/integrations/supabase/types';
 
@@ -143,6 +144,9 @@ const AdminPanel = () => {
           <TabsTrigger value="kpi-master">
             <Target className="h-4 w-4 mr-1" /> KPI Master
           </TabsTrigger>
+          <TabsTrigger value="kpi-templates">
+            <FileText className="h-4 w-4 mr-1" /> KPI Templates
+          </TabsTrigger>
           {isSuperAdmin && (
             <TabsTrigger value="config">
               <Sliders className="h-4 w-4 mr-1" /> Configuration
@@ -246,6 +250,10 @@ const AdminPanel = () => {
 
         <TabsContent value="kpi-master" className="mt-4">
           <KPIMasterManagement />
+        </TabsContent>
+
+        <TabsContent value="kpi-templates" className="mt-4">
+          <KPITemplateManagement />
         </TabsContent>
 
         {isSuperAdmin && (
