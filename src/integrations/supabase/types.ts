@@ -240,6 +240,92 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_template_items: {
+        Row: {
+          baseline_annual_target_pct: number | null
+          baseline_annual_target_value: number | null
+          created_at: string
+          id: string
+          kpi_id: string
+          notes: string | null
+          template_id: string
+          weight_pct: number
+        }
+        Insert: {
+          baseline_annual_target_pct?: number | null
+          baseline_annual_target_value?: number | null
+          created_at?: string
+          id?: string
+          kpi_id: string
+          notes?: string | null
+          template_id: string
+          weight_pct?: number
+        }
+        Update: {
+          baseline_annual_target_pct?: number | null
+          baseline_annual_target_value?: number | null
+          created_at?: string
+          id?: string
+          kpi_id?: string
+          notes?: string | null
+          template_id?: string
+          weight_pct?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_template_items_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_master"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "kpi_template_items_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          position_id: string
+          template_name: string
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position_id: string
+          template_name: string
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position_id?: string
+          template_name?: string
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_templates_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_user_configs: {
         Row: {
           created_at: string
@@ -280,6 +366,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      positions: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          position_code: string
+          position_name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position_code: string
+          position_name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          position_code?: string
+          position_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       product_categories: {
         Row: {
