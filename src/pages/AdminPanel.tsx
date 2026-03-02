@@ -5,11 +5,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Shield, Users, Sliders, Loader2, Target, FileText, CalendarRange } from 'lucide-react';
+import { Shield, Users, Sliders, Loader2, Target, FileText, CalendarRange, TrendingUp } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIMasterManagement } from '@/components/admin/KPIMasterManagement';
 import { KPITemplateManagement } from '@/components/admin/KPITemplateManagement';
 import { MonthlyKPITargets } from '@/components/admin/MonthlyKPITargets';
+import { KPICalculationEngine } from '@/components/admin/KPICalculationEngine';
 import { useToast } from '@/hooks/use-toast';
 import { Constants } from '@/integrations/supabase/types';
 
@@ -151,6 +152,9 @@ const AdminPanel = () => {
           <TabsTrigger value="monthly-targets">
             <CalendarRange className="h-4 w-4 mr-1" /> Target Bulanan
           </TabsTrigger>
+          <TabsTrigger value="kpi-engine">
+            <TrendingUp className="h-4 w-4 mr-1" /> KPI Engine
+          </TabsTrigger>
           {isSuperAdmin && (
             <TabsTrigger value="config">
               <Sliders className="h-4 w-4 mr-1" /> Configuration
@@ -262,6 +266,10 @@ const AdminPanel = () => {
 
         <TabsContent value="monthly-targets" className="mt-4">
           <MonthlyKPITargets />
+        </TabsContent>
+
+        <TabsContent value="kpi-engine" className="mt-4">
+          <KPICalculationEngine />
         </TabsContent>
 
         {isSuperAdmin && (
