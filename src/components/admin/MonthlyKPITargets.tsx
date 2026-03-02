@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, Calculator, Upload, Download, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Loader2, Save, Calculator, Upload, Download, AlertCircle, CheckCircle2, Copy } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -264,6 +264,30 @@ export function MonthlyKPITargets() {
       return { ...r, target_value: annual != null ? parseFloat((annual / 12).toFixed(2)) : null, dirty: true };
     }));
     toast({ title: 'Target diisi dari baseline tahunan / 12' });
+  }
+
+  // Copy from previous month
+  function copyFromPreviousMonth() {
+    const hasAnyPrev = rows.some(r => r.prev_target_value != null || r.prev_target_pct != null);
+    if (!hasAnyPrev) {
+      toast({ title: 'Tidak ada data target bulan lalu', description: 'Pastikan target bulan sebelumnya sudah diisi.', variant: 'destructive' });
+      return;
+    }
+    setRows(prev => prev.map(r => {
+      const isBinary = r.unit_type === 'Binary';
+      const isPercent = r.unit_type === '%';
+      if (isBinary) return { ...r, target_value: 1, dirty: true };
+      if (isPercent && r.prev_target_pct != null) {
+        return { ...r, target_pct: r.prev_target_pct, dirty: true };
+      }
+      if (!isPercent && r.prev_target_value != null) {
+        return { ...r, target_value: r.prev_target_value, dirty: true };
+      }
+      return r;
+    }));
+    const prevMonth = selMonth === 1 ? 12 : selMonth - 1;
+    const prevMonthName = monthNames[prevMonth - 1];
+    toast({ title: `Target dicopy dari ${prevMonthName}` });
   }
 
   // Save (upsert)
@@ -540,6 +564,9 @@ export function MonthlyKPITargets() {
               <div className="flex gap-2 flex-wrap">
                 <Button variant="outline" size="sm" onClick={() => setCsvDialog(true)}>
                   <Upload className="h-3.5 w-3.5 mr-1" /> Import CSV
+                </Button>
+                <Button variant="outline" size="sm" onClick={copyFromPreviousMonth} disabled={rows.length === 0}>
+                  <Copy className="h-3.5 w-3.5 mr-1" /> Copy dari Bulan Lalu
                 </Button>
                 <Button variant="outline" size="sm" onClick={generateFromBaseline} disabled={rows.length === 0}>
                   <Calculator className="h-3.5 w-3.5 mr-1" /> Generate dari Baseline
