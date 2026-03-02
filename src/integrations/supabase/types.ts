@@ -290,6 +290,127 @@ export type Database = {
           },
         ]
       }
+      kpi_results_monthly: {
+        Row: {
+          achievement_pct: number | null
+          achievement_ratio: number | null
+          actual_pct: number | null
+          actual_value: number | null
+          calculated_at: string
+          id: string
+          kpi_id: string
+          month: number
+          status: Database["public"]["Enums"]["kpi_result_status"] | null
+          target_pct: number | null
+          target_value: number | null
+          user_id: string
+          weight_pct: number | null
+          weighted_score: number | null
+          year: number
+        }
+        Insert: {
+          achievement_pct?: number | null
+          achievement_ratio?: number | null
+          actual_pct?: number | null
+          actual_value?: number | null
+          calculated_at?: string
+          id?: string
+          kpi_id: string
+          month: number
+          status?: Database["public"]["Enums"]["kpi_result_status"] | null
+          target_pct?: number | null
+          target_value?: number | null
+          user_id: string
+          weight_pct?: number | null
+          weighted_score?: number | null
+          year: number
+        }
+        Update: {
+          achievement_pct?: number | null
+          achievement_ratio?: number | null
+          actual_pct?: number | null
+          actual_value?: number | null
+          calculated_at?: string
+          id?: string
+          kpi_id?: string
+          month?: number
+          status?: Database["public"]["Enums"]["kpi_result_status"] | null
+          target_pct?: number | null
+          target_value?: number | null
+          user_id?: string
+          weight_pct?: number | null
+          weighted_score?: number | null
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_results_monthly_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      kpi_submissions: {
+        Row: {
+          created_at: string
+          evidence_url: string | null
+          id: string
+          kpi_id: string
+          month: number
+          notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          submitted_at: string
+          submitted_value: number | null
+          updated_at: string
+          user_id: string
+          year: number
+        }
+        Insert: {
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          kpi_id: string
+          month: number
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_value?: number | null
+          updated_at?: string
+          user_id: string
+          year: number
+        }
+        Update: {
+          created_at?: string
+          evidence_url?: string | null
+          id?: string
+          kpi_id?: string
+          month?: number
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          submitted_at?: string
+          submitted_value?: number | null
+          updated_at?: string
+          user_id?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "kpi_submissions_kpi_id_fkey"
+            columns: ["kpi_id"]
+            isOneToOne: false
+            referencedRelation: "kpi_master"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kpi_template_items: {
         Row: {
           baseline_annual_target_pct: number | null
@@ -375,6 +496,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      kpi_total_score_monthly: {
+        Row: {
+          calculated_at: string
+          id: string
+          month: number
+          status: Database["public"]["Enums"]["kpi_total_status"] | null
+          total_score: number | null
+          user_id: string
+          year: number
+        }
+        Insert: {
+          calculated_at?: string
+          id?: string
+          month: number
+          status?: Database["public"]["Enums"]["kpi_total_status"] | null
+          total_score?: number | null
+          user_id: string
+          year: number
+        }
+        Update: {
+          calculated_at?: string
+          id?: string
+          month?: number
+          status?: Database["public"]["Enums"]["kpi_total_status"] | null
+          total_score?: number | null
+          user_id?: string
+          year?: number
+        }
+        Relationships: []
       }
       kpi_user_configs: {
         Row: {
@@ -554,6 +705,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          position_id: string | null
           region: string | null
           segment: string | null
           supervisor_id: string | null
@@ -566,6 +718,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          position_id?: string | null
           region?: string | null
           segment?: string | null
           supervisor_id?: string | null
@@ -578,6 +731,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          position_id?: string | null
           region?: string | null
           segment?: string | null
           supervisor_id?: string | null
@@ -585,6 +739,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "profiles_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "profiles_supervisor_id_fkey"
             columns: ["supervisor_id"]
@@ -743,7 +904,9 @@ export type Database = {
         | "avg_deal_size"
         | "collection_rate"
         | "segment_specific"
+      kpi_result_status: "GREEN" | "YELLOW" | "RED"
       kpi_target_source: "MANUAL" | "IMPORT" | "AUTO"
+      kpi_total_status: "EXCELLENT" | "ON_TRACK" | "NEED_IMPROVEMENT"
       org_role:
         | "sales_manager"
         | "supervisor"
@@ -899,7 +1062,9 @@ export const Constants = {
         "collection_rate",
         "segment_specific",
       ],
+      kpi_result_status: ["GREEN", "YELLOW", "RED"],
       kpi_target_source: ["MANUAL", "IMPORT", "AUTO"],
+      kpi_total_status: ["EXCELLENT", "ON_TRACK", "NEED_IMPROVEMENT"],
       org_role: [
         "sales_manager",
         "supervisor",
