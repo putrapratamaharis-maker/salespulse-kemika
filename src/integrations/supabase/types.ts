@@ -189,6 +189,57 @@ export type Database = {
         }
         Relationships: []
       }
+      kpi_master: {
+        Row: {
+          calculation_type: string
+          created_at: string
+          default_cap: number | null
+          definition_notes: string | null
+          direction: string
+          id: string
+          is_active: boolean
+          kpi_code: string
+          kpi_name: string
+          threshold_green: number
+          threshold_red: number
+          threshold_yellow: number
+          unit_type: string
+          updated_at: string
+        }
+        Insert: {
+          calculation_type?: string
+          created_at?: string
+          default_cap?: number | null
+          definition_notes?: string | null
+          direction?: string
+          id?: string
+          is_active?: boolean
+          kpi_code: string
+          kpi_name: string
+          threshold_green?: number
+          threshold_red?: number
+          threshold_yellow?: number
+          unit_type?: string
+          updated_at?: string
+        }
+        Update: {
+          calculation_type?: string
+          created_at?: string
+          default_cap?: number | null
+          definition_notes?: string | null
+          direction?: string
+          id?: string
+          is_active?: boolean
+          kpi_code?: string
+          kpi_name?: string
+          threshold_green?: number
+          threshold_red?: number
+          threshold_yellow?: number
+          unit_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       kpi_user_configs: {
         Row: {
           created_at: string
