@@ -8,14 +8,13 @@ const Index = () => {
   const { currentUser } = useAppContext();
 
   switch (currentUser.orgRole) {
-    case 'sales_person':
-      return <SalesPersonDashboard />;
     case 'supervisor':
       return <SupervisorDashboard />;
     case 'sales_manager':
       return <ManagerDashboard />;
     case 'representative_management':
       return <RepManagementDashboard />;
+    case 'sales_person':
     default:
       return <ManagerDashboard />;
   }
