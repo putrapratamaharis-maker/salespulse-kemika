@@ -196,15 +196,20 @@ export type Database = {
           default_cap: number | null
           definition_notes: string | null
           direction: string
+          green_threshold_pct: number
           id: string
           is_active: boolean
+          kpi_category: Database["public"]["Enums"]["kpi_category"] | null
           kpi_code: string
           kpi_name: string
+          red_threshold_pct: number
+          score_cap_pct: number
           threshold_green: number
           threshold_red: number
           threshold_yellow: number
           unit_type: string
           updated_at: string
+          yellow_threshold_pct: number
         }
         Insert: {
           calculation_type?: string
@@ -212,15 +217,20 @@ export type Database = {
           default_cap?: number | null
           definition_notes?: string | null
           direction?: string
+          green_threshold_pct?: number
           id?: string
           is_active?: boolean
+          kpi_category?: Database["public"]["Enums"]["kpi_category"] | null
           kpi_code: string
           kpi_name: string
+          red_threshold_pct?: number
+          score_cap_pct?: number
           threshold_green?: number
           threshold_red?: number
           threshold_yellow?: number
           unit_type?: string
           updated_at?: string
+          yellow_threshold_pct?: number
         }
         Update: {
           calculation_type?: string
@@ -228,15 +238,20 @@ export type Database = {
           default_cap?: number | null
           definition_notes?: string | null
           direction?: string
+          green_threshold_pct?: number
           id?: string
           is_active?: boolean
+          kpi_category?: Database["public"]["Enums"]["kpi_category"] | null
           kpi_code?: string
           kpi_name?: string
+          red_threshold_pct?: number
+          score_cap_pct?: number
           threshold_green?: number
           threshold_red?: number
           threshold_yellow?: number
           unit_type?: string
           updated_at?: string
+          yellow_threshold_pct?: number
         }
         Relationships: []
       }
@@ -891,6 +906,12 @@ export type Database = {
         | "negotiation"
         | "closed_won"
         | "closed_lost"
+      kpi_category:
+        | "GROWTH"
+        | "PROFITABILITY"
+        | "COMPLIANCE"
+        | "PRODUCTIVITY"
+        | "DISCIPLINE"
       kpi_data_source:
         | "revenue_achievement"
         | "margin_compliance"
@@ -1047,6 +1068,13 @@ export const Constants = {
         "negotiation",
         "closed_won",
         "closed_lost",
+      ],
+      kpi_category: [
+        "GROWTH",
+        "PROFITABILITY",
+        "COMPLIANCE",
+        "PRODUCTIVITY",
+        "DISCIPLINE",
       ],
       kpi_data_source: [
         "revenue_achievement",

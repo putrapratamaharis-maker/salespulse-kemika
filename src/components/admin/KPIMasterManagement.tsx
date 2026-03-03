@@ -18,6 +18,15 @@ const DIRECTIONS = [
   { value: 'higher_is_better', label: 'Higher is Better' },
   { value: 'lower_is_better', label: 'Lower is Better' },
 ] as const;
+const KPI_CATEGORIES = ['GROWTH', 'PROFITABILITY', 'COMPLIANCE', 'PRODUCTIVITY', 'DISCIPLINE'] as const;
+
+const CATEGORY_DEFAULTS: Record<string, { score_cap_pct: string; green_threshold_pct: string; yellow_threshold_pct: string }> = {
+  GROWTH: { score_cap_pct: '120', green_threshold_pct: '100', yellow_threshold_pct: '90' },
+  PROFITABILITY: { score_cap_pct: '110', green_threshold_pct: '100', yellow_threshold_pct: '90' },
+  COMPLIANCE: { score_cap_pct: '100', green_threshold_pct: '100', yellow_threshold_pct: '90' },
+  PRODUCTIVITY: { score_cap_pct: '120', green_threshold_pct: '100', yellow_threshold_pct: '90' },
+  DISCIPLINE: { score_cap_pct: '100', green_threshold_pct: '100', yellow_threshold_pct: '90' },
+};
 
 interface KPIMaster {
   id: string;
@@ -34,6 +43,11 @@ interface KPIMaster {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  kpi_category: string | null;
+  score_cap_pct: number;
+  green_threshold_pct: number;
+  yellow_threshold_pct: number;
+  red_threshold_pct: number;
 }
 
 const emptyForm = {
@@ -47,6 +61,10 @@ const emptyForm = {
   threshold_yellow: '80',
   threshold_red: '60',
   definition_notes: '',
+  kpi_category: '',
+  score_cap_pct: '100',
+  green_threshold_pct: '100',
+  yellow_threshold_pct: '90',
 };
 
 export function KPIMasterManagement() {
@@ -58,7 +76,6 @@ export function KPIMasterManagement() {
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
-  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -95,8 +112,21 @@ export function KPIMasterManagement() {
       threshold_yellow: kpi.threshold_yellow.toString(),
       threshold_red: kpi.threshold_red.toString(),
       definition_notes: kpi.definition_notes ?? '',
+      kpi_category: kpi.kpi_category ?? '',
+      score_cap_pct: kpi.score_cap_pct.toString(),
+      green_threshold_pct: kpi.green_threshold_pct.toString(),
+      yellow_threshold_pct: kpi.yellow_threshold_pct.toString(),
     });
     setDialogOpen(true);
+  }
+
+  function handleCategoryChange(category: string) {
+    const defaults = CATEGORY_DEFAULTS[category];
+    if (defaults && !editId) {
+      setForm(f => ({ ...f, kpi_category: category, ...defaults }));
+    } else {
+      setForm(f => ({ ...f, kpi_category: category }));
+    }
   }
 
   async function handleSave() {
@@ -105,7 +135,6 @@ export function KPIMasterManagement() {
       return;
     }
 
-    // Check unique code
     const duplicate = data.find(k => k.kpi_code === form.kpi_code.trim() && k.id !== editId);
     if (duplicate) {
       toast({ title: 'Validasi', description: 'KPI Code sudah digunakan.', variant: 'destructive' });
@@ -124,6 +153,11 @@ export function KPIMasterManagement() {
       threshold_yellow: parseFloat(form.threshold_yellow) || 80,
       threshold_red: parseFloat(form.threshold_red) || 60,
       definition_notes: form.definition_notes || null,
+      kpi_category: form.kpi_category || null,
+      score_cap_pct: parseFloat(form.score_cap_pct) || 100,
+      green_threshold_pct: parseFloat(form.green_threshold_pct) || 100,
+      yellow_threshold_pct: parseFloat(form.yellow_threshold_pct) || 90,
+      red_threshold_pct: 0,
     };
 
     let error;
@@ -196,12 +230,12 @@ export function KPIMasterManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Kode KPI</TableHead>
+                  <TableHead className="text-xs">Kode</TableHead>
                   <TableHead className="text-xs">Nama KPI</TableHead>
+                  <TableHead className="text-xs">Kategori</TableHead>
                   <TableHead className="text-xs">Unit</TableHead>
-                  <TableHead className="text-xs">Kalkulasi</TableHead>
-                  <TableHead className="text-xs">Arah</TableHead>
                   <TableHead className="text-xs">Cap (%)</TableHead>
+                  <TableHead className="text-xs">🟢 / 🟡</TableHead>
                   <TableHead className="text-xs">Status</TableHead>
                   <TableHead className="text-xs text-right">Aksi</TableHead>
                 </TableRow>
@@ -211,10 +245,14 @@ export function KPIMasterManagement() {
                   <TableRow key={kpi.id} className={!kpi.is_active ? 'opacity-50' : ''}>
                     <TableCell className="text-sm font-mono font-medium">{kpi.kpi_code}</TableCell>
                     <TableCell className="text-sm">{kpi.kpi_name}</TableCell>
+                    <TableCell className="text-xs">
+                      {kpi.kpi_category ? (
+                        <Badge variant="outline" className="text-[10px]">{kpi.kpi_category}</Badge>
+                      ) : '—'}
+                    </TableCell>
                     <TableCell className="text-sm">{kpi.unit_type}</TableCell>
-                    <TableCell className="text-sm">{kpi.calculation_type}</TableCell>
-                    <TableCell className="text-xs">{dirLabel(kpi.direction)}</TableCell>
-                    <TableCell className="text-sm">{kpi.default_cap ?? '—'}</TableCell>
+                    <TableCell className="text-sm">{kpi.score_cap_pct}%</TableCell>
+                    <TableCell className="text-xs">{kpi.green_threshold_pct}% / {kpi.yellow_threshold_pct}%</TableCell>
                     <TableCell>
                       <Badge
                         variant={kpi.is_active ? 'default' : 'secondary'}
@@ -242,7 +280,7 @@ export function KPIMasterManagement() {
 
       {/* Create/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editId ? 'Edit KPI' : 'Tambah KPI Baru'}</DialogTitle>
           </DialogHeader>
@@ -259,6 +297,15 @@ export function KPIMasterManagement() {
             </div>
 
             <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Kategori</Label>
+                <Select value={form.kpi_category} onValueChange={handleCategoryChange}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih..." /></SelectTrigger>
+                  <SelectContent>
+                    {KPI_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1.5">
                 <Label className="text-xs">Tipe Unit</Label>
                 <Select value={form.unit_type} onValueChange={v => setForm(f => ({ ...f, unit_type: v }))}>
@@ -277,6 +324,9 @@ export function KPIMasterManagement() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs">Arah</Label>
                 <Select value={form.direction} onValueChange={v => setForm(f => ({ ...f, direction: v }))}>
@@ -286,24 +336,20 @@ export function KPIMasterManagement() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Score Cap (%)</Label>
+                <Input type="number" value={form.score_cap_pct} onChange={e => setForm(f => ({ ...f, score_cap_pct: e.target.value }))} className="h-9 text-sm" />
+              </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs">Cap Default (%)</Label>
-                <Input type="number" value={form.default_cap} onChange={e => setForm(f => ({ ...f, default_cap: e.target.value }))} placeholder="—" className="h-9 text-sm" />
+                <Label className="text-xs">Green Threshold (%) 🟢</Label>
+                <Input type="number" value={form.green_threshold_pct} onChange={e => setForm(f => ({ ...f, green_threshold_pct: e.target.value }))} className="h-9 text-sm" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs">Threshold 🟢</Label>
-                <Input type="number" value={form.threshold_green} onChange={e => setForm(f => ({ ...f, threshold_green: e.target.value }))} className="h-9 text-sm" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Threshold 🟡</Label>
-                <Input type="number" value={form.threshold_yellow} onChange={e => setForm(f => ({ ...f, threshold_yellow: e.target.value }))} className="h-9 text-sm" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs">Threshold 🔴</Label>
-                <Input type="number" value={form.threshold_red} onChange={e => setForm(f => ({ ...f, threshold_red: e.target.value }))} className="h-9 text-sm" />
+                <Label className="text-xs">Yellow Threshold (%) 🟡</Label>
+                <Input type="number" value={form.yellow_threshold_pct} onChange={e => setForm(f => ({ ...f, yellow_threshold_pct: e.target.value }))} className="h-9 text-sm" />
               </div>
             </div>
 
