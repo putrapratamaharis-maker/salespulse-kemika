@@ -127,7 +127,14 @@ const MyPipeline = () => {
 
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
-  const accountOptions = mockAccounts.map(a => ({ id: a.id, name: a.name, picContact: a.picContact, picEmail: a.picEmail }));
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>(() =>
+    mockAccounts.map(a => ({ id: a.id, name: a.name, picContact: a.picContact, picEmail: a.picEmail }))
+  );
+  const accountOptions = localAccounts;
+
+  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
+    setLocalAccounts(prev => [...prev, account]);
+  };
 
   return (
     <div className="space-y-6">
@@ -136,7 +143,7 @@ const MyPipeline = () => {
           <h2 className="text-xl font-bold text-foreground">My Leads & Forecast</h2>
           <p className="text-sm text-muted-foreground">Lead pipeline & forecast — {currentUser.name}</p>
         </div>
-        <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} />
+        <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       </div>
 
       {/* Pipeline KPIs */}
