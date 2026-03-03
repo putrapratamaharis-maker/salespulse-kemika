@@ -13,9 +13,12 @@ interface KPIMaster {
   calculation_type: string
   direction: string
   default_cap: number | null
-  threshold_green: number
-  threshold_yellow: number
-  threshold_red: number
+  // New advanced scoring fields
+  score_cap_pct: number
+  green_threshold_pct: number
+  yellow_threshold_pct: number
+  red_threshold_pct: number
+  kpi_category: string | null
 }
 
 interface TemplateItem {
@@ -43,9 +46,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
-    // Parse request body
     const body = await req.json().catch(() => ({}))
-    const targetUserId = body.user_id || null // null = all users
+    const targetUserId = body.user_id || null
     const targetYear = body.year || new Date().getFullYear()
     const targetMonth = body.month || new Date().getMonth() + 1
 
@@ -63,11 +65,10 @@ Deno.serve(async (req) => {
     const { data: profiles, error: profileErr } = await profilesQuery
     if (profileErr) throw new Error(`Failed to fetch profiles: ${profileErr.message}`)
 
-    // Also get user_roles for fallback position detection
     const { data: allRoles } = await supabaseAdmin.from('user_roles').select('user_id, org_role')
     const roleMap = new Map((allRoles || []).map((r: any) => [r.user_id, r.org_role]))
 
-    // 2. Get all active templates for the year with items
+    // 2. Get all active templates for the year with items (including new kpi_master fields)
     const { data: templates, error: tplErr } = await supabaseAdmin
       .from('kpi_templates')
       .select('*, positions(*), kpi_template_items(*, kpi_master(*))')
@@ -82,7 +83,6 @@ Deno.serve(async (req) => {
       .select('id, position_code')
       .eq('is_active', true)
     
-    // Build org_role → position_id mapping (heuristic)
     const roleToPosition: Record<string, string> = {}
     for (const pos of (positions || [])) {
       const code = pos.position_code.toLowerCase()
@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
       if (code.includes('adm') || code.includes('rep')) roleToPosition['representative_management'] = pos.id
     }
 
-    // 4. Get monthly targets for all relevant users
+    // 4. Get monthly targets
     let targetsQuery = supabaseAdmin
       .from('kpi_monthly_targets')
       .select('user_id, kpi_id, target_value, target_pct')
@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
       targetMap.set(`${t.user_id}::${t.kpi_id}`, t)
     }
 
-    // 5. Get approved submissions for MANUAL/HYBRID KPIs
+    // 5. Get approved submissions
     let subsQuery = supabaseAdmin
       .from('kpi_submissions')
       .select('user_id, kpi_id, submitted_value')
@@ -127,32 +127,29 @@ Deno.serve(async (req) => {
       submissionMap.set(`${s.user_id}::${s.kpi_id}`, s.submitted_value || 0)
     }
 
-    // 6. Pre-fetch transactional data for AUTO calculations
+    // 6. Pre-fetch transactional data
     const monthStart = `${targetYear}-${String(targetMonth).padStart(2, '0')}-01`
     const nextMonth = targetMonth === 12 ? 1 : targetMonth + 1
     const nextYear = targetMonth === 12 ? targetYear + 1 : targetYear
     const monthEnd = `${nextYear}-${String(nextMonth).padStart(2, '0')}-01`
 
-    // Invoices for the month
     const { data: invoices } = await supabaseAdmin
       .from('invoices')
       .select('sales_id, net_sales, gross_profit, account_id')
       .gte('issue_date', monthStart)
       .lt('issue_date', monthEnd)
 
-    // Deals for the month
     const { data: deals } = await supabaseAdmin
       .from('deals')
       .select('sales_id, stage, value, account_id, created_at, updated_at')
 
-    // Activities for the month
     const { data: activities } = await supabaseAdmin
       .from('sales_activities')
       .select('sales_id, type, account_id, activity_date')
       .gte('activity_date', monthStart)
       .lt('activity_date', monthEnd)
 
-    // Pre-aggregate transactional data per user
+    // Pre-aggregate per user
     const userInvoiceData = new Map<string, { totalRevenue: number; totalGP: number; accountIds: Set<string> }>()
     for (const inv of (invoices || [])) {
       const existing = userInvoiceData.get(inv.sales_id) || { totalRevenue: 0, totalGP: 0, accountIds: new Set<string>() }
@@ -180,7 +177,6 @@ Deno.serve(async (req) => {
       userActivityData.set(a.sales_id, existing)
     }
 
-    // Also get team-level invoice data (for team KPIs like GOV002)
     const teamInvoiceTotal = (invoices || []).reduce((sum, inv) => sum + Number(inv.net_sales || 0), 0)
     const teamGPTotal = (invoices || []).reduce((sum, inv) => sum + Number(inv.gross_profit || 0), 0)
 
@@ -192,7 +188,6 @@ Deno.serve(async (req) => {
     for (const profile of (profiles || [])) {
       const userId = profile.user_id
 
-      // Find user's position
       let positionId = profile.position_id
       if (!positionId) {
         const orgRole = roleMap.get(userId)
@@ -206,7 +201,6 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Find matching template
       const template = (templates || []).find((t: any) => t.position_id === positionId)
       if (!template || !template.kpi_template_items?.length) {
         console.log(`[KPI Engine] Skipping user ${profile.full_name}: no active template`)
@@ -219,19 +213,18 @@ Deno.serve(async (req) => {
         const kpi = item.kpi_master
         if (!kpi) continue
 
-        // Get target (monthly override → baseline/12)
+        // Get target
         const mtKey = `${userId}::${item.kpi_id}`
         const monthlyTarget = targetMap.get(mtKey)
 
         let targetValue = monthlyTarget?.target_value ?? null
         let targetPct = monthlyTarget?.target_pct ?? null
 
-        // Fallback to baseline / 12
         if (targetValue == null && item.baseline_annual_target_value != null) {
           targetValue = Math.round((item.baseline_annual_target_value / 12) * 100) / 100
         }
         if (targetPct == null && item.baseline_annual_target_pct != null) {
-          targetPct = item.baseline_annual_target_pct // pct doesn't divide by 12
+          targetPct = item.baseline_annual_target_pct
         }
 
         // Calculate actual value
@@ -246,7 +239,6 @@ Deno.serve(async (req) => {
             teamGP: teamGPTotal,
           })
         } else if (kpi.calculation_type === 'HYBRID') {
-          // Use submission if available, otherwise try auto
           const subVal = submissionMap.get(mtKey)
           if (subVal != null) {
             actualValue = subVal
@@ -260,43 +252,43 @@ Deno.serve(async (req) => {
             })
           }
         } else {
-          // MANUAL - only from approved submissions
           const subVal = submissionMap.get(mtKey)
           actualValue = subVal ?? 0
         }
 
         if (actualValue == null) actualValue = 0
 
-        // Determine effective target for ratio calculation
+        // Determine effective target
         const isPercentKPI = kpi.unit_type === '%' || kpi.unit_type === 'Score 0-100'
         const effectiveTarget = isPercentKPI ? (targetPct ?? 100) : (targetValue ?? 0)
         const actualPct = isPercentKPI ? actualValue : null
 
-        // Calculate achievement
-        let achievementRatio = 0
+        // ─── STEP 1: Calculate base ratio ───
+        let ratio = 0
         if (effectiveTarget > 0) {
           if (kpi.direction === 'lower_is_better') {
-            achievementRatio = effectiveTarget / (actualValue || 1)
+            ratio = effectiveTarget / (actualValue || 1)
           } else {
-            achievementRatio = actualValue / effectiveTarget
+            ratio = actualValue / effectiveTarget
           }
         } else if (kpi.unit_type === 'Binary') {
-          achievementRatio = actualValue >= 1 ? 1 : 0
+          ratio = actualValue >= 1 ? 1 : 0
         }
 
-        // Apply cap
-        if (kpi.default_cap != null) {
-          const capRatio = kpi.default_cap / 100
-          if (achievementRatio > capRatio) achievementRatio = capRatio
-        }
+        // ─── STEP 2: Apply score cap from kpi_master ───
+        const capRatio = (kpi.score_cap_pct ?? 100) / 100
+        const ratioCapped = Math.min(ratio, capRatio)
+        const achievementPct = Math.round(ratioCapped * 10000) / 100
 
-        const achievementPctVal = Math.round(achievementRatio * 10000) / 100 // 2 decimal places
-        const weightedScore = Math.round(achievementRatio * item.weight_pct * 100) / 100
+        // ─── STEP 3: Weighted score ───
+        const weightedScore = Math.round(ratioCapped * item.weight_pct * 100) / 100
 
-        // Status per KPI (using thresholds from kpi_master)
+        // ─── STEP 4: KPI Status using per-KPI thresholds ───
         let status: 'GREEN' | 'YELLOW' | 'RED' = 'RED'
-        if (achievementPctVal >= kpi.threshold_green) status = 'GREEN'
-        else if (achievementPctVal >= kpi.threshold_yellow) status = 'YELLOW'
+        const greenThreshold = kpi.green_threshold_pct ?? 100
+        const yellowThreshold = kpi.yellow_threshold_pct ?? 90
+        if (achievementPct >= greenThreshold) status = 'GREEN'
+        else if (achievementPct >= yellowThreshold) status = 'YELLOW'
 
         totalWeightedScore += weightedScore
 
@@ -309,8 +301,8 @@ Deno.serve(async (req) => {
           target_pct: targetPct,
           actual_value: actualValue,
           actual_pct: actualPct,
-          achievement_ratio: Math.round(achievementRatio * 10000) / 10000,
-          achievement_pct: achievementPctVal,
+          achievement_ratio: Math.round(ratioCapped * 10000) / 10000,
+          achievement_pct: achievementPct,
           weight_pct: item.weight_pct,
           weighted_score: weightedScore,
           status,
@@ -318,7 +310,7 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Total score
+      // ─── PART 4: Total KPI Score Status ───
       const totalScore = Math.round(totalWeightedScore * 100) / 100
       let totalStatus: 'EXCELLENT' | 'ON_TRACK' | 'NEED_IMPROVEMENT' = 'NEED_IMPROVEMENT'
       if (totalScore >= 100) totalStatus = 'EXCELLENT'
@@ -390,50 +382,41 @@ function calculateAutoKPI(kpiCode: string, userId: string, data: TransactionalDa
   const act = data.activityData || { count: 0, accountIds: new Set<string>() }
 
   switch (kpiCode) {
-    // ── Revenue KPIs (IDR) ──
-    case 'TSS001': // Revenue Confirmed/Delivered (individual)
-    case 'GOV001': // Revenue Confirmed/Delivered – Individual
+    case 'TSS001':
+    case 'GOV001':
       return inv.totalRevenue
 
-    case 'GOV002': // Revenue Confirmed/Delivered – Team
+    case 'GOV002':
       return data.teamRevenue
 
-    case 'GOV010': // Productivity per Sales Person
-      return inv.totalRevenue // Will be compared against target
+    case 'GOV010':
+      return inv.totalRevenue
 
-    // ── GP / Margin KPIs (%) ──
-    case 'TSS002': // GP Margin Contribution B2B
-    case 'GOV003': // GP Contribution / GP Team
+    case 'TSS002':
+    case 'GOV003':
       if (data.teamGP > 0) return Math.round((inv.totalGP / data.teamGP) * 10000) / 100
       return 0
 
-    case 'GOV004': // Margin Compliance Rate
+    case 'GOV004':
       if (inv.totalRevenue > 0) return Math.round((inv.totalGP / inv.totalRevenue) * 10000) / 100
       return 0
 
-    // ── Conversion Rate (%) ──
-    case 'GOV008': // Conversion Rate
+    case 'GOV008':
       if (deal.qualifiedDeals > 0) return Math.round((deal.wonDeals / deal.qualifiedDeals) * 10000) / 100
       return 0
 
-    // ── Forecast Accuracy ──
-    case 'GOV011': // Forecast Accuracy (Error Rate)
-      // Would need forecast vs actual comparison - default to 0 for now
+    case 'GOV011':
       return 0
 
-    // ── Document / SLA KPIs ──
-    case 'ADM003': // On-time Document Completion
-    case 'ADM004': // SLA Response Time to Sales
-      return 0 // Requires specific tracking data
+    case 'ADM003':
+    case 'ADM004':
+      return 0
 
-    // ── Count-based KPIs ──
-    case 'GOV005': // Active Government Accounts
-    case 'GOV006': // Active & Repeat Gov. Account
+    case 'GOV005':
+    case 'GOV006':
       return inv.accountIds.size + act.accountIds.size
 
-    // ── Activity count ──
     default:
-      // For unknown AUTO KPIs, try to return activity count as fallback
       return act.count
   }
 }
