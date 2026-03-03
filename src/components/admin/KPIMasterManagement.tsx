@@ -72,6 +72,7 @@ export function KPIMasterManagement() {
   const [data, setData] = useState<KPIMaster[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -190,10 +191,12 @@ export function KPIMasterManagement() {
     }
   }
 
-  const filtered = data.filter(k =>
-    k.kpi_code.toLowerCase().includes(search.toLowerCase()) ||
-    k.kpi_name.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = data.filter(k => {
+    const matchesSearch = k.kpi_code.toLowerCase().includes(search.toLowerCase()) ||
+      k.kpi_name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === 'ALL' || k.kpi_category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
 
   const dirLabel = (d: string) => d === 'higher_is_better' ? 'Higher is Better' : 'Lower is Better';
 
@@ -206,14 +209,25 @@ export function KPIMasterManagement() {
             <Plus className="h-4 w-4 mr-1" /> Tambah KPI
           </Button>
         </div>
-        <div className="relative mt-2 max-w-xs">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Cari kode atau nama KPI..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-9 text-sm"
-          />
+        <div className="flex items-center gap-2 mt-2 flex-wrap">
+          <div className="relative max-w-xs flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari kode atau nama KPI..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="pl-9 h-9 text-sm"
+            />
+          </div>
+          <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+            <SelectTrigger className="h-9 w-[160px] text-sm">
+              <SelectValue placeholder="Semua Kategori" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL" className="text-sm">Semua Kategori</SelectItem>
+              {KPI_CATEGORIES.map(c => <SelectItem key={c} value={c} className="text-sm">{c}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
