@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Plus, Pencil, Trash2, Loader2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, Search, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 const UNIT_TYPES = ['IDR', '%', 'Count', 'Binary', 'Score 0-100'] as const;
 const CALC_TYPES = ['AUTO', 'MANUAL', 'HYBRID'] as const;
@@ -73,6 +73,8 @@ export function KPIMasterManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('ALL');
+  const [sortField, setSortField] = useState<'kpi_code' | 'kpi_name' | 'kpi_category'>('kpi_code');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
@@ -191,12 +193,32 @@ export function KPIMasterManagement() {
     }
   }
 
-  const filtered = data.filter(k => {
-    const matchesSearch = k.kpi_code.toLowerCase().includes(search.toLowerCase()) ||
-      k.kpi_name.toLowerCase().includes(search.toLowerCase());
-    const matchesCategory = categoryFilter === 'ALL' || k.kpi_category === categoryFilter;
-    return matchesSearch && matchesCategory;
-  });
+  const filtered = data
+    .filter(k => {
+      const matchesSearch = k.kpi_code.toLowerCase().includes(search.toLowerCase()) ||
+        k.kpi_name.toLowerCase().includes(search.toLowerCase());
+      const matchesCategory = categoryFilter === 'ALL' || k.kpi_category === categoryFilter;
+      return matchesSearch && matchesCategory;
+    })
+    .sort((a, b) => {
+      const valA = (a[sortField] ?? '').toString().toLowerCase();
+      const valB = (b[sortField] ?? '').toString().toLowerCase();
+      return sortDir === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+    });
+
+  function toggleSort(field: typeof sortField) {
+    if (sortField === field) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDir('asc');
+    }
+  }
+
+  function SortIcon({ field }: { field: typeof sortField }) {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-40" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  }
 
   const dirLabel = (d: string) => d === 'higher_is_better' ? 'Higher is Better' : 'Lower is Better';
 
@@ -244,9 +266,15 @@ export function KPIMasterManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="text-xs">Kode</TableHead>
-                  <TableHead className="text-xs">Nama KPI</TableHead>
-                  <TableHead className="text-xs">Kategori</TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('kpi_code')}>
+                    <span className="inline-flex items-center">Kode<SortIcon field="kpi_code" /></span>
+                  </TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('kpi_name')}>
+                    <span className="inline-flex items-center">Nama KPI<SortIcon field="kpi_name" /></span>
+                  </TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('kpi_category')}>
+                    <span className="inline-flex items-center">Kategori<SortIcon field="kpi_category" /></span>
+                  </TableHead>
                   <TableHead className="text-xs">Unit</TableHead>
                   <TableHead className="text-xs">Cap (%)</TableHead>
                   <TableHead className="text-xs">🟢 / 🟡</TableHead>
