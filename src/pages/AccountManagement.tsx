@@ -43,6 +43,9 @@ export default function AccountManagement() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterRegion, setFilterRegion] = useState('all');
+  const [filterType, setFilterType] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -166,12 +169,20 @@ export default function AccountManagement() {
     setSaving(false);
   };
 
-  const filtered = accounts.filter(a =>
-    a.name.toLowerCase().includes(search.toLowerCase()) ||
-    a.region.toLowerCase().includes(search.toLowerCase()) ||
-    a.type.toLowerCase().includes(search.toLowerCase()) ||
-    (a.pic_name || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const usedRegions = [...new Set(accounts.map(a => a.region).filter(Boolean))].sort();
+  const usedTypes = [...new Set(accounts.map(a => a.type).filter(Boolean))].sort();
+
+  const filtered = accounts.filter(a => {
+    const matchesSearch = search === '' ||
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a.region.toLowerCase().includes(search.toLowerCase()) ||
+      a.type.toLowerCase().includes(search.toLowerCase()) ||
+      (a.pic_name || '').toLowerCase().includes(search.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || (a.status || 'Active') === filterStatus;
+    const matchesRegion = filterRegion === 'all' || a.region === filterRegion;
+    const matchesType = filterType === 'all' || a.type === filterType;
+    return matchesSearch && matchesStatus && matchesRegion && matchesType;
+  });
 
   const statusColor = (s: string) => {
     if (s === 'Active') return 'bg-green-500/10 text-green-700 border-green-200';
@@ -218,6 +229,40 @@ export default function AccountManagement() {
                 className="pl-9 h-9 text-sm"
               />
             </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="h-8 w-[140px] text-xs">
+                <SelectValue placeholder="Tipe" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Tipe</SelectItem>
+                {usedTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterRegion} onValueChange={setFilterRegion}>
+              <SelectTrigger className="h-8 w-[160px] text-xs">
+                <SelectValue placeholder="Region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Region</SelectItem>
+                {usedRegions.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {(filterStatus !== 'all' || filterRegion !== 'all' || filterType !== 'all') && (
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => { setFilterStatus('all'); setFilterRegion('all'); setFilterType('all'); }}>
+                Reset Filter
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent className="p-0">
