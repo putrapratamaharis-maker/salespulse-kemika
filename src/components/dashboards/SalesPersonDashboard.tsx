@@ -3,7 +3,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
 import { getUserInvoices, getUserDeals, getUserTarget, getUserActivities } from '@/data/mockData';
-import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
@@ -14,13 +14,30 @@ export function SalesPersonDashboard() {
   const target = getUserTarget(currentUser.id);
   const activities = getUserActivities(currentUser.id);
 
-  const revenue = invoices.reduce((s, i) => s + i.netSales, 0);
-  const grossProfit = invoices.reduce((s, i) => s + i.grossProfit, 0);
-  const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // MTD invoices
+  const mtdInvoices = invoices.filter(i => {
+    const d = new Date(i.issueDate);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  const revenueMTD = mtdInvoices.reduce((s, i) => s + i.netSales, 0);
+  const grossProfitMTD = mtdInvoices.reduce((s, i) => s + i.grossProfit, 0);
+
+  // YTD invoices
+  const ytdInvoices = invoices.filter(i => new Date(i.issueDate).getFullYear() === currentYear);
+  const revenueYTD = ytdInvoices.reduce((s, i) => s + i.netSales, 0);
+
+  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetVal = target?.revenueTarget || 1;
-  const achievementPct = (revenue / targetVal) * 100;
-  const pipelineValue = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage)).reduce((s, d) => s + d.value, 0);
-  const weightedForecast = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage)).reduce((s, d) => s + d.value * d.probability / 100, 0);
+  const achievementPct = (revenueMTD / targetVal) * 100;
+  const outstandingAR = invoices.filter(inv => !inv.paidDate).reduce((s, inv) => s + inv.netSales, 0);
+
+  const openDeals = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
+  const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
+  const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
 
   const overdueInvoices = invoices.filter(inv => !inv.paidDate && new Date(inv.dueDate) < new Date());
   const nearingDeals = deals.filter(d => {
@@ -32,15 +49,17 @@ export function SalesPersonDashboard() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-bold text-foreground">My Performance</h2>
+        <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
         <p className="text-sm text-muted-foreground">Personal sales dashboard — {currentUser.name}</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} change={12.5} changeLabel="vs last month" icon={DollarSign} autoFitText />
+      {/* Row 1 — same structure as Executive Summary row 1 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={12.5} changeLabel="vs last month" icon={DollarSign} autoFitText />
         <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
-        <KPICard label="Pipeline Value" value={formatIDRFull(pipelineValue)} icon={BarChart3} autoFitText />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
