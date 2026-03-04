@@ -19,9 +19,13 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          pic_contact: string
+          pic_email: string
+          pic_name: string
           region: string
           sales_id: string
           segment: string
+          status: string
           type: string
           updated_at: string
         }
@@ -29,9 +33,13 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          pic_contact?: string
+          pic_email?: string
+          pic_name?: string
           region?: string
           sales_id: string
           segment?: string
+          status?: string
           type?: string
           updated_at?: string
         }
@@ -39,9 +47,13 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          pic_contact?: string
+          pic_email?: string
+          pic_name?: string
           region?: string
           sales_id?: string
           segment?: string
+          status?: string
           type?: string
           updated_at?: string
         }

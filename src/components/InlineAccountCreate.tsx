@@ -7,8 +7,17 @@ import { UserPlus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
-const SEGMENTS = ['B2B', 'B2G', 'B2C'];
-const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor'];
+const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor', 'NGO', 'Others'];
+const STATUSES = ['Active', 'Non-Active'];
+const PROVINCES = [
+  'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau',
+  'Jambi', 'Sumatera Selatan', 'Bangka Belitung', 'Bengkulu', 'Lampung',
+  'DKI Jakarta', 'Banten', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur',
+  'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+  'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara',
+  'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Barat', 'Sulawesi Tenggara',
+  'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat', 'Papua Selatan', 'Papua Tengah', 'Papua Pegunungan', 'Papua Barat Daya',
+];
 
 interface InlineAccountCreateProps {
   salesId: string;
@@ -19,9 +28,12 @@ interface InlineAccountCreateProps {
 export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: InlineAccountCreateProps) {
   const { toast } = useToast();
   const [name, setName] = useState('');
-  const [segment, setSegment] = useState('B2B');
+  const [picName, setPicName] = useState('');
+  const [picContact, setPicContact] = useState('');
+  const [picEmail, setPicEmail] = useState('');
   const [region, setRegion] = useState('');
   const [type, setType] = useState('Corporate');
+  const [status, setStatus] = useState('Active');
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
@@ -35,9 +47,12 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         .from('accounts')
         .insert({
           name: name.trim(),
-          segment,
-          region: region.trim(),
+          pic_name: picName.trim(),
+          pic_contact: picContact.trim(),
+          pic_email: picEmail.trim(),
+          region,
           type,
+          status,
           sales_id: salesId,
         })
         .select()
@@ -63,29 +78,48 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         </Button>
       </div>
       <div className="space-y-1.5">
-        <Label className="text-xs">Nama Akun *</Label>
+        <Label className="text-xs">Nama Akun Pelanggan/Customer *</Label>
         <Input className="h-9 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Nama perusahaan / instansi" />
       </div>
+      <div className="space-y-1.5">
+        <Label className="text-xs">Nama PIC</Label>
+        <Input className="h-9 text-sm" value={picName} onChange={e => setPicName(e.target.value)} placeholder="Nama Person in Charge" />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Nomor Contact</Label>
+          <Input className="h-9 text-sm" value={picContact} onChange={e => setPicContact(e.target.value)} placeholder="08xxxxxxxxxx" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Email <span className="text-muted-foreground">(optional)</span></Label>
+          <Input type="email" className="h-9 text-sm" value={picEmail} onChange={e => setPicEmail(e.target.value)} placeholder="email@contoh.com" />
+        </div>
+      </div>
       <div className="grid grid-cols-3 gap-2">
-        <div className="space-y-1.5">
-          <Label className="text-xs">Segmen</Label>
-          <Select value={segment} onValueChange={setSegment}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-xs">Region</Label>
-          <Input className="h-9 text-sm" value={region} onChange={e => setRegion(e.target.value)} placeholder="Contoh: Jakarta" />
-        </div>
         <div className="space-y-1.5">
           <Label className="text-xs">Tipe</Label>
           <Select value={type} onValueChange={setType}>
             <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
             <SelectContent>
               {TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Region</Label>
+          <Select value={region} onValueChange={setRegion}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Provinsi" /></SelectTrigger>
+            <SelectContent>
+              {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Status</Label>
+          <Select value={status} onValueChange={setStatus}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
             </SelectContent>
           </Select>
         </div>
