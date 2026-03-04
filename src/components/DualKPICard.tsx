@@ -17,29 +17,39 @@ interface DualKPICardProps {
 export function DualKPICard({ items, icon: Icon, className }: DualKPICardProps) {
   return (
     <div className={cn('kpi-card animate-fade-in', className)}>
-      {Icon && (
-        <div className="flex justify-end mb-2">
-          <div className="p-1.5 rounded-md bg-secondary">
-            <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="flex items-start justify-between mb-1">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider leading-tight">{items[0].label}</span>
+        {Icon && (
+          <div className="p-1 rounded-md bg-secondary shrink-0">
+            <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-        </div>
+        )}
+      </div>
+      <div className={cn(
+        "font-bold tracking-tight text-sm sm:text-base break-all leading-tight",
+        items[0].status === 'green' && 'text-status-green',
+        items[0].status === 'red' && 'text-status-red',
+        !items[0].status && 'text-foreground',
+      )}>
+        {items[0].value}
+      </div>
+      {items[0].changeLabel && (
+        <span className="text-[10px] text-muted-foreground leading-none">{items[0].changeLabel}</span>
       )}
-      <div className="space-y-3">
-        {items.map((item, idx) => (
-          <div key={idx} className={cn(idx === 1 && 'pt-3 border-t border-border')}>
-            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{item.label}</span>
-            <div className={cn(
-              "font-bold text-foreground tracking-tight text-base sm:text-lg leading-tight mt-0.5",
-              item.status === 'green' && 'text-status-green',
-              item.status === 'red' && 'text-status-red',
-            )}>
-              {item.value}
-            </div>
-            {item.changeLabel && (
-              <span className="text-xs text-muted-foreground">{item.changeLabel}</span>
-            )}
-          </div>
-        ))}
+
+      <div className="border-t border-border my-1.5 pt-1.5">
+        <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider leading-tight">{items[1].label}</span>
+        <div className={cn(
+          "font-bold tracking-tight text-sm sm:text-base break-all leading-tight mt-0.5",
+          items[1].status === 'green' && 'text-status-green',
+          items[1].status === 'red' && 'text-status-red',
+          !items[1].status && 'text-foreground',
+        )}>
+          {items[1].value}
+        </div>
+        {items[1].changeLabel && (
+          <span className="text-[10px] text-muted-foreground leading-none">{items[1].changeLabel}</span>
+        )}
       </div>
     </div>
   );
