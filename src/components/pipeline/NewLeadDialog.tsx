@@ -12,7 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 
 const stageOptions: { value: DealStage; label: string }[] = [
-  { value: 'prospect', label: 'Prospect' },
+  { value: 'prospect', label: 'Qualified Prospect' },
   { value: 'quotation', label: 'Quotation' },
   { value: 'negotiation', label: 'Negotiation' },
   { value: 'po_secured', label: 'PO Secured/Won' },
