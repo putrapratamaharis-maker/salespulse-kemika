@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Building2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface Account {
   id: string;
@@ -46,6 +46,8 @@ export default function AccountManagement() {
   const [filterStatus, setFilterStatus] = useState('all');
   const [filterRegion, setFilterRegion] = useState('all');
   const [filterType, setFilterType] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 15;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
@@ -184,6 +186,13 @@ export default function AccountManagement() {
     return matchesSearch && matchesStatus && matchesRegion && matchesType;
   });
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedAccounts = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [search, filterStatus, filterRegion, filterType]);
+
   const statusColor = (s: string) => {
     if (s === 'Active') return 'bg-green-500/10 text-green-700 border-green-200';
     return 'bg-red-500/10 text-red-700 border-red-200';
@@ -285,7 +294,7 @@ export default function AccountManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(acc => (
+                {paginatedAccounts.map(acc => (
                   <TableRow key={acc.id}>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
@@ -306,6 +315,37 @@ export default function AccountManagement() {
                 ))}
               </TableBody>
             </Table>
+          )}
+          {filtered.length > pageSize && (
+            <div className="flex items-center justify-between px-4 py-3 border-t">
+              <p className="text-xs text-muted-foreground">
+                Menampilkan {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} dari {filtered.length} akun
+              </p>
+              <div className="flex items-center gap-1">
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                  .reduce<(number | string)[]>((acc, p, i, arr) => {
+                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, i) =>
+                    typeof p === 'string' ? (
+                      <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                    ) : (
+                      <Button key={p} variant={p === safePage ? 'default' : 'outline'} size="icon" className="h-7 w-7 text-xs" onClick={() => setCurrentPage(p)}>
+                        {p}
+                      </Button>
+                    )
+                  )}
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>
