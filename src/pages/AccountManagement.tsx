@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface Account {
   id: string;
@@ -47,6 +47,8 @@ export default function AccountManagement() {
   const [filterRegion, setFilterRegion] = useState('all');
   const [filterType, setFilterType] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortCol, setSortCol] = useState<keyof Account | ''>('name');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const pageSize = 15;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -186,9 +188,33 @@ export default function AccountManagement() {
     return matchesSearch && matchesStatus && matchesRegion && matchesType;
   });
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const sorted = [...filtered].sort((a, b) => {
+    if (!sortCol) return 0;
+    const valA = (a[sortCol] || '').toString().toLowerCase();
+    const valB = (b[sortCol] || '').toString().toLowerCase();
+    if (valA < valB) return sortDir === 'asc' ? -1 : 1;
+    if (valA > valB) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
-  const paginatedAccounts = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const paginatedAccounts = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const toggleSort = (col: keyof Account) => {
+    if (sortCol === col) {
+      setSortDir(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+    setCurrentPage(1);
+  };
+
+  const SortIcon = ({ col }: { col: keyof Account }) => {
+    if (sortCol !== col) return <ArrowUpDown className="h-3 w-3 ml-1 opacity-30" />;
+    return sortDir === 'asc' ? <ArrowUp className="h-3 w-3 ml-1" /> : <ArrowDown className="h-3 w-3 ml-1" />;
+  };
 
   // Reset page when filters change
   useEffect(() => { setCurrentPage(1); }, [search, filterStatus, filterRegion, filterType]);
@@ -285,11 +311,21 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nama Akun</TableHead>
-                  <TableHead>PIC</TableHead>
-                  <TableHead>Region</TableHead>
-                  <TableHead>Tipe</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
+                    <span className="inline-flex items-center">Nama Akun <SortIcon col="name" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_name')}>
+                    <span className="inline-flex items-center">PIC <SortIcon col="pic_name" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('region')}>
+                    <span className="inline-flex items-center">Region <SortIcon col="region" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                    <span className="inline-flex items-center">Tipe <SortIcon col="type" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                    <span className="inline-flex items-center">Status <SortIcon col="status" /></span>
+                  </TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
