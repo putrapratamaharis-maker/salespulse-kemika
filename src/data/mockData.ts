@@ -73,6 +73,13 @@ export const mockInvoices: Invoice[] = [
   { id: 'inv7', accountId: 'a5', salesId: 'u7', invoiceNumber: 'INV-2026-007', netSales: 520_000_000, grossProfit: 109_200_000, issueDate: '2026-01-25', dueDate: '2026-02-24', segment: 'B2B' },
   { id: 'inv8', accountId: 'a2', salesId: 'u5', invoiceNumber: 'INV-2026-008', netSales: 450_000_000, grossProfit: 81_000_000, issueDate: '2026-01-20', dueDate: '2026-02-19', paidDate: '2026-02-18', segment: 'B2G' },
   { id: 'inv9', accountId: 'a9', salesId: 'u6', invoiceNumber: 'INV-2026-009', netSales: 280_000_000, grossProfit: 58_800_000, issueDate: '2026-02-25', dueDate: '2026-03-27', segment: 'B2B' },
+  // March 2026 invoices
+  { id: 'inv10', accountId: 'a1', salesId: 'u4', invoiceNumber: 'INV-2026-010', netSales: 820_000_000, grossProfit: 172_200_000, issueDate: '2026-03-03', dueDate: '2026-04-02', segment: 'B2G' },
+  { id: 'inv11', accountId: 'a2', salesId: 'u5', invoiceNumber: 'INV-2026-011', netSales: 550_000_000, grossProfit: 99_000_000, issueDate: '2026-03-01', dueDate: '2026-03-31', segment: 'B2G' },
+  { id: 'inv12', accountId: 'a4', salesId: 'u6', invoiceNumber: 'INV-2026-012', netSales: 720_000_000, grossProfit: 158_400_000, issueDate: '2026-03-02', dueDate: '2026-04-01', segment: 'B2B' },
+  { id: 'inv13', accountId: 'a3', salesId: 'u7', invoiceNumber: 'INV-2026-013', netSales: 480_000_000, grossProfit: 96_000_000, issueDate: '2026-03-01', dueDate: '2026-03-31', segment: 'B2B' },
+  { id: 'inv14', accountId: 'a6', salesId: 'u8', invoiceNumber: 'INV-2026-014', netSales: 195_000_000, grossProfit: 58_500_000, issueDate: '2026-03-03', dueDate: '2026-04-02', segment: 'B2C' },
+  { id: 'inv15', accountId: 'a1', salesId: 'u4', invoiceNumber: 'INV-2026-015', netSales: 630_000_000, grossProfit: 132_300_000, issueDate: '2026-03-02', dueDate: '2026-04-01', paidDate: '2026-03-03', segment: 'B2G' },
 ];
 
 // ---- ACTIVITIES ----
