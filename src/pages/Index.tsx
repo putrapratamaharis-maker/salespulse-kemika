@@ -15,6 +15,7 @@ const Index = () => {
     case 'representative_management':
       return <RepManagementDashboard />;
     case 'sales_person':
+      return <SalesPersonDashboard />;
     default:
       return <ManagerDashboard />;
   }
