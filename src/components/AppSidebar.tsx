@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
-  Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch
+  Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
@@ -33,6 +33,7 @@ const navItems = [
   { title: 'Revenue & Margin', url: '/revenue', icon: DollarSign },
   { title: 'Product Performance', url: '/products', icon: Package },
   { title: 'AR & Cashflow', url: '/ar-cashflow', icon: CreditCard },
+  { title: 'Manajemen Akun', url: '/accounts', icon: Building2 },
 ];
 
 const adminItems = [
