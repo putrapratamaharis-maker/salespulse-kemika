@@ -57,10 +57,12 @@ export function AppSidebar() {
   const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => isSalesPerson || !item.salesOnly);
   const hasTeam = ['sales_manager', 'supervisor'].includes(currentUser.orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(currentUser.systemRole);
+  const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(currentUser.systemRole);
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
 
   const visibleNav = navItems.filter(item => {
     if (item.url === '/team-performance' && !hasTeam) return false;
+    if (item.url === '/accounts' && !isStaffOrAbove) return false;
     return true;
   });
 
