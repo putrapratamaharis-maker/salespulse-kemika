@@ -5,11 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, UserPlus, X } from 'lucide-react';
+import { Plus, Trash2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { supabase } from '@/integrations/supabase/client';
+import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -64,14 +64,6 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Inline new account state
-  const [showNewAccount, setShowNewAccount] = useState(false);
-  const [newAccName, setNewAccName] = useState('');
-  const [newAccSegment, setNewAccSegment] = useState('B2B');
-  const [newAccRegion, setNewAccRegion] = useState('');
-  const [newAccType, setNewAccType] = useState('Corporate');
-  const [savingAccount, setSavingAccount] = useState(false);
-
   const selectedAccount = accountOptions.find(a => a.id === accountId);
 
   const resetForm = () => {
@@ -84,48 +76,6 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     setProbability('');
     setExpectedCloseDate('');
     setNotes('');
-    setShowNewAccount(false);
-    setNewAccName('');
-    setNewAccSegment('B2B');
-    setNewAccRegion('');
-    setNewAccType('Corporate');
-  };
-
-  const handleSaveNewAccount = async () => {
-    if (!newAccName.trim()) {
-      toast({ title: 'Nama akun wajib diisi', variant: 'destructive' });
-      return;
-    }
-    setSavingAccount(true);
-    try {
-      const { data, error } = await supabase
-        .from('accounts')
-        .insert({
-          name: newAccName.trim(),
-          segment: newAccSegment,
-          region: newAccRegion.trim(),
-          type: newAccType,
-          sales_id: salesId,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      const newAcc = { id: data.id, name: data.name };
-      onAccountCreated?.(newAcc);
-      setAccountId(data.id);
-      setShowNewAccount(false);
-      setNewAccName('');
-      setNewAccSegment('B2B');
-      setNewAccRegion('');
-      setNewAccType('Corporate');
-      toast({ title: `Akun "${data.name}" berhasil dibuat` });
-    } catch (err: any) {
-      toast({ title: 'Gagal membuat akun', description: err.message, variant: 'destructive' });
-    } finally {
-      setSavingAccount(false);
-    }
   };
 
   const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
@@ -199,76 +149,18 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
             {/* Account & PIC */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between">
-                <Label>Account / Customer Name</Label>
-                {!showNewAccount && (
-                  <Button type="button" variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={() => setShowNewAccount(true)}>
-                    <UserPlus className="h-3 w-3" /> Akun Baru
-                  </Button>
-                )}
-              </div>
+            <AccountSelectWithCreate
+              accounts={accountOptions}
+              value={accountId}
+              onValueChange={setAccountId}
+              salesId={salesId}
+              onAccountCreated={(acc) => {
+                onAccountCreated?.(acc);
+              }}
+              label="Account / Customer Name"
+            />
 
-              {showNewAccount ? (
-                <div className="rounded-md border border-primary/30 bg-primary/5 p-3 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-primary">Buat Akun Baru</span>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={() => setShowNewAccount(false)}>
-                      <X className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Nama Akun *</Label>
-                    <Input className="h-9 text-sm" value={newAccName} onChange={e => setNewAccName(e.target.value)} placeholder="Nama perusahaan / instansi" />
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Segmen</Label>
-                      <Select value={newAccSegment} onValueChange={setNewAccSegment}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {segmentOptions.map(s => (
-                            <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Region</Label>
-                      <Input className="h-9 text-sm" value={newAccRegion} onChange={e => setNewAccRegion(e.target.value)} placeholder="Contoh: Jabodetabek" />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs">Tipe</Label>
-                      <Select value={newAccType} onValueChange={setNewAccType}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Corporate">Corporate</SelectItem>
-                          <SelectItem value="Government">Government</SelectItem>
-                          <SelectItem value="Individual">Individual</SelectItem>
-                          <SelectItem value="SME">SME</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex justify-end">
-                    <Button type="button" size="sm" className="gap-1 h-8 text-xs" onClick={handleSaveNewAccount} disabled={savingAccount}>
-                      {savingAccount ? 'Menyimpan...' : 'Simpan Akun'}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <Select value={accountId} onValueChange={setAccountId}>
-                  <SelectTrigger><SelectValue placeholder="Pilih account" /></SelectTrigger>
-                  <SelectContent>
-                    {accountOptions.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            {selectedAccount && !showNewAccount && (
+            {selectedAccount && (
               <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-3">
                 <div>
                   <p className="text-xs text-muted-foreground">PIC Contact</p>
