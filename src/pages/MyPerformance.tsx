@@ -4,6 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
 import { KPICard } from '@/components/KPICard';
+import { DualKPICard } from '@/components/DualKPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -288,7 +289,13 @@ const MyPerformance = () => {
         <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
         <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
-        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} icon={Banknote} autoFitText />
+        <DualKPICard
+          icon={Banknote}
+          items={[
+            { label: 'Cash-In (Paid)', value: formatIDRFull(cashInValue), status: cashInValue > 0 ? 'green' : 'yellow', changeLabel: `${paidInvoices.length} invoices` },
+            { label: 'Outstanding AR', value: formatIDRFull(outstandingAR), status: outstandingAR > 0 ? 'red' : 'green', changeLabel: `${inv.filter(i => !i.paid_date).length} unpaid` },
+          ]}
+        />
       </div>
 
       {/* SECTION 2 — Action Required Panel */}
