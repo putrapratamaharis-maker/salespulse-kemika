@@ -28,12 +28,29 @@ export function ManagerDashboard() {
   const [loadingProducts, setLoadingProducts] = useState(true);
   
 
-  // Existing mock data calculations
+  // Date boundaries
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  // MTD: only current month invoices
+  const mtdInvoices = mockInvoices.filter(i => {
+    const d = new Date(i.issueDate);
+    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+  });
+  const revenueMTD = mtdInvoices.reduce((s, i) => s + i.netSales, 0);
+  const grossProfitMTD = mtdInvoices.reduce((s, i) => s + i.grossProfit, 0);
+
+  // YTD: all invoices in current year
+  const ytdInvoices = mockInvoices.filter(i => new Date(i.issueDate).getFullYear() === currentYear);
+  const revenueYTD = ytdInvoices.reduce((s, i) => s + i.netSales, 0);
+
+  // Totals for other calculations (keep existing behaviour)
   const totalRevenue = mockInvoices.reduce((s, i) => s + i.netSales, 0);
   const totalGrossProfit = mockInvoices.reduce((s, i) => s + i.grossProfit, 0);
   const totalTarget = mockTargets.reduce((s, t) => s + t.revenueTarget, 0);
-  const marginPct = totalRevenue > 0 ? (totalGrossProfit / totalRevenue) * 100 : 0;
-  const achievementPct = totalTarget > 0 ? (totalRevenue / totalTarget) * 100 : 0;
+  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
+  const achievementPct = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
   const outstandingAR = mockInvoices.filter(inv => !inv.paidDate).reduce((s, inv) => s + inv.netSales, 0);
 
   const openDeals = mockDeals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
@@ -106,8 +123,8 @@ export function ManagerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="Actual Revenue" value={formatIDRFull(totalRevenue)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
-        <KPICard label="Total Revenue MTD" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
         <KPICard label="Total Target" value={formatIDRFull(totalTarget)} icon={Target} autoFitText />
         <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
