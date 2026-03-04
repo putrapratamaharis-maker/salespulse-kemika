@@ -26,7 +26,7 @@ const SEGMENTS = ['B2B', 'B2G', 'B2C'];
 const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor'];
 
 export default function AccountManagement() {
-  const { user } = useAuth();
+  const { user, userRole, loading: authLoading } = useAuth();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -42,13 +42,15 @@ export default function AccountManagement() {
   const [formRegion, setFormRegion] = useState('');
   const [formType, setFormType] = useState('Corporate');
 
+  const allowedRoles = ['super_admin', 'admin', 'staff'];
+  const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
+
   const fetchAccounts = async () => {
     if (!user) return;
     setLoading(true);
     const { data, error } = await supabase
       .from('accounts')
       .select('*')
-      .eq('sales_id', user.id)
       .order('name');
     if (error) {
       toast({ title: 'Gagal memuat akun', description: error.message, variant: 'destructive' });
@@ -143,6 +145,19 @@ export default function AccountManagement() {
     if (seg === 'B2C') return 'bg-green-500/10 text-green-700 border-green-200';
     return 'bg-orange-500/10 text-orange-700 border-orange-200';
   };
+
+  if (authLoading) {
+    return <div className="flex items-center justify-center p-12 text-muted-foreground text-sm">Memuat...</div>;
+  }
+
+  if (!hasAccess) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center">
+        <h2 className="text-xl font-semibold text-foreground mb-2">Akses Ditolak</h2>
+        <p className="text-sm text-muted-foreground">Halaman ini hanya dapat diakses oleh Super Admin, Admin, dan Staff.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
