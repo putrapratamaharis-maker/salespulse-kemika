@@ -9,7 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   Target, DollarSign, Percent, BarChart3, TrendingUp, AlertTriangle,
-  Clock, FileWarning, Activity, CheckCircle2, CalendarClock, FileText, Loader2
+  Clock, FileWarning, Activity, CheckCircle2, CalendarClock, FileText, Loader2,
+  Banknote, CreditCard
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
@@ -155,18 +156,42 @@ const MyPerformance = () => {
   })) : activities;
 
   // ===== SECTION 1: KPI Calculations =====
-  const revenue = inv.reduce((s, i) => s + i.net_sales, 0);
-  const grossProfit = inv.reduce((s, i) => s + i.gross_profit, 0);
-  const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
+  const currentMonthNum = now.getMonth();
+  const currentYearNum = now.getFullYear();
+
+  // MTD invoices
+  const mtdInv = inv.filter(i => {
+    const d = new Date(i.issue_date);
+    return d.getMonth() === currentMonthNum && d.getFullYear() === currentYearNum;
+  });
+  const revenueMTD = mtdInv.reduce((s, i) => s + i.net_sales, 0);
+  const grossProfitMTD = mtdInv.reduce((s, i) => s + i.gross_profit, 0);
+
+  // YTD invoices
+  const ytdInv = inv.filter(i => new Date(i.issue_date).getFullYear() === currentYearNum);
+  const revenueYTD = ytdInv.reduce((s, i) => s + i.net_sales, 0);
+
+  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetRevenue = tgt?.revenue_target || 0;
-  const achievementPct = targetRevenue > 0 ? (revenue / targetRevenue) * 100 : 0;
+  const achievementPct = targetRevenue > 0 ? (revenueMTD / targetRevenue) * 100 : 0;
 
   const openDeals = dls.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
   const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
 
+  const outstandingAR = inv.filter(i => !i.paid_date).reduce((s, i) => s + i.net_sales, 0);
   const overdueInvoices = inv.filter(i => !i.paid_date && new Date(i.due_date) < now);
   const overdueValue = overdueInvoices.reduce((s, i) => s + i.net_sales, 0);
+
+  // Pipeline by time bucket (personal)
+  const pipeline30 = openDeals.filter(d => {
+    const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return days <= 30;
+  }).reduce((s, d) => s + d.value, 0);
+  const pipeline60 = openDeals.filter(d => {
+    const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    return days > 30 && days <= 60;
+  }).reduce((s, d) => s + d.value, 0);
 
   // Last month comparison (simplified)
   const lastMonthChange = 12.5; // placeholder until historical data available
@@ -197,9 +222,9 @@ const MyPerformance = () => {
   // ===== SECTION 3: Trend Data (last 3 months mock) =====
   const trendMonths = ['Dec', 'Jan', 'Feb'];
   const revenueTrend = [
-    { month: 'Dec', revenue: revenue * 0.82 },
-    { month: 'Jan', revenue: revenue * 0.91 },
-    { month: 'Feb', revenue: revenue },
+    { month: 'Dec', revenue: revenueYTD * 0.82 },
+    { month: 'Jan', revenue: revenueYTD * 0.91 },
+    { month: 'Feb', revenue: revenueYTD },
   ];
   const marginTrend = [
     { month: 'Dec', margin: marginPct * 0.95 },
@@ -245,65 +270,21 @@ const MyPerformance = () => {
         </p>
       </div>
 
-      {/* SECTION 1 — Result Snapshot */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          label="Target Revenue MTD"
-          value={formatIDRFull(targetRevenue)}
-          icon={Target}
-          autoFitText
-        />
-        <KPICard
-          label="Actual Revenue MTD"
-          value={formatIDRFull(revenue)}
-          change={lastMonthChange}
-          changeLabel="vs last month"
-          icon={DollarSign}
-          autoFitText
-        />
-        <KPICard
-          label="Achievement %"
-          value={formatPercent(achievementPct)}
-          status={getAchievementStatus(achievementPct)}
-          icon={Target}
-          autoFitText
-        />
-        <KPICard
-          label="Gross Margin %"
-          value={formatPercent(marginPct)}
-          status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'}
-          icon={Percent}
-          autoFitText
-        />
+      {/* SECTION 1 — Row 1: 5 cards matching Executive Summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Total Target" value={formatIDRFull(targetRevenue)} icon={Target} autoFitText />
+        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText />
       </div>
+
+      {/* Row 2: 4 cards matching Executive Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          label="GP Contribution"
-          value={formatIDRFull(grossProfit)}
-          icon={TrendingUp}
-          autoFitText
-        />
-        <KPICard
-          label="Total Pipeline Value"
-          value={formatIDRFull(pipelineValue)}
-          changeLabel={`${openDeals.length} open deals`}
-          icon={BarChart3}
-          autoFitText
-        />
-        <KPICard
-          label="Weighted Forecast"
-          value={formatIDRFull(weightedForecast)}
-          icon={TrendingUp}
-          autoFitText
-        />
-        <KPICard
-          label="Overdue Invoice Value"
-          value={formatIDRFull(overdueValue)}
-          status={overdueValue > 0 ? 'red' : 'green'}
-          changeLabel={`${overdueInvoices.length} invoices`}
-          icon={AlertTriangle}
-          autoFitText
-        />
+        <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText />
+        <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
       </div>
 
       {/* SECTION 2 — Action Required Panel */}
