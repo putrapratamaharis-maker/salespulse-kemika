@@ -7,18 +7,8 @@ import { RepManagementDashboard } from '@/components/dashboards/RepManagementDas
 const Index = () => {
   const { currentUser } = useAppContext();
 
-  switch (currentUser.orgRole) {
-    case 'supervisor':
-      return <SupervisorDashboard />;
-    case 'sales_manager':
-      return <ManagerDashboard />;
-    case 'representative_management':
-      return <RepManagementDashboard />;
-    case 'sales_person':
-      return <SalesPersonDashboard />;
-    default:
-      return <ManagerDashboard />;
-  }
+  // Executive Summary is the same for all roles
+  return <ManagerDashboard />;
 };
 
 export default Index;
