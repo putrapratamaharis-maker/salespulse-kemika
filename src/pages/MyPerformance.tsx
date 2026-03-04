@@ -183,6 +183,10 @@ const MyPerformance = () => {
   const overdueInvoices = inv.filter(i => !i.paid_date && new Date(i.due_date) < now);
   const overdueValue = overdueInvoices.reduce((s, i) => s + i.net_sales, 0);
 
+  // Cash-In (Paid) — total paid invoices
+  const paidInvoices = inv.filter(i => !!i.paid_date);
+  const cashInValue = paidInvoices.reduce((s, i) => s + i.net_sales, 0);
+
   // Pipeline by time bucket (personal)
   const pipeline30 = openDeals.filter(d => {
     const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -284,7 +288,7 @@ const MyPerformance = () => {
         <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
         <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
-        <KPICard label="Overdue Invoice Value" value={formatIDRFull(overdueValue)} status={overdueValue > 0 ? 'red' : 'green'} changeLabel={`${overdueInvoices.length} invoices`} icon={AlertTriangle} autoFitText />
+        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} icon={Banknote} autoFitText />
       </div>
 
       {/* SECTION 2 — Action Required Panel */}
