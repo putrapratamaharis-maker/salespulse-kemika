@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown, Settings2, Eye, ExternalLink } from 'lucide-react';
+import { Activity, Phone, Users, MapPin, FileText, Clock, Loader2, Plus, Pencil, Trash2, Search, X, Monitor, GraduationCap, Download, ArrowUpDown, ArrowUp, ArrowDown, Settings2, Eye, ExternalLink, UserPlus } from 'lucide-react';
 import { WeeklyTrendChart } from '@/components/activities/WeeklyTrendChart';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { MonthlyStats } from '@/components/activities/MonthlyStats';
@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 
 interface SalesActivity {
   id: string;
@@ -463,17 +464,16 @@ const MyActivities = () => {
                 <Label>Date</Label>
                 <Input type="date" value={formDate} onChange={e => setFormDate(e.target.value)} />
               </div>
-              <div className="space-y-2">
-                <Label>Account/Customer <span className="text-muted-foreground text-xs">(optional)</span></Label>
-                <Select value={formAccountId} onValueChange={setFormAccountId}>
-                  <SelectTrigger><SelectValue placeholder="Select account/customer" /></SelectTrigger>
-                  <SelectContent>
-                    {accounts.map(a => (
-                      <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <AccountSelectWithCreate
+                  accounts={accounts}
+                  value={formAccountId}
+                  onValueChange={setFormAccountId}
+                  salesId={user!.id}
+                  onAccountCreated={(acc) => {
+                    setAccounts(prev => [...prev, acc].sort((a, b) => a.name.localeCompare(b.name)));
+                  }}
+                  optional
+                />
               <div className="space-y-2">
                 <Label>Purpose/Tujuan <span className="text-destructive">*</span></Label>
                 <Textarea
