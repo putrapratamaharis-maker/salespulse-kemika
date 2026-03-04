@@ -20,10 +20,23 @@ interface Account {
   type: string;
   sales_id: string;
   created_at: string;
+  pic_name: string;
+  pic_contact: string;
+  pic_email: string;
+  status: string;
 }
 
-const SEGMENTS = ['B2B', 'B2G', 'B2C'];
-const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor'];
+const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor', 'NGO', 'Others'];
+const STATUSES = ['Active', 'Non-Active'];
+const PROVINCES = [
+  'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau',
+  'Jambi', 'Sumatera Selatan', 'Bangka Belitung', 'Bengkulu', 'Lampung',
+  'DKI Jakarta', 'Banten', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur',
+  'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+  'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara',
+  'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Barat', 'Sulawesi Tenggara',
+  'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat', 'Papua Selatan', 'Papua Tengah', 'Papua Pegunungan', 'Papua Barat Daya',
+];
 
 export default function AccountManagement() {
   const { user, userRole, loading: authLoading } = useAuth();
@@ -38,9 +51,12 @@ export default function AccountManagement() {
 
   // Form state
   const [formName, setFormName] = useState('');
-  const [formSegment, setFormSegment] = useState('B2B');
+  const [formPicName, setFormPicName] = useState('');
+  const [formPicContact, setFormPicContact] = useState('');
+  const [formPicEmail, setFormPicEmail] = useState('');
   const [formRegion, setFormRegion] = useState('');
   const [formType, setFormType] = useState('Corporate');
+  const [formStatus, setFormStatus] = useState('Active');
 
   const allowedRoles = ['super_admin', 'admin', 'staff'];
   const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
@@ -65,18 +81,24 @@ export default function AccountManagement() {
   const openCreate = () => {
     setEditingAccount(null);
     setFormName('');
-    setFormSegment('B2B');
+    setFormPicName('');
+    setFormPicContact('');
+    setFormPicEmail('');
     setFormRegion('');
     setFormType('Corporate');
+    setFormStatus('Active');
     setDialogOpen(true);
   };
 
   const openEdit = (acc: Account) => {
     setEditingAccount(acc);
     setFormName(acc.name);
-    setFormSegment(acc.segment);
+    setFormPicName(acc.pic_name || '');
+    setFormPicContact(acc.pic_contact || '');
+    setFormPicEmail(acc.pic_email || '');
     setFormRegion(acc.region);
     setFormType(acc.type);
+    setFormStatus(acc.status || 'Active');
     setDialogOpen(true);
   };
 
@@ -93,10 +115,20 @@ export default function AccountManagement() {
     if (!user) return;
     setSaving(true);
 
+    const payload = {
+      name: formName.trim(),
+      pic_name: formPicName.trim(),
+      pic_contact: formPicContact.trim(),
+      pic_email: formPicEmail.trim(),
+      region: formRegion,
+      type: formType,
+      status: formStatus,
+    };
+
     if (editingAccount) {
       const { error } = await supabase
         .from('accounts')
-        .update({ name: formName.trim(), segment: formSegment, region: formRegion.trim(), type: formType })
+        .update(payload)
         .eq('id', editingAccount.id);
       if (error) {
         toast({ title: 'Gagal mengupdate', description: error.message, variant: 'destructive' });
@@ -108,7 +140,7 @@ export default function AccountManagement() {
     } else {
       const { error } = await supabase
         .from('accounts')
-        .insert({ name: formName.trim(), segment: formSegment, region: formRegion.trim(), type: formType, sales_id: user.id });
+        .insert({ ...payload, sales_id: user.id });
       if (error) {
         toast({ title: 'Gagal menambahkan', description: error.message, variant: 'destructive' });
       } else {
@@ -137,13 +169,13 @@ export default function AccountManagement() {
   const filtered = accounts.filter(a =>
     a.name.toLowerCase().includes(search.toLowerCase()) ||
     a.region.toLowerCase().includes(search.toLowerCase()) ||
-    a.type.toLowerCase().includes(search.toLowerCase())
+    a.type.toLowerCase().includes(search.toLowerCase()) ||
+    (a.pic_name || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const segmentColor = (seg: string) => {
-    if (seg === 'B2G') return 'bg-blue-500/10 text-blue-700 border-blue-200';
-    if (seg === 'B2C') return 'bg-green-500/10 text-green-700 border-green-200';
-    return 'bg-orange-500/10 text-orange-700 border-orange-200';
+  const statusColor = (s: string) => {
+    if (s === 'Active') return 'bg-green-500/10 text-green-700 border-green-200';
+    return 'bg-red-500/10 text-red-700 border-red-200';
   };
 
   if (authLoading) {
@@ -200,9 +232,10 @@ export default function AccountManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nama Akun</TableHead>
-                  <TableHead>Segment</TableHead>
+                  <TableHead>PIC</TableHead>
                   <TableHead>Region</TableHead>
                   <TableHead>Tipe</TableHead>
+                  <TableHead>Status</TableHead>
                   <TableHead className="text-right">Aksi</TableHead>
                 </TableRow>
               </TableHeader>
@@ -210,11 +243,12 @@ export default function AccountManagement() {
                 {filtered.map(acc => (
                   <TableRow key={acc.id}>
                     <TableCell className="font-medium">{acc.name}</TableCell>
-                    <TableCell>
-                      <Badge variant="outline" className={segmentColor(acc.segment)}>{acc.segment}</Badge>
-                    </TableCell>
+                    <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.region || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(acc)}>
                         <Pencil className="h-3.5 w-3.5" />
@@ -239,19 +273,24 @@ export default function AccountManagement() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label>Nama Akun *</Label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / pelanggan" />
+              <Label>Nama Akun Pelanggan/Customer *</Label>
+              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+            </div>
+            <div className="space-y-1.5">
+              <Label>Nama PIC</Label>
+              <Input value={formPicName} onChange={e => setFormPicName(e.target.value)} placeholder="Nama Person in Charge" />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label>Segment</Label>
-                <Select value={formSegment} onValueChange={setFormSegment}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <Label>Nomor Contact</Label>
+                <Input value={formPicContact} onChange={e => setFormPicContact(e.target.value)} placeholder="08xxxxxxxxxx" />
               </div>
+              <div className="space-y-1.5">
+                <Label>Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                <Input type="email" value={formPicEmail} onChange={e => setFormPicEmail(e.target.value)} placeholder="email@contoh.com" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label>Tipe</Label>
                 <Select value={formType} onValueChange={setFormType}>
@@ -261,10 +300,24 @@ export default function AccountManagement() {
                   </SelectContent>
                 </Select>
               </div>
+              <div className="space-y-1.5">
+                <Label>Status</Label>
+                <Select value={formStatus} onValueChange={setFormStatus}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Region</Label>
-              <Input value={formRegion} onChange={e => setFormRegion(e.target.value)} placeholder="Contoh: Jakarta, Surabaya" />
+              <Label>Region (Provinsi)</Label>
+              <Select value={formRegion} onValueChange={setFormRegion}>
+                <SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger>
+                <SelectContent>
+                  {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
