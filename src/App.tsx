@@ -19,6 +19,7 @@ import Products from "./pages/Products";
 import ARCashflow from "./pages/ARCashflow";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPanel from "./pages/AdminPanel";
+import AccountManagement from "./pages/AccountManagement";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,7 @@ function ProtectedRoutes() {
           <Route path="/products" element={<Products />} />
           <Route path="/ar-cashflow" element={<ARCashflow />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
+          <Route path="/accounts" element={<AccountManagement />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
