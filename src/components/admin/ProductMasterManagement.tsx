@@ -9,9 +9,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler, Upload, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import * as XLSX from 'xlsx';
 
 // --- Category Management ---
 function CategoryTab() {
@@ -120,6 +121,7 @@ function ProductTab() {
   const [price, setPrice] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
   // Search & filter
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
@@ -164,6 +166,73 @@ function ProductTab() {
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); }
   };
 
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Harga', 'Aktif (Ya/Tidak)'],
+      ['Contoh Produk', 'SKU-001', categories[0]?.name || 'Hardware', units[0]?.name || 'pcs', 100000, 'Ya'],
+    ]);
+    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Products');
+    XLSX.writeFile(wb, 'template_import_produk.xlsx');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImporting(true);
+
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      // Skip header row
+      const dataRows = rows.slice(1).filter(r => r[0]?.toString().trim());
+      if (dataRows.length === 0) {
+        toast({ title: 'File kosong', description: 'Tidak ada data produk ditemukan.', variant: 'destructive' });
+        setImporting(false);
+        return;
+      }
+
+      // Build category & unit lookup maps (case-insensitive)
+      const catMap = new Map(categories.map(c => [c.name.toLowerCase(), c.id]));
+      const unitNames = new Set(units.map(u => u.name.toLowerCase()));
+
+      const payloads = dataRows.map(row => {
+        const prodName = row[0]?.toString().trim() || '';
+        const prodSku = row[1]?.toString().trim() || null;
+        const catName = row[2]?.toString().trim() || '';
+        const unitName = row[3]?.toString().trim() || 'pcs';
+        const prodPrice = Number(row[4]) || 0;
+        const activeStr = (row[5]?.toString().trim() || 'Ya').toLowerCase();
+        const active = !['tidak', 'no', 'false', '0', 'non-aktif'].includes(activeStr);
+
+        return {
+          name: prodName,
+          sku: prodSku,
+          category_id: catMap.get(catName.toLowerCase()) || null,
+          unit: unitNames.has(unitName.toLowerCase()) ? unitName : 'pcs',
+          price: prodPrice,
+          is_active: active,
+        };
+      }).filter(p => p.name);
+
+      const { error, data: inserted } = await supabase.from('products').insert(payloads).select();
+      if (error) {
+        toast({ title: 'Import gagal', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Import berhasil', description: `${inserted?.length || payloads.length} produk ditambahkan.` });
+        fetchAll();
+      }
+    } catch (err: any) {
+      toast({ title: 'Error membaca file', description: err.message, variant: 'destructive' });
+    }
+    setImporting(false);
+  };
+
   const filteredItems = items.filter(i => {
     const q = searchQuery.toLowerCase();
     const matchesSearch = !q || i.name.toLowerCase().includes(q) || (i.sku && i.sku.toLowerCase().includes(q));
@@ -179,53 +248,64 @@ function ProductTab() {
           <Package className="h-4 w-4 text-accent" /> Products
           <Badge variant="secondary" className="text-[10px] ml-1">{filteredItems.length}/{items.length}</Badge>
         </CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader><DialogTitle>{editItem ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle></DialogHeader>
-            <div className="space-y-3 mt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">Nama Produk</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Nama produk" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">SKU (opsional)</Label><Input value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU" /></div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Kategori</Label>
-                  <Select value={categoryId} onValueChange={setCategoryId}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                    <SelectContent>
-                      {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
+            <Download className="h-3 w-3" /> Template
+          </Button>
+          <label>
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+            </Button>
+          </label>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-lg">
+              <DialogHeader><DialogTitle>{editItem ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle></DialogHeader>
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Nama Produk</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Nama produk" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">SKU (opsional)</Label><Input value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU" /></div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Satuan Unit</Label>
-                  <Select value={unit} onValueChange={setUnit}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih satuan" /></SelectTrigger>
-                    <SelectContent>
-                      {units.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Kategori</Label>
+                    <Select value={categoryId} onValueChange={setCategoryId}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                      <SelectContent>
+                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Satuan Unit</Label>
+                    <Select value={unit} onValueChange={setUnit}>
+                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih satuan" /></SelectTrigger>
+                      <SelectContent>
+                        {units.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Harga (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
+                  <div className="space-y-1.5 flex items-end">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                      Aktif
+                    </label>
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">Harga (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
-                <div className="space-y-1.5 flex items-end">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                    Aktif
-                  </label>
-                </div>
-              </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Search & Filters */}
