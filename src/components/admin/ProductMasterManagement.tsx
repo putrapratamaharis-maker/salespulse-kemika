@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -119,6 +120,10 @@ function ProductTab() {
   const [price, setPrice] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Search & filter
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
 
   const fetchAll = async () => {
     setLoading(true);
@@ -159,11 +164,20 @@ function ProductTab() {
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); }
   };
 
+  const filteredItems = items.filter(i => {
+    const q = searchQuery.toLowerCase();
+    const matchesSearch = !q || i.name.toLowerCase().includes(q) || (i.sku && i.sku.toLowerCase().includes(q));
+    const matchesCategory = filterCategory === 'all' || i.category_id === filterCategory;
+    const matchesStatus = filterStatus === 'all' || (filterStatus === 'active' ? i.is_active : !i.is_active);
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
   return (
     <Card>
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Package className="h-4 w-4 text-accent" /> Products
+          <Badge variant="secondary" className="text-[10px] ml-1">{filteredItems.length}/{items.length}</Badge>
         </CardTitle>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
@@ -213,8 +227,36 @@ function ProductTab() {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
-        {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada produk.</p> : (
+      <CardContent className="space-y-3">
+        {/* Search & Filters */}
+        <div className="flex flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[180px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              className="h-8 text-sm pl-8"
+              placeholder="Cari nama atau SKU..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+          <Select value={filterCategory} onValueChange={setFilterCategory}>
+            <SelectTrigger className="h-8 text-xs w-[150px]"><SelectValue placeholder="Kategori" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Kategori</SelectItem>
+              {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Select value={filterStatus} onValueChange={v => setFilterStatus(v as any)}>
+            <SelectTrigger className="h-8 text-xs w-[120px]"><SelectValue placeholder="Status" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Semua Status</SelectItem>
+              <SelectItem value="active">Aktif</SelectItem>
+              <SelectItem value="inactive">Non-aktif</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : filteredItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">{items.length === 0 ? 'Belum ada produk.' : 'Tidak ada produk yang cocok.'}</p> : (
           <Table>
             <TableHeader><TableRow>
               <TableHead className="text-xs">Nama</TableHead>
@@ -226,7 +268,7 @@ function ProductTab() {
               <TableHead className="text-xs w-20">Aksi</TableHead>
             </TableRow></TableHeader>
             <TableBody>
-              {items.map((i: any) => (
+              {filteredItems.map((i: any) => (
                 <TableRow key={i.id}>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{i.sku || '—'}</TableCell>
