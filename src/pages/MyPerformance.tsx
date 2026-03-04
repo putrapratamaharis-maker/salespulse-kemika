@@ -279,12 +279,12 @@ const MyPerformance = () => {
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText />
       </div>
 
-      {/* Row 2: 4 cards matching Executive Summary */}
+      {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText />
-        <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText />
-        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
+        <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
+        <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
+        <KPICard label="Overdue Invoice Value" value={formatIDRFull(overdueValue)} status={overdueValue > 0 ? 'red' : 'green'} changeLabel={`${overdueInvoices.length} invoices`} icon={AlertTriangle} autoFitText />
       </div>
 
       {/* SECTION 2 — Action Required Panel */}
