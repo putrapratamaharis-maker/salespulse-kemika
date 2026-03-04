@@ -289,13 +289,7 @@ const MyPerformance = () => {
         <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
         <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
-        <DualKPICard
-          icon={Banknote}
-          items={[
-            { label: 'Cash-In (Paid)', value: formatIDRFull(cashInValue), status: cashInValue > 0 ? 'green' : 'yellow', changeLabel: `${paidInvoices.length} invoices` },
-            { label: 'Outstanding AR', value: formatIDRFull(outstandingAR), status: outstandingAR > 0 ? 'red' : 'green', changeLabel: `${inv.filter(i => !i.paid_date).length} unpaid` },
-          ]}
-        />
+        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText />
       </div>
 
       {/* SECTION 2 — Action Required Panel */}
