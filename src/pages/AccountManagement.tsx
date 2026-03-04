@@ -10,7 +10,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, FileText, Loader2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface Account {
   id: string;
@@ -55,6 +59,7 @@ export default function AccountManagement() {
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   // Form state
   const [formName, setFormName] = useState('');
@@ -173,6 +178,109 @@ export default function AccountManagement() {
     setSaving(false);
   };
 
+  // --- Import / Export ---
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'Status'],
+      ['PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Active'],
+    ]);
+    ws['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
+    XLSX.writeFile(wb, 'template_import_akun.xlsx');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    e.target.value = '';
+    setImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const dataRows = rows.slice(1).filter(r => r[0]?.toString().trim());
+      if (dataRows.length === 0) {
+        toast({ title: 'File kosong', description: 'Tidak ada data akun ditemukan.', variant: 'destructive' });
+        setImporting(false);
+        return;
+      }
+      const validTypes = new Set(TYPES.map(t => t.toLowerCase()));
+      const validProvinces = new Set(PROVINCES.map(p => p.toLowerCase()));
+      const payloads = dataRows.map(row => {
+        const name = row[0]?.toString().trim() || '';
+        const picName = row[1]?.toString().trim() || '';
+        const picContact = row[2]?.toString().trim() || '';
+        const picEmail = row[3]?.toString().trim() || '';
+        const typeRaw = row[4]?.toString().trim() || 'Corporate';
+        const regionRaw = row[5]?.toString().trim() || '';
+        const statusRaw = row[6]?.toString().trim() || 'Active';
+        const type = TYPES.find(t => t.toLowerCase() === typeRaw.toLowerCase()) || 'Corporate';
+        const region = PROVINCES.find(p => p.toLowerCase() === regionRaw.toLowerCase()) || regionRaw;
+        const status = statusRaw.toLowerCase() === 'non-active' || statusRaw.toLowerCase() === 'non-aktif' || statusRaw.toLowerCase() === 'inactive' ? 'Non-Active' : 'Active';
+        return { name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
+      }).filter(p => p.name);
+
+      const { error, data: inserted } = await supabase.from('accounts').insert(payloads).select();
+      if (error) {
+        toast({ title: 'Import gagal', description: error.message, variant: 'destructive' });
+      } else {
+        toast({ title: 'Import berhasil', description: `${inserted?.length || payloads.length} akun ditambahkan.` });
+        fetchAccounts();
+      }
+    } catch (err: any) {
+      toast({ title: 'Error membaca file', description: err.message, variant: 'destructive' });
+    }
+    setImporting(false);
+  };
+
+  const exportExcel = () => {
+    const exportData = filtered.map(a => ({
+      'Nama Akun': a.name,
+      'Nama PIC': a.pic_name || '',
+      'Nomor Contact': a.pic_contact || '',
+      'Email': a.pic_email || '',
+      'Tipe': a.type,
+      'Region': a.region || '',
+      'Status': a.status || 'Active',
+    }));
+    const ws = XLSX.utils.json_to_sheet(exportData);
+    ws['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
+    XLSX.writeFile(wb, `data_akun_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: 'Export berhasil', description: `${exportData.length} akun diekspor ke Excel.` });
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text('Data Akun Pelanggan', 14, 15);
+    doc.setFontSize(8);
+    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} | Total: ${filtered.length} akun`, 14, 21);
+
+    autoTable(doc, {
+      startY: 26,
+      head: [['No', 'Nama Akun', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region', 'Status']],
+      body: filtered.map((a, i) => [
+        i + 1,
+        a.name,
+        a.pic_name || '-',
+        a.pic_contact || '-',
+        a.pic_email || '-',
+        a.type,
+        a.region || '-',
+        a.status || 'Active',
+      ]),
+      styles: { fontSize: 7, cellPadding: 2 },
+      headStyles: { fillColor: [59, 130, 246], fontSize: 7 },
+    });
+
+    doc.save(`data_akun_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast({ title: 'Export berhasil', description: `${filtered.length} akun diekspor ke PDF.` });
+  };
+
   const usedRegions = [...new Set(accounts.map(a => a.region).filter(Boolean))].sort();
   const usedTypes = [...new Set(accounts.map(a => a.type).filter(Boolean))].sort();
 
@@ -244,9 +352,35 @@ export default function AccountManagement() {
           <h1 className="text-2xl font-bold text-foreground">Manajemen Akun</h1>
           <p className="text-sm text-muted-foreground">Kelola daftar pelanggan & prospek Anda</p>
         </div>
-        <Button onClick={openCreate} size="sm">
-          <Plus className="h-4 w-4 mr-1" /> Tambah Akun
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={downloadTemplate}>
+            <Download className="h-4 w-4 mr-1" /> Template
+          </Button>
+          <label>
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <Button variant="outline" size="sm" asChild disabled={importing}>
+              <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
+            </Button>
+          </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <FileText className="h-4 w-4 mr-1" /> Ekspor
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={exportExcel}>
+                <Download className="h-4 w-4 mr-2" /> Export Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPdf}>
+                <FileText className="h-4 w-4 mr-2" /> Export PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button onClick={openCreate} size="sm">
+            <Plus className="h-4 w-4 mr-1" /> Tambah Akun
+          </Button>
+        </div>
       </div>
 
       <Card>
