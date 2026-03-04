@@ -281,7 +281,7 @@ export default function AccountManagement() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Semua Tipe</SelectItem>
-                {usedTypes.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {TYPES.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
             <Select value={filterRegion} onValueChange={setFilterRegion}>
