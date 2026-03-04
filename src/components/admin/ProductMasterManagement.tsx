@@ -9,10 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler, Upload, Download } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler, Upload, Download, FileDown, FileSpreadsheet, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 // --- Category Management ---
 function CategoryTab() {
@@ -241,6 +244,50 @@ function ProductTab() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  const exportExcel = () => {
+    const rows = filteredItems.map((i: any, idx: number) => ({
+      'No': idx + 1,
+      'Nama Produk': i.name,
+      'SKU': i.sku || '',
+      'Kategori': i.product_categories?.name || '',
+      'Satuan Unit': i.unit || '',
+      'Harga': Number(i.price) || 0,
+      'Status': i.is_active ? 'Aktif' : 'Non-aktif',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Products');
+    XLSX.writeFile(wb, `data_produk_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: 'Export Excel berhasil' });
+  };
+
+  const exportPdf = () => {
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    doc.setFontSize(14);
+    doc.text('Data Produk', 14, 15);
+    doc.setFontSize(8);
+    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 21);
+
+    autoTable(doc, {
+      startY: 26,
+      head: [['No', 'Nama Produk', 'SKU', 'Kategori', 'Unit', 'Harga (Rp)', 'Status']],
+      body: filteredItems.map((i: any, idx: number) => [
+        idx + 1,
+        i.name,
+        i.sku || '—',
+        i.product_categories?.name || '—',
+        i.unit || '—',
+        Number(i.price).toLocaleString('id-ID'),
+        i.is_active ? 'Aktif' : 'Non-aktif',
+      ]),
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [41, 128, 185] },
+    });
+    doc.save(`data_produk_${new Date().toISOString().slice(0, 10)}.pdf`);
+    toast({ title: 'Export PDF berhasil' });
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
@@ -258,6 +305,21 @@ function ProductTab() {
               <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
             </Button>
           </label>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs">
+                <FileDown className="h-3 w-3" /> Ekspor
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportExcel} className="text-xs gap-2">
+                <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportPdf} className="text-xs gap-2">
+                <FileText className="h-3.5 w-3.5" /> Export PDF
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
