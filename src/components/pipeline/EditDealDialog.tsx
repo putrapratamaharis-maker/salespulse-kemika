@@ -233,11 +233,47 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Price/Unit (Rp)</Label>
-                      <Input className="h-9 text-sm" type="number" min={0} value={product.pricePerUnit || ''} onChange={e => updateProduct(idx, 'pricePerUnit', Number(e.target.value))} />
+                      <Input
+                        className="h-9 text-sm"
+                        type="text"
+                        inputMode="numeric"
+                        value={product.pricePerUnit ? `Rp ${product.pricePerUnit.toLocaleString('id-ID')}` : ''}
+                        onChange={e => {
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          updateProduct(idx, 'pricePerUnit', Number(raw) || 0);
+                        }}
+                        onFocus={e => {
+                          const raw = String(product.pricePerUnit || '');
+                          e.target.value = raw;
+                          e.target.type = 'number';
+                        }}
+                        onBlur={e => {
+                          e.target.type = 'text';
+                        }}
+                        placeholder="Rp 0"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Biaya Lainnya (Rp)</Label>
-                      <Input className="h-9 text-sm" type="number" min={0} value={product.otherCost || ''} onChange={e => updateProduct(idx, 'otherCost', Number(e.target.value))} />
+                      <Input
+                        className="h-9 text-sm"
+                        type="text"
+                        inputMode="numeric"
+                        value={product.otherCost ? `Rp ${product.otherCost.toLocaleString('id-ID')}` : ''}
+                        onChange={e => {
+                          const raw = e.target.value.replace(/[^0-9]/g, '');
+                          updateProduct(idx, 'otherCost', Number(raw) || 0);
+                        }}
+                        onFocus={e => {
+                          const raw = String(product.otherCost || '');
+                          e.target.value = raw;
+                          e.target.type = 'number';
+                        }}
+                        onBlur={e => {
+                          e.target.type = 'text';
+                        }}
+                        placeholder="Rp 0"
+                      />
                     </div>
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
