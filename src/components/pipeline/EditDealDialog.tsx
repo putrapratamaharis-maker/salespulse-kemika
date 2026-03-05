@@ -9,6 +9,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { supabase } from '@/integrations/supabase/client';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -25,9 +26,6 @@ const segmentOptions: { value: string; label: string }[] = [
   { value: 'B2B', label: 'B2B' },
   { value: 'B2C', label: 'B2C/e-Commerce' },
 ];
-
-const productCategories = ['Hardware', 'Software', 'Networking', 'Services', 'Consumables', 'Other'];
-const unitOptions = ['pcs', 'unit', 'set', 'lot', 'pack', 'box', 'roll', 'meter', 'kg', 'liter'];
 
 interface EditDealDialogProps {
   deal: Deal | null;
@@ -49,6 +47,25 @@ const emptyProduct = (): DealProduct => ({
 
 export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions }: EditDealDialogProps) {
   const { toast } = useToast();
+
+  // Master data from DB
+  const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
+  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number }[]>([]);
+  const [dbUnits, setDbUnits] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const fetchMasters = async () => {
+      const [{ data: cats }, { data: prods }, { data: units }] = await Promise.all([
+        supabase.from('product_categories').select('id, name').order('name'),
+        supabase.from('products').select('id, name, category_id, unit, price').eq('is_active', true).order('name'),
+        supabase.from('units').select('id, name').order('name'),
+      ]);
+      setDbCategories(cats || []);
+      setDbProducts(prods || []);
+      setDbUnits(units || []);
+    };
+    if (open) fetchMasters();
+  }, [open]);
 
   const [accountId, setAccountId] = useState('');
   const [location, setLocation] = useState('');
@@ -79,6 +96,28 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
 
   const updateProduct = (index: number, field: keyof DealProduct, value: string | number) => {
     setProducts(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
+  };
+
+  // Auto-fill category, unit, price when selecting product from DB
+  const handleProductSelect = (index: number, productId: string) => {
+    const prod = dbProducts.find(p => p.id === productId);
+    if (!prod) return;
+    const cat = dbCategories.find(c => c.id === prod.category_id);
+    setProducts(prev => prev.map((p, i) => i === index ? {
+      ...p,
+      productName: prod.name,
+      category: cat?.name || '',
+      unit: prod.unit || 'pcs',
+      pricePerUnit: Number(prod.price) || 0,
+    } : p));
+  };
+
+  // Filter products by selected category
+  const getFilteredProducts = (categoryName: string) => {
+    if (!categoryName) return dbProducts;
+    const cat = dbCategories.find(c => c.name === categoryName);
+    if (!cat) return dbProducts;
+    return dbProducts.filter(p => p.category_id === cat.id);
   };
 
   const formatRp = (val: number) => val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
@@ -208,13 +247,27 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                       <Select value={product.category} onValueChange={v => updateProduct(idx, 'category', v)}>
                         <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
                         <SelectContent>
-                          {productCategories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                          {dbCategories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Product Name</Label>
-                      <Input className="h-9 text-sm" value={product.productName} onChange={e => updateProduct(idx, 'productName', e.target.value)} placeholder="Nama produk" />
+                      <Select
+                        value={product.productName}
+                        onValueChange={v => {
+                          const prod = dbProducts.find(p => p.name === v);
+                          if (prod) handleProductSelect(idx, prod.id);
+                          else updateProduct(idx, 'productName', v);
+                        }}
+                      >
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih produk" /></SelectTrigger>
+                        <SelectContent>
+                          {getFilteredProducts(product.category).map(p => (
+                            <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2">
@@ -223,7 +276,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                       <Select value={product.unit} onValueChange={v => updateProduct(idx, 'unit', v)}>
                         <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          {unitOptions.map(u => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                          {dbUnits.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     </div>
