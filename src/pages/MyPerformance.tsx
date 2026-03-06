@@ -160,8 +160,8 @@ const MyPerformance = () => {
   const currentMonthNum = now.getMonth();
   const currentYearNum = now.getFullYear();
 
-  // Revenue source: deals at PO Secured/Won or Invoice Issued stage
-  const revenueStages = ['po_secured', 'closed_won', 'invoice_issued'];
+  // Revenue source: deals at PO Secured or Invoice Issued stage
+  const revenueStages = ['po_secured', 'invoice_issued'];
   const wonDeals = dls.filter(d => revenueStages.includes(d.stage));
 
   // MTD won deals (by updated_at — when deal moved to won stage)
