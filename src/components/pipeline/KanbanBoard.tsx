@@ -56,6 +56,7 @@ interface KanbanBoardProps {
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
   onStageChange?: (dealId: string, newStage: DealStage) => void;
+  readOnly?: boolean;
 }
 
 const segmentOptions: { value: string; label: string }[] = [
@@ -72,7 +73,7 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
-export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDelete, onStageChange }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDelete, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
@@ -217,9 +218,9 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                       col.deals.map(d => (
                         <div
                           key={d.id}
-                          draggable
-                          onDragStart={(e) => handleDragStart(e, d.id)}
-                          className="bg-card rounded-md border shadow-sm p-2.5 space-y-1 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow group"
+                          draggable={!readOnly}
+                          onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
+                          className={`bg-card rounded-md border shadow-sm p-2.5 space-y-1 ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group`}
                           onClick={() => setDetailDeal(d)}
                         >
                           <div className="flex items-start justify-between gap-1">
