@@ -56,7 +56,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
             {getSalesName && <InfoRow icon={User} label="Sales Person" value={getSalesName(deal.salesId)} />}
             <InfoRow icon={TrendingUp} label="Deal Value" value={formatIDRFull(deal.value)} highlight />
             <InfoRow icon={TrendingUp} label="Probability" value={`${deal.probability}%`} />
-            <InfoRow icon={CalendarDays} label="Expected Close" value={formatDate(deal.expectedCloseDate)} />
+            <InfoRow icon={CalendarDays} label={deal.stage === 'invoice_issued' ? 'Invoice Issued Date' : deal.stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Close'} value={formatDate(deal.expectedCloseDate)} />
             <InfoRow icon={Clock} label="Created" value={formatDate(deal.createdAt)} />
             {deal.expectedMargin !== undefined && (
               <InfoRow icon={TrendingUp} label="Expected Margin" value={formatPercent(deal.expectedMargin)} />

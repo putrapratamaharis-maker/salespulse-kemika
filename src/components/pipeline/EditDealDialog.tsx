@@ -351,7 +351,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                 <Input type="number" min={0} max={100} value={probability} onChange={e => setProbability(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
-                <Label>Expected Deal/Close</Label>
+                <Label>{stage === 'invoice_issued' ? 'Invoice Issued Date' : stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Deal/Close'}</Label>
                 <Input type="date" value={expectedCloseDate} onChange={e => setExpectedCloseDate(e.target.value)} />
               </div>
             </div>
