@@ -64,7 +64,7 @@ export const mockDeals: Deal[] = [
   { id: 'd19', accountId: 'a4', salesId: 'u6', name: 'Telkom SD-WAN Rollout', segment: 'B2B', stage: 'po_secured', value: 870_000_000, probability: 100, expectedCloseDate: '2026-03-05', createdAt: '2026-01-12', updatedAt: '2026-03-05', daysInStage: 0 },
   { id: 'd20', accountId: 'a2', salesId: 'u5', name: 'Disdik Smart Classroom', segment: 'B2G', stage: 'po_secured', value: 680_000_000, probability: 100, expectedCloseDate: '2026-03-02', createdAt: '2026-01-05', updatedAt: '2026-03-02', daysInStage: 0 },
   { id: 'd21', accountId: 'a5', salesId: 'u7', name: 'Unilever Warehouse Automation', segment: 'B2B', stage: 'po_secured', value: 520_000_000, probability: 100, expectedCloseDate: '2026-03-04', createdAt: '2026-01-20', updatedAt: '2026-03-04', daysInStage: 0 },
-  { id: 'd22', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Fulfillment System', segment: 'B2C', stage: 'po_secured', value: 410_000_000, probability: 100, expectedCloseDate: '2026-03-01', createdAt: '2026-02-01', updatedAt: '2026-03-01', daysInStage: 0 },
+  { id: 'd22', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Fulfillment System', segment: 'B2C', stage: 'po_secured', value: 410_000_000, probability: 100, expectedCloseDate: '2026-03-02', createdAt: '2026-02-01', updatedAt: '2026-03-02', daysInStage: 0 },
 ];
 
 
