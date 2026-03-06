@@ -936,6 +936,11 @@ export type Database = {
         | "negotiation"
         | "closed_won"
         | "closed_lost"
+        | "quotation"
+        | "po_secured"
+        | "invoice_issued"
+        | "canceled"
+        | "lost"
       kpi_category:
         | "GROWTH"
         | "PROFITABILITY"
@@ -1098,6 +1103,11 @@ export const Constants = {
         "negotiation",
         "closed_won",
         "closed_lost",
+        "quotation",
+        "po_secured",
+        "invoice_issued",
+        "canceled",
+        "lost",
       ],
       kpi_category: [
         "GROWTH",
