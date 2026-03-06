@@ -15,11 +15,11 @@ export const mockUsers: User[] = [
 
 // ---- TARGETS ----
 export const mockTargets: Target[] = [
-  { id: 't1', userId: 'u4', segment: 'B2G', month: '2026-02', revenueTarget: 2_500_000_000, marginTarget: 20 },
-  { id: 't2', userId: 'u5', segment: 'B2G', month: '2026-02', revenueTarget: 2_000_000_000, marginTarget: 18 },
-  { id: 't3', userId: 'u6', segment: 'B2B', month: '2026-02', revenueTarget: 1_800_000_000, marginTarget: 22 },
-  { id: 't4', userId: 'u7', segment: 'B2B', month: '2026-02', revenueTarget: 1_500_000_000, marginTarget: 20 },
-  { id: 't5', userId: 'u8', segment: 'B2C', month: '2026-02', revenueTarget: 800_000_000, marginTarget: 25 },
+  { id: 't1', userId: 'u4', segment: 'B2G', month: '2026-03', revenueTarget: 2_500_000_000, marginTarget: 20 },
+  { id: 't2', userId: 'u5', segment: 'B2G', month: '2026-03', revenueTarget: 2_000_000_000, marginTarget: 18 },
+  { id: 't3', userId: 'u6', segment: 'B2B', month: '2026-03', revenueTarget: 1_800_000_000, marginTarget: 22 },
+  { id: 't4', userId: 'u7', segment: 'B2B', month: '2026-03', revenueTarget: 1_500_000_000, marginTarget: 20 },
+  { id: 't5', userId: 'u8', segment: 'B2C', month: '2026-03', revenueTarget: 800_000_000, marginTarget: 25 },
 ];
 
 // ---- ACCOUNTS ----
@@ -59,6 +59,12 @@ export const mockDeals: Deal[] = [
   // Additional
   { id: 'd16', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Seller Analytics', segment: 'B2C', stage: 'prospect', value: 190_000_000, probability: 20, expectedCloseDate: '2026-05-15', createdAt: '2026-02-18', updatedAt: '2026-02-18', daysInStage: 10 },
   { id: 'd17', accountId: 'a5', salesId: 'u7', name: 'Unilever IoT Sensors', segment: 'B2B', stage: 'quotation', value: 720_000_000, probability: 45, expectedCloseDate: '2026-04-10', createdAt: '2026-02-10', updatedAt: '2026-02-22', daysInStage: 6 },
+  // March 2026 PO Secured — for MTD demo
+  { id: 'd18', accountId: 'a1', salesId: 'u4', name: 'Kemkes Alat Lab Batch 2', segment: 'B2G', stage: 'po_secured', value: 1_350_000_000, probability: 100, expectedCloseDate: '2026-03-03', createdAt: '2025-12-10', updatedAt: '2026-03-03', daysInStage: 0 },
+  { id: 'd19', accountId: 'a4', salesId: 'u6', name: 'Telkom SD-WAN Rollout', segment: 'B2B', stage: 'po_secured', value: 870_000_000, probability: 100, expectedCloseDate: '2026-03-05', createdAt: '2026-01-12', updatedAt: '2026-03-05', daysInStage: 0 },
+  { id: 'd20', accountId: 'a2', salesId: 'u5', name: 'Disdik Smart Classroom', segment: 'B2G', stage: 'po_secured', value: 680_000_000, probability: 100, expectedCloseDate: '2026-03-02', createdAt: '2026-01-05', updatedAt: '2026-03-02', daysInStage: 0 },
+  { id: 'd21', accountId: 'a5', salesId: 'u7', name: 'Unilever Warehouse Automation', segment: 'B2B', stage: 'po_secured', value: 520_000_000, probability: 100, expectedCloseDate: '2026-03-04', createdAt: '2026-01-20', updatedAt: '2026-03-04', daysInStage: 0 },
+  { id: 'd22', accountId: 'a6', salesId: 'u8', name: 'Tokopedia Fulfillment System', segment: 'B2C', stage: 'po_secured', value: 410_000_000, probability: 100, expectedCloseDate: '2026-03-01', createdAt: '2026-02-01', updatedAt: '2026-03-01', daysInStage: 0 },
 ];
 
 
