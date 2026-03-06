@@ -186,7 +186,8 @@ const MyPerformance = () => {
   const targetRevenue = tgt?.revenue_target || 0;
   const achievementPct = targetRevenue > 0 ? (revenueMTD / targetRevenue) * 100 : 0;
 
-  const openDeals = dls.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
+  const finalStages = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
+  const openDeals = dls.filter(d => !finalStages.includes(d.stage));
   const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
 
@@ -213,10 +214,10 @@ const MyPerformance = () => {
 
   // ===== SECTION 2: Alerts =====
   const stagnantDeals = dls.filter(d =>
-    !['closed_won', 'closed_lost'].includes(d.stage) && d.days_in_stage > 14
+    !finalStages.includes(d.stage) && d.days_in_stage > 14
   );
   const lowMarginDeals = dls.filter(d =>
-    !['closed_won', 'closed_lost'].includes(d.stage) && marginPct < MARGIN_THRESHOLD
+    !finalStages.includes(d.stage) && marginPct < MARGIN_THRESHOLD
   );
   const overdueInv30 = inv.filter(i => {
     if (i.paid_date) return false;
@@ -254,7 +255,7 @@ const MyPerformance = () => {
 
   // ===== SECTION 4: Upcoming =====
   const closingSoon = dls.filter(d => {
-    if (['closed_won', 'closed_lost'].includes(d.stage)) return false;
+    if (finalStages.includes(d.stage)) return false;
     const days = (new Date(d.expected_close_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
     return days >= 0 && days <= 14;
   });
