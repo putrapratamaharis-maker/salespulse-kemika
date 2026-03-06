@@ -144,7 +144,7 @@ const Pipeline = () => {
         deals={allDeals}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
-        onStageChange={handleStageChange}
+        readOnly
       />
 
       <Card>
