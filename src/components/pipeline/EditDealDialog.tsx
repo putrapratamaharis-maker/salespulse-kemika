@@ -343,12 +343,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             {/* Margin, Probability, Date */}
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Expected Margin (%)</Label>
+                <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
                 <Input type="number" min={0} max={100} value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label>Probability (%)</Label>
-                <Input type="number" min={0} max={100} value={probability} onChange={e => setProbability(e.target.value)} placeholder="0-100" />
+                <Input type="number" min={0} max={100} value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label>{stage === 'invoice_issued' ? 'Invoice Issued Date' : stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Deal/Close'}</Label>
