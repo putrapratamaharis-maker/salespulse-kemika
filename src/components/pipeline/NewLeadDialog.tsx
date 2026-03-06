@@ -377,7 +377,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
                 <Input id="lead-prob" type="number" min={0} max={100} value={probability} onChange={e => setProbability(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="lead-close">Expected Deal/Close</Label>
+                <Label htmlFor="lead-close">{stage === 'invoice_issued' ? 'Invoice Issued Date' : stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Deal/Close'}</Label>
                 <Input id="lead-close" type="date" value={expectedCloseDate} onChange={e => setExpectedCloseDate(e.target.value)} />
               </div>
             </div>
