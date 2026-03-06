@@ -160,17 +160,27 @@ const MyPerformance = () => {
   const currentMonthNum = now.getMonth();
   const currentYearNum = now.getFullYear();
 
-  // MTD invoices
+  // PO Secured/Won deals (revenue source)
+  const wonStages = ['po_secured', 'closed_won'];
+  const wonDeals = dls.filter(d => wonStages.includes(d.stage));
+
+  // MTD won deals (by updated_at — when deal moved to won stage)
+  const mtdWon = wonDeals.filter(d => {
+    const dt = new Date(d.updated_at);
+    return dt.getMonth() === currentMonthNum && dt.getFullYear() === currentYearNum;
+  });
+  const revenueMTD = mtdWon.reduce((s, d) => s + d.value, 0);
+
+  // YTD won deals
+  const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYearNum);
+  const revenueYTD = ytdWon.reduce((s, d) => s + d.value, 0);
+
+  // MTD invoices (still needed for GP and AR calculations)
   const mtdInv = inv.filter(i => {
     const d = new Date(i.issue_date);
     return d.getMonth() === currentMonthNum && d.getFullYear() === currentYearNum;
   });
-  const revenueMTD = mtdInv.reduce((s, i) => s + i.net_sales, 0);
   const grossProfitMTD = mtdInv.reduce((s, i) => s + i.gross_profit, 0);
-
-  // YTD invoices
-  const ytdInv = inv.filter(i => new Date(i.issue_date).getFullYear() === currentYearNum);
-  const revenueYTD = ytdInv.reduce((s, i) => s + i.net_sales, 0);
 
   const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetRevenue = tgt?.revenue_target || 0;
