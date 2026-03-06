@@ -79,6 +79,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
   const [searchQuery, setSearchQuery] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [valueFilter, setValueFilter] = useState('all');
+  const [stageConfirm, setStageConfirm] = useState<{ deal: Deal; targetStage: DealStage } | null>(null);
   const dragDealId = useRef<string | null>(null);
 
   const filteredDeals = useMemo(() => {
@@ -124,6 +125,8 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
     setDragOverStage(null);
   };
 
+  const finalStages: DealStage[] = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
+
   const handleDrop = (e: DragEvent, targetStage: string) => {
     e.preventDefault();
     setDragOverStage(null);
@@ -131,7 +134,11 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
     if (dealId && onStageChange) {
       const deal = deals.find(d => d.id === dealId);
       if (deal && deal.stage !== targetStage) {
-        onStageChange(dealId, targetStage as DealStage);
+        if (finalStages.includes(targetStage as DealStage)) {
+          setStageConfirm({ deal, targetStage: targetStage as DealStage });
+        } else {
+          onStageChange(dealId, targetStage as DealStage);
+        }
       }
     }
     dragDealId.current = null;
@@ -254,6 +261,37 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
           </div>
         </CardContent>
       </Card>
+
+      {/* Stage Change Confirmation */}
+      <AlertDialog open={!!stageConfirm} onOpenChange={(open) => !open && setStageConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Perpindahan Stage</AlertDialogTitle>
+            <AlertDialogDescription>
+              Apakah Anda yakin ingin memindahkan deal "{stageConfirm?.deal.name}" ke tahap <span className="font-semibold">{stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}</span>?
+              {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
+                <span className="block mt-1 text-xs">Probability akan otomatis diatur ke 100%.</span>
+              )}
+              {stageConfirm && (stageConfirm.targetStage === 'canceled' || stageConfirm.targetStage === 'lost') && (
+                <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageLabels[stageConfirm.targetStage]}.</span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (stageConfirm && onStageChange) {
+                  onStageChange(stageConfirm.deal.id, stageConfirm.targetStage);
+                }
+                setStageConfirm(null);
+              }}
+            >
+              Ya, Pindahkan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete Confirmation */}
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
