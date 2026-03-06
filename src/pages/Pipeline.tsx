@@ -17,7 +17,8 @@ const Pipeline = () => {
 
 
   const handleStageChange = (dealId: string, newStage: DealStage) => {
-    setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0 } : d));
+    const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
+    setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0, ...(isFinalStage ? { probability: 100 } : {}) } : d));
   };
 
   // Get sales users who have deals

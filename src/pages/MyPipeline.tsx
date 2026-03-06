@@ -85,7 +85,8 @@ const MyPipeline = () => {
   const handleStageChange = (dealId: string, newStage: DealStage) => {
     const deal = deals.find(d => d.id === dealId);
     if (deal) {
-      const updated = { ...deal, stage: newStage, daysInStage: 0, updatedAt: new Date().toISOString().split('T')[0] };
+      const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
+      const updated = { ...deal, stage: newStage, daysInStage: 0, updatedAt: new Date().toISOString().split('T')[0], ...(isFinalStage ? { probability: 100 } : {}) };
       setEditedDeals(prev => ({ ...prev, [dealId]: updated }));
       toast({ title: `Deal dipindahkan ke ${newStage.replace('_', ' ')}` });
     }
