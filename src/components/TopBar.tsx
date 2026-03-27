@@ -34,14 +34,15 @@ export function TopBar() {
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
 
-  const displayName = profile?.full_name || currentUser.name;
-  const displayEmail = profile?.email || currentUser.email;
+  const displayName = profile?.full_name || currentUser?.name || 'User';
+  const displayEmail = profile?.email || currentUser?.email || '';
   const initials = displayName
     .split(' ')
+    .filter(Boolean)
     .map((n) => n[0])
     .join('')
     .toUpperCase()
-    .slice(0, 2);
+    .slice(0, 2) || 'U';
 
   return (
     <header className="filter-bar sticky top-0 z-30">
