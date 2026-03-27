@@ -5,7 +5,7 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
 import { useLocation } from 'react-router-dom';
-import { mockUsers } from '@/data/mockData';
+
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
