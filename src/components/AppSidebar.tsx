@@ -191,27 +191,6 @@ export function AppSidebar() {
         )}
       </SidebarContent>
 
-      {!collapsed && (
-        <SidebarFooter className="border-t border-sidebar-border p-3">
-          <div className="text-[10px] text-sidebar-muted uppercase tracking-widest mb-1.5">Demo: Switch Role</div>
-          <Select value={currentUser.id} onValueChange={(id) => {
-            const user = mockUsers.find(u => u.id === id);
-            if (user) setCurrentUser(user);
-          }}>
-            <SelectTrigger className="bg-sidebar-accent border-sidebar-border text-sidebar-foreground text-xs h-9">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {mockUsers.map(u => (
-                <SelectItem key={u.id} value={u.id} className="text-xs">
-                  <span className="font-medium">{u.name}</span>
-                  <span className="text-muted-foreground ml-1">({orgRoleLabels[u.orgRole]})</span>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </SidebarFooter>
-      )}
     </Sidebar>
   );
 }
