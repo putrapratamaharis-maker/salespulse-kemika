@@ -11,8 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, ChevronDown, Bell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useNavigate } from 'react-router-dom';
 
 const orgRoleLabels: Record<string, string> = {
