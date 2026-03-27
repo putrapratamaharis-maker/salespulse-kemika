@@ -14,9 +14,6 @@ import {
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
 } from '@/components/ui/collapsible';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 
 const allMyPerformanceSubItems = [
   { title: 'My Sales Overview', url: '/my-performance', icon: BarChart3, salesOnly: true },
