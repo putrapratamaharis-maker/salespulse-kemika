@@ -51,10 +51,10 @@ export function TopBar() {
       <div className="flex items-center gap-1 mr-auto">
         <span className="font-semibold text-sm text-foreground">{displayName}</span>
         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-          {orgRoleLabels[currentUser.orgRole]}
+          {orgRoleLabels[currentUser?.orgRole] || 'User'}
         </Badge>
         <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-          {systemRoleLabels[currentUser.systemRole]}
+          {systemRoleLabels[currentUser?.systemRole] || 'Viewer'}
         </Badge>
       </div>
 
