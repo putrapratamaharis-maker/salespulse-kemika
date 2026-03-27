@@ -9,7 +9,7 @@ import { useLocation } from 'react-router-dom';
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
-  SidebarHeader, SidebarFooter, useSidebar,
+  SidebarHeader, useSidebar,
 } from '@/components/ui/sidebar';
 import {
   Collapsible, CollapsibleContent, CollapsibleTrigger,
