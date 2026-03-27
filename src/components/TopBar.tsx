@@ -11,8 +11,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, ChevronDown, Bell } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useNavigate } from 'react-router-dom';
 
 const orgRoleLabels: Record<string, string> = {
@@ -57,12 +57,7 @@ export function TopBar() {
         </Badge>
       </div>
 
-      <Button variant="ghost" size="icon" className="relative h-8 w-8">
-        <Bell className="h-4 w-4 text-muted-foreground" />
-        <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive text-[10px] font-medium text-destructive-foreground flex items-center justify-center">
-          3
-        </span>
-      </Button>
+      <NotificationDropdown />
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
