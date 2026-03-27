@@ -50,11 +50,13 @@ export function AppSidebar() {
   const { currentUser, setCurrentUser } = useAppContext();
   const location = useLocation();
 
-  const isSalesPerson = currentUser.orgRole === 'sales_person';
+  const orgRole = currentUser?.orgRole || 'sales_person';
+  const systemRole = currentUser?.systemRole || 'viewer';
+  const isSalesPerson = orgRole === 'sales_person';
   const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => isSalesPerson || !item.salesOnly);
-  const hasTeam = ['sales_manager', 'supervisor'].includes(currentUser.orgRole);
-  const isAdmin = ['super_admin', 'admin'].includes(currentUser.systemRole);
-  const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(currentUser.systemRole);
+  const hasTeam = ['sales_manager', 'supervisor'].includes(orgRole);
+  const isAdmin = ['super_admin', 'admin'].includes(systemRole);
+  const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(systemRole);
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
 
   const visibleNav = navItems.filter(item => {
