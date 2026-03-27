@@ -1,11 +1,18 @@
 import { useAppContext } from '@/context/AppContext';
 import { useAuth } from '@/context/AuthContext';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Calendar, Filter, LogOut } from 'lucide-react';
-import { DateRange, Segment } from '@/types/sales';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const orgRoleLabels: Record<string, string> = {
   sales_manager: 'Sales Manager',
@@ -22,15 +29,25 @@ const systemRoleLabels: Record<string, string> = {
 };
 
 export function TopBar() {
-  const { currentUser, dateRange, setDateRange, segmentFilter, setSegmentFilter } = useAppContext();
+  const { currentUser } = useAppContext();
   const { signOut, profile } = useAuth();
+  const navigate = useNavigate();
+
+  const displayName = profile?.full_name || currentUser.name;
+  const displayEmail = profile?.email || currentUser.email;
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
     <header className="filter-bar sticky top-0 z-30">
       <SidebarTrigger className="mr-2" />
 
       <div className="flex items-center gap-1 mr-auto">
-        <span className="font-semibold text-sm text-foreground">{currentUser.name}</span>
+        <span className="font-semibold text-sm text-foreground">{displayName}</span>
         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
           {orgRoleLabels[currentUser.orgRole]}
         </Badge>
@@ -39,42 +56,45 @@ export function TopBar() {
         </Badge>
       </div>
 
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-          <Select value={dateRange} onValueChange={(v) => setDateRange(v as DateRange)}>
-            <SelectTrigger className="h-8 text-xs w-24 border-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="MTD">MTD</SelectItem>
-              <SelectItem value="QTD">QTD</SelectItem>
-              <SelectItem value="YTD">YTD</SelectItem>
-              <SelectItem value="custom">Custom</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
-          <Select value={segmentFilter} onValueChange={(v) => setSegmentFilter(v as Segment | 'All')}>
-            <SelectTrigger className="h-8 text-xs w-24 border-border">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="All">All Segments</SelectItem>
-              <SelectItem value="B2G">B2G</SelectItem>
-              <SelectItem value="B2B">B2B</SelectItem>
-              <SelectItem value="B2C">B2C</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <Button variant="ghost" size="sm" onClick={signOut} className="ml-2 h-8 text-xs gap-1.5">
-          <LogOut className="h-3.5 w-3.5" />
-          Logout
-        </Button>
-      </div>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <button className="flex items-center gap-2 rounded-lg px-2 py-1.5 hover:bg-accent transition-colors outline-none">
+            <Avatar className="h-8 w-8">
+              <AvatarImage src={profile?.avatar_url || undefined} alt={displayName} />
+              <AvatarFallback className="text-xs bg-primary text-primary-foreground">
+                {initials}
+              </AvatarFallback>
+            </Avatar>
+            <div className="hidden sm:flex flex-col items-start">
+              <span className="text-xs font-medium text-foreground leading-tight">{displayName}</span>
+              <span className="text-[10px] text-muted-foreground leading-tight">{displayEmail}</span>
+            </div>
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          </button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel className="font-normal">
+            <div className="flex flex-col space-y-1">
+              <p className="text-sm font-medium leading-none">{displayName}</p>
+              <p className="text-xs text-muted-foreground leading-none">{displayEmail}</p>
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={() => navigate('/profile')} className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={signOut} className="cursor-pointer text-destructive focus:text-destructive">
+            <LogOut className="mr-2 h-4 w-4" />
+            Logout
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </header>
   );
 }
