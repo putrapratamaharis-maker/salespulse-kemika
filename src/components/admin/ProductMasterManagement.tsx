@@ -48,11 +48,12 @@ function CategoryTab() {
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama wajib diisi', variant: 'destructive' }); return; }
     setSaving(true);
+    const payload: any = { name: name.trim(), description: description.trim() || null, code: code.trim(), is_active: isActive };
     if (editItem) {
-      const { error } = await supabase.from('product_categories').update({ name: name.trim(), description: description.trim() || null }).eq('id', editItem.id);
+      const { error } = await supabase.from('product_categories').update(payload).eq('id', editItem.id);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Kategori diperbarui' }); }
     } else {
-      const { error } = await supabase.from('product_categories').insert({ name: name.trim(), description: description.trim() || null });
+      const { error } = await supabase.from('product_categories').insert(payload);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Kategori ditambahkan' }); }
     }
     setSaving(false);
