@@ -242,10 +242,10 @@ export default function AccountManagement() {
   // --- Import / Export ---
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Customer ID', 'Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'Status'],
-      ['CUST2026-0101', 'PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Active'],
+      ['Customer ID', 'Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'City', 'Status'],
+      ['CUST2026-0101', 'PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Jakarta Selatan', 'Active'],
     ]);
-    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, 'template_import_akun.xlsx');
