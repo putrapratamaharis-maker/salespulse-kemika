@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
-import { mockInvoices, mockDeals, mockTargets, monthlyRevenueData, mockAccounts } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
@@ -26,59 +25,122 @@ export function ManagerDashboard() {
   const [topProducts, setTopProducts] = useState<ProductWithCategory[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryRevenue[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
-  
+  const [loading, setLoading] = useState(true);
 
-  // Date boundaries
+  // Real DB state
+  const [revenueMTD, setRevenueMTD] = useState(0);
+  const [revenueYTD, setRevenueYTD] = useState(0);
+  const [grossProfitMTD, setGrossProfitMTD] = useState(0);
+  const [totalTarget, setTotalTarget] = useState(0);
+  const [outstandingAR, setOutstandingAR] = useState(0);
+  const [pipeline30, setPipeline30] = useState(0);
+  const [pipeline60, setPipeline60] = useState(0);
+  const [weightedForecast, setWeightedForecast] = useState(0);
+  const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
+  const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
+  const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
+  const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
+
   const now = new Date();
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  // MTD: only current month invoices
-  const mtdInvoices = mockInvoices.filter(i => {
-    const d = new Date(i.issueDate);
-    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-  });
-  const revenueMTD = mtdInvoices.reduce((s, i) => s + i.netSales, 0);
-  const grossProfitMTD = mtdInvoices.reduce((s, i) => s + i.grossProfit, 0);
+  useEffect(() => {
+    async function fetchDashboardData() {
+      setLoading(true);
 
-  // YTD: all invoices in current year
-  const ytdInvoices = mockInvoices.filter(i => new Date(i.issueDate).getFullYear() === currentYear);
-  const revenueYTD = ytdInvoices.reduce((s, i) => s + i.netSales, 0);
+      const [{ data: invoices }, { data: deals }, { data: targets }, { data: accounts }] = await Promise.all([
+        supabase.from('invoices').select('net_sales, gross_profit, issue_date, due_date, paid_date, segment, account_id'),
+        supabase.from('deals').select('value, probability, expected_close_date, stage'),
+        supabase.from('targets').select('revenue_target'),
+        supabase.from('accounts').select('id, name, segment, region'),
+      ]);
 
-  // Totals for other calculations (keep existing behaviour)
-  const totalRevenue = mockInvoices.reduce((s, i) => s + i.netSales, 0);
-  const totalGrossProfit = mockInvoices.reduce((s, i) => s + i.grossProfit, 0);
-  const totalTarget = mockTargets.reduce((s, t) => s + t.revenueTarget, 0);
-  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
-  const achievementPct = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
-  const outstandingAR = mockInvoices.filter(inv => !inv.paidDate).reduce((s, inv) => s + inv.netSales, 0);
+      const allInvoices = invoices || [];
+      const allDeals = deals || [];
+      const allTargets = targets || [];
+      const allAccounts = accounts || [];
 
-  const openDeals = mockDeals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
-  const pipeline30 = openDeals.filter(d => {
-    const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return days <= 30;
-  }).reduce((s, d) => s + d.value, 0);
-  const pipeline60 = openDeals.filter(d => {
-    const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return days > 30 && days <= 60;
-  }).reduce((s, d) => s + d.value, 0);
-  const pipeline90 = openDeals.filter(d => {
-    const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return days > 60 && days <= 90;
-  }).reduce((s, d) => s + d.value, 0);
-  const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
+      // MTD invoices
+      const mtd = allInvoices.filter(i => {
+        const d = new Date(i.issue_date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      const mtdRev = mtd.reduce((s, i) => s + Number(i.net_sales), 0);
+      const mtdGP = mtd.reduce((s, i) => s + Number(i.gross_profit), 0);
+      setRevenueMTD(mtdRev);
+      setGrossProfitMTD(mtdGP);
 
-  const segments = ['B2G', 'B2B', 'B2C'] as const;
-  const segmentRevenue = segments.map(seg => ({
-    segment: seg,
-    revenue: mockInvoices.filter(i => i.segment === seg).reduce((s, i) => s + i.netSales, 0),
-  }));
+      // YTD
+      const ytd = allInvoices.filter(i => new Date(i.issue_date).getFullYear() === currentYear);
+      setRevenueYTD(ytd.reduce((s, i) => s + Number(i.net_sales), 0));
 
-  // Top 10 Customer from mock data
-  const customerRevenue = mockAccounts.map(acc => {
-    const rev = mockInvoices.filter(inv => inv.accountId === acc.id).reduce((s, inv) => s + inv.netSales, 0);
-    return { name: acc.name, segment: acc.segment, revenue: rev };
-  }).filter(c => c.revenue > 0).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+      // Targets
+      setTotalTarget(allTargets.reduce((s, t) => s + Number(t.revenue_target), 0));
+
+      // Outstanding AR
+      setOutstandingAR(allInvoices.filter(inv => !inv.paid_date).reduce((s, inv) => s + Number(inv.net_sales), 0));
+
+      // Pipeline
+      const openDeals = allDeals.filter(d => !['closed_won', 'closed_lost', 'canceled', 'lost'].includes(d.stage));
+      const now30 = Date.now() + 30 * 86400000;
+      const now60 = Date.now() + 60 * 86400000;
+      setPipeline30(openDeals.filter(d => new Date(d.expected_close_date).getTime() <= now30).reduce((s, d) => s + Number(d.value), 0));
+      setPipeline60(openDeals.filter(d => { const t = new Date(d.expected_close_date).getTime(); return t > now30 && t <= now60; }).reduce((s, d) => s + Number(d.value), 0));
+      setWeightedForecast(openDeals.reduce((s, d) => s + Number(d.value) * Number(d.probability) / 100, 0));
+
+      // Segment revenue
+      const totalRev = allInvoices.reduce((s, i) => s + Number(i.net_sales), 0);
+      const segments = ['B2G', 'B2B', 'B2C'];
+      setSegmentRevenue(segments.map(seg => ({
+        segment: seg,
+        revenue: allInvoices.filter(i => i.segment === seg).reduce((s, i) => s + Number(i.net_sales), 0),
+      })));
+
+      // Top 10 Customer
+      const accountMap = new Map(allAccounts.map(a => [a.id, a]));
+      const custRevMap = new Map<string, number>();
+      allInvoices.forEach(inv => {
+        custRevMap.set(inv.account_id, (custRevMap.get(inv.account_id) || 0) + Number(inv.net_sales));
+      });
+      const custRev = Array.from(custRevMap, ([accId, rev]) => {
+        const acc = accountMap.get(accId);
+        return { name: acc?.name || accId, segment: acc?.segment || '—', revenue: rev };
+      }).filter(c => c.revenue > 0).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+      setCustomerRevenue(custRev);
+
+      // Region distribution
+      const regMap = new Map<string, number>();
+      allInvoices.forEach(inv => {
+        const acc = accountMap.get(inv.account_id);
+        const region = acc?.region || 'Unknown';
+        if (region) regMap.set(region, (regMap.get(region) || 0) + Number(inv.net_sales));
+      });
+      setRegionData(Array.from(regMap, ([region, revenue]) => ({ region, revenue })).filter(r => r.region && r.region !== '').sort((a, b) => b.revenue - a.revenue));
+
+      // Monthly trend by segment
+      const monthMap = new Map<string, { B2G: number; B2B: number; B2C: number }>();
+      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      allInvoices.forEach(inv => {
+        const d = new Date(inv.issue_date);
+        if (d.getFullYear() === currentYear) {
+          const key = monthNames[d.getMonth()];
+          const entry = monthMap.get(key) || { B2G: 0, B2B: 0, B2C: 0 };
+          const seg = inv.segment as 'B2G' | 'B2B' | 'B2C';
+          if (seg in entry) entry[seg] += Number(inv.net_sales) / 1_000_000;
+          monthMap.set(key, entry);
+        }
+      });
+      const trend = monthNames.slice(0, currentMonth + 1).map(m => ({
+        month: m,
+        ...(monthMap.get(m) || { B2G: 0, B2B: 0, B2C: 0 }),
+      }));
+      setMonthlyTrend(trend);
+
+      setLoading(false);
+    }
+    fetchDashboardData();
+  }, []);
 
   // Fetch products from database
   useEffect(() => {
@@ -99,7 +161,6 @@ export function ManagerDashboard() {
         }));
         setTopProducts(products);
 
-        // Aggregate by category
         const catMap = new Map<string, number>();
         salesData.forEach((s: any) => {
           const cat = s.products?.product_categories?.name ?? 'Uncategorized';
@@ -112,8 +173,22 @@ export function ManagerDashboard() {
     fetchProducts();
   }, []);
 
+  const totalRevenue = segmentRevenue.reduce((s, sr) => s + sr.revenue, 0);
+  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
+  const achievementPct = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
+
   const CATEGORY_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
   const totalCategoryRevenue = categoryData.reduce((s, c) => s + c.revenue, 0);
+  const REGION_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
+  const totalRegionRevenue = regionData.reduce((s, r) => s + r.revenue, 0);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -124,7 +199,7 @@ export function ManagerDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
-        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText />
         <KPICard label="Total Target" value={formatIDRFull(totalTarget)} icon={Target} autoFitText />
         <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
@@ -134,7 +209,7 @@ export function ManagerDashboard() {
         <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText />
         <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText />
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={BarChart3} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText />
       </div>
 
       {/* Revenue by Segment + Revenue Trend side by side */}
@@ -169,7 +244,7 @@ export function ManagerDashboard() {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={monthlyRevenueData}>
+              <BarChart data={monthlyTrend}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
@@ -197,31 +272,35 @@ export function ManagerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="text-xs w-8">#</TableHead>
-                  <TableHead className="text-xs">Customer</TableHead>
-                  <TableHead className="text-xs">Segment</TableHead>
-                  <TableHead className="text-xs text-right">Revenue</TableHead>
-                  <TableHead className="text-xs text-right">Kontribusi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {customerRevenue.map((c, i) => {
-                  const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
-                  return (
-                    <TableRow key={c.name}>
-                      <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
-                      <TableCell className="text-xs font-medium">{c.name}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
-                      <TableCell className="text-xs text-right font-semibold">{formatIDR(c.revenue)}</TableCell>
-                      <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            {customerRevenue.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Belum ada data customer.</p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-xs w-8">#</TableHead>
+                    <TableHead className="text-xs">Customer</TableHead>
+                    <TableHead className="text-xs">Segment</TableHead>
+                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Kontribusi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {customerRevenue.map((c, i) => {
+                    const pct = totalRevenue > 0 ? (c.revenue / totalRevenue) * 100 : 0;
+                    return (
+                      <TableRow key={c.name}>
+                        <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
+                        <TableCell className="text-xs font-medium">{c.name}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{formatIDR(c.revenue)}</TableCell>
+                        <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
@@ -263,7 +342,7 @@ export function ManagerDashboard() {
         </Card>
       </div>
 
-      {/* Kategori Produk — Donut + Bar side by side */}
+      {/* Kategori Produk — Donut + Region side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -314,50 +393,40 @@ export function ManagerDashboard() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {(() => {
-              const regionMap = new Map<string, number>();
-              mockInvoices.forEach(inv => {
-                const acc = mockAccounts.find(a => a.id === inv.accountId);
-                const region = acc?.region ?? 'Unknown';
-                regionMap.set(region, (regionMap.get(region) || 0) + inv.netSales);
-              });
-              const regionData = Array.from(regionMap, ([region, revenue]) => ({ region, revenue })).sort((a, b) => b.revenue - a.revenue);
-              const totalRegionRevenue = regionData.reduce((s, r) => s + r.revenue, 0);
-              const REGION_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))', 'hsl(var(--chart-5))'];
-
-              return (
-                <div>
-                  <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
-                      <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
-                      <Tooltip formatter={(value: number) => {
-                        const pct = totalRegionRevenue > 0 ? (Number(value) / totalRegionRevenue) * 100 : 0;
-                        return [`${formatIDR(Number(value))} (${formatPercent(pct)})`, 'Revenue'];
-                      }} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                      <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
-                        {regionData.map((_, idx) => (
-                          <Cell key={idx} fill={REGION_COLORS[idx % REGION_COLORS.length]} />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
-                    {regionData.map((r, idx) => {
-                      const pct = totalRegionRevenue > 0 ? (r.revenue / totalRegionRevenue) * 100 : 0;
-                      return (
-                        <div key={r.region} className="flex items-center gap-2 text-xs">
-                          <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: REGION_COLORS[idx % REGION_COLORS.length] }} />
-                          <span className="truncate">{r.region}</span>
-                          <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+            {regionData.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Belum ada data region.</p>
+            ) : (
+              <div>
+                <ResponsiveContainer width="100%" height={240}>
+                  <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
+                    <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
+                    <Tooltip formatter={(value: number) => {
+                      const pct = totalRegionRevenue > 0 ? (Number(value) / totalRegionRevenue) * 100 : 0;
+                      return [`${formatIDR(Number(value))} (${formatPercent(pct)})`, 'Revenue'];
+                    }} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                    <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
+                      {regionData.map((_, idx) => (
+                        <Cell key={idx} fill={REGION_COLORS[idx % REGION_COLORS.length]} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
+                  {regionData.map((r, idx) => {
+                    const pct = totalRegionRevenue > 0 ? (r.revenue / totalRegionRevenue) * 100 : 0;
+                    return (
+                      <div key={r.region} className="flex items-center gap-2 text-xs">
+                        <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: REGION_COLORS[idx % REGION_COLORS.length] }} />
+                        <span className="truncate">{r.region}</span>
+                        <span className="ml-auto font-semibold text-muted-foreground">{formatPercent(pct)}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })()}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
