@@ -33,6 +33,8 @@ function CategoryTab() {
   const [importing, setImporting] = useState(false);
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
@@ -66,6 +68,40 @@ function CategoryTab() {
     if (!confirm('Hapus kategori ini?')) return;
     const { error } = await supabase.from('product_categories').delete().eq('id', id);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Kategori dihapus' }); fetch(); }
+  };
+
+  const toggleCatSelect = (id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleCatSelectAll = () => setSelectedIds(prev => prev.size === items.length ? new Set() : new Set(items.map(i => i.id)));
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Hapus ${selectedIds.size} kategori yang dipilih?`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from('product_categories').delete().in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} kategori dihapus` }); setSelectedIds(new Set()); fetch(); }
+    setBulkDeleting(false);
+  };
+
+  const handleBulkSetStatus = async (active: boolean) => {
+    if (selectedIds.size === 0) return;
+    const label = active ? 'aktifkan' : 'nonaktifkan';
+    if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${selectedIds.size} kategori?`)) return;
+    const { error } = await supabase.from('product_categories').update({ is_active: active } as any).in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} kategori di-${label}` }); setSelectedIds(new Set()); fetch(); }
+  };
+
+  const exportSelectedExcel = () => {
+    const selected = items.filter(i => selectedIds.has(i.id));
+    if (selected.length === 0) return;
+    const rows = selected.map((i, idx) => ({ 'No': idx + 1, 'Kode': i.code || '', 'Nama Kategori': i.name, 'Deskripsi': i.description || '', 'Status': i.is_active ? 'Aktif' : 'Non-aktif' }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selected Categories');
+    XLSX.writeFile(wb, `kategori_terpilih_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: `${selected.length} kategori diekspor` });
   };
 
   const downloadTemplate = () => {
@@ -172,10 +208,31 @@ function CategoryTab() {
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
+            <span className="text-xs font-medium">{selectedIds.size} kategori dipilih</span>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>Aktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>Nonaktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={exportSelectedExcel}>
+              <FileSpreadsheet className="h-3 w-3" /> Export Terpilih
+            </Button>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
+          </div>
+        )}
+
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada kategori.</p> : (
           <Table>
             <TableHeader><TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleCatSelectAll} />
+              </TableHead>
               <TableHead className="text-xs">Code</TableHead>
               <TableHead className="text-xs">Name</TableHead>
               <TableHead className="text-xs">Description</TableHead>
@@ -184,7 +241,8 @@ function CategoryTab() {
             </TableRow></TableHeader>
             <TableBody>
               {items.map(i => (
-                <TableRow key={i.id} className={!i.is_active ? 'opacity-60' : ''}>
+                <TableRow key={i.id} className={`${!i.is_active ? 'opacity-60' : ''} ${selectedIds.has(i.id) ? 'bg-muted/40' : ''}`}>
+                  <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleCatSelect(i.id)} /></TableCell>
                   <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{i.description || '—'}</TableCell>
@@ -801,6 +859,9 @@ function UnitTab() {
   const [saving, setSaving] = useState(false);
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
@@ -833,7 +894,63 @@ function UnitTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus unit ini?')) return;
     const { error } = await supabase.from('units').delete().eq('id', id);
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Unit dihapus' }); fetch(); }
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Unit dihapus' }); fetch(); setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; }); }
+  };
+
+  const toggleUnitSelect = (id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleUnitSelectAll = () => setSelectedIds(prev => prev.size === items.length ? new Set() : new Set(items.map(i => i.id)));
+  const handleBulkDelete = async () => {
+    if (!confirm(`Hapus ${selectedIds.size} unit?`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from('units').delete().in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} unit dihapus` }); setSelectedIds(new Set()); fetch(); }
+    setBulkDeleting(false);
+  };
+  const handleBulkSetStatus = async (active: boolean) => {
+    const label = active ? 'aktifkan' : 'nonaktifkan';
+    if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${selectedIds.size} unit?`)) return;
+    const { error } = await supabase.from('units').update({ is_active: active } as any).in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} unit di-${label}` }); setSelectedIds(new Set()); fetch(); }
+  };
+  const exportSelectedExcel = () => {
+    const selected = items.filter(i => selectedIds.has(i.id));
+    const rows = selected.map((i, idx) => ({ 'No': idx + 1, 'Kode': i.code || '', 'Nama Unit': i.name, 'Status': i.is_active ? 'Aktif' : 'Non-aktif' }));
+    const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selected Units');
+    XLSX.writeFile(wb, `unit_terpilih_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: `${selected.length} unit diekspor` });
+  };
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([['Kode Unit', 'Nama Unit*', 'Aktif (Ya/Tidak)'], ['PCS', 'Pieces', 'Ya']]);
+    ws['!cols'] = [{ wch: 15 }, { wch: 25 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Units');
+    XLSX.writeFile(wb, 'template_import_unit.xlsx');
+  };
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return; e.target.value = ''; setImporting(true);
+    try {
+      const data = await file.arrayBuffer(); const wb = XLSX.read(data); const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const dataRows = rows.slice(1).filter(r => r[1]?.toString().trim());
+      if (dataRows.length === 0) { toast({ title: 'File kosong', variant: 'destructive' }); setImporting(false); return; }
+      const payloads: any[] = dataRows.map(row => {
+        const activeStr = (row[2]?.toString().trim() || 'Ya').toLowerCase();
+        return { code: row[0]?.toString().trim() || '', name: row[1]?.toString().trim() || '', is_active: !['tidak', 'no', 'false', '0'].includes(activeStr) };
+      }).filter(p => p.name);
+      const { error, data: inserted } = await supabase.from('units').insert(payloads).select();
+      if (error) { toast({ title: 'Import gagal', description: error.message, variant: 'destructive' }); }
+      else { toast({ title: 'Import berhasil', description: `${inserted?.length} unit ditambahkan.` }); fetch(); }
+    } catch (err: any) { toast({ title: 'Error', description: err.message, variant: 'destructive' }); }
+    setImporting(false);
+  };
+  const exportExcel = () => {
+    const rows = items.map((i, idx) => ({ 'No': idx + 1, 'Kode': i.code || '', 'Nama Unit': i.name, 'Status': i.is_active ? 'Aktif' : 'Non-aktif' }));
+    const ws = XLSX.utils.json_to_sheet(rows); const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Units');
+    XLSX.writeFile(wb, `data_unit_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: 'Export Excel berhasil' });
   };
 
   return (
@@ -841,34 +958,55 @@ function UnitTab() {
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <Ruler className="h-4 w-4 text-accent" /> Satuan Unit
+          <Badge variant="secondary" className="text-[10px] ml-1">{items.length}</Badge>
         </CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>{editItem ? 'Edit Unit' : 'Tambah Unit'}</DialogTitle></DialogHeader>
-            <div className="space-y-3 mt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">Kode Unit</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. PCS" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}><Download className="h-3 w-3" /> Template</Button>
+          <label>
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+            </Button>
+          </label>
+          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}><FileDown className="h-3 w-3" /> Ekspor</Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader><DialogTitle>{editItem ? 'Edit Unit' : 'Tambah Unit'}</DialogTitle></DialogHeader>
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Kode Unit</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. PCS" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+                </div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" /> Aktif</label>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
+                </div>
               </div>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                Aktif
-              </label>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
+            <span className="text-xs font-medium">{selectedIds.size} unit dipilih</span>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>Aktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>Nonaktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={exportSelectedExcel}><FileSpreadsheet className="h-3 w-3" /> Export Terpilih</Button>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>{bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus</Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
+          </div>
+        )}
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada unit.</p> : (
           <Table>
             <TableHeader><TableRow>
+              <TableHead className="w-10"><Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleUnitSelectAll} /></TableHead>
               <TableHead className="text-xs">Code</TableHead>
               <TableHead className="text-xs">Name</TableHead>
               <TableHead className="text-xs">Status</TableHead>
@@ -876,31 +1014,18 @@ function UnitTab() {
             </TableRow></TableHeader>
             <TableBody>
               {items.map(i => (
-                <TableRow key={i.id} className={!i.is_active ? 'opacity-60' : ''}>
+                <TableRow key={i.id} className={`${!i.is_active ? 'opacity-60' : ''} ${selectedIds.has(i.id) ? 'bg-muted/40' : ''}`}>
+                  <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleUnitSelect(i.id)} /></TableCell>
                   <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>
-                      {i.is_active ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
+                  <TableCell><Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>{i.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
+                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openView(i)}>
-                          <Eye className="h-4 w-4 mr-2" /> View Detail
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEdit(i)}>
-                          <Pencil className="h-4 w-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
-                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openView(i)}><Eye className="h-4 w-4 mr-2" /> View Detail</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(i)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
