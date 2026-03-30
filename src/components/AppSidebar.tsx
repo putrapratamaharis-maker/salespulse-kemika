@@ -58,7 +58,7 @@ export function AppSidebar() {
 
   const orgRole = currentUser?.orgRole || 'staff_operational';
   const systemRole = currentUser?.systemRole || 'viewer';
-  const showSalesMenus = ['sales_person', 'staff_operational'].includes(orgRole) || ['staff', 'admin', 'super_admin'].includes(systemRole);
+  const showSalesMenus = orgRole === 'staff_operational' && systemRole === 'staff';
   const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => showSalesMenus || !item.salesOnly);
   const hasTeam = ['sales_manager', 'supervisor'].includes(orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(systemRole);
