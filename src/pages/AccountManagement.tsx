@@ -581,37 +581,50 @@ export default function AccountManagement() {
               </TableBody>
             </Table>
           )}
-          {filtered.length > pageSize && (
-            <div className="flex items-center justify-between px-4 py-3 border-t">
-              <p className="text-xs text-muted-foreground">
-                Menampilkan {(safePage - 1) * pageSize + 1}–{Math.min(safePage * pageSize, filtered.length)} dari {filtered.length} akun
-              </p>
-              <div className="flex items-center gap-1">
-                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </Button>
-                {Array.from({ length: totalPages }, (_, i) => i + 1)
-                  .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
-                  .reduce<(number | string)[]>((acc, p, i, arr) => {
-                    if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
-                    acc.push(p);
-                    return acc;
-                  }, [])
-                  .map((p, i) =>
-                    typeof p === 'string' ? (
-                      <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
-                    ) : (
-                      <Button key={p} variant={p === safePage ? 'default' : 'outline'} size="icon" className="h-7 w-7 text-xs" onClick={() => setCurrentPage(p)}>
-                        {p}
-                      </Button>
-                    )
-                  )}
-                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </Button>
+          <div className="flex items-center justify-between px-4 py-3 border-t">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Tampilkan</span>
+                <Select value={pageSize === 0 ? 'all' : String(pageSize)} onValueChange={v => { setPageSize(v === 'all' ? 0 : Number(v)); setCurrentPage(1); }}>
+                  <SelectTrigger className="h-7 w-[70px] text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZE_OPTIONS.map(opt => (
+                      <SelectItem key={String(opt)} value={String(opt)}>{opt === 'all' ? 'Semua' : opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-xs text-muted-foreground">
+                  {pageSize === 0
+                    ? `${sorted.length} akun`
+                    : `${(safePage - 1) * effectivePageSize + 1}–${Math.min(safePage * effectivePageSize, sorted.length)} dari ${sorted.length} akun`}
+                </span>
               </div>
+              {pageSize !== 0 && totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage <= 1} onClick={() => setCurrentPage(p => p - 1)}>
+                    <ChevronLeft className="h-3.5 w-3.5" />
+                  </Button>
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(p => p === 1 || p === totalPages || Math.abs(p - safePage) <= 1)
+                    .reduce<(number | string)[]>((acc, p, i, arr) => {
+                      if (i > 0 && p - (arr[i - 1] as number) > 1) acc.push('...');
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, i) =>
+                      typeof p === 'string' ? (
+                        <span key={`dot-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
+                      ) : (
+                        <Button key={p} variant={p === safePage ? 'default' : 'outline'} size="icon" className="h-7 w-7 text-xs" onClick={() => setCurrentPage(p)}>
+                          {p}
+                        </Button>
+                      )
+                    )}
+                  <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage >= totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+                    <ChevronRight className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              )}
             </div>
-          )}
         </CardContent>
       </Card>
 
