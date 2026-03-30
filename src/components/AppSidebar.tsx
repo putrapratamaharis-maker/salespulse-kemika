@@ -31,7 +31,14 @@ const navItems = [
   { title: 'Revenue & Margin', url: '/revenue', icon: DollarSign },
   { title: 'Product Performance', url: '/products', icon: Package },
   { title: 'AR & Cashflow', url: '/ar-cashflow', icon: CreditCard },
-  { title: 'Manajemen Akun', url: '/accounts', icon: Building2 },
+];
+
+const masterDataSubItems = [
+  { title: 'Akun / Customer', url: '/accounts', icon: Building2 },
+  { title: 'Produk', url: '/admin?tab=products', icon: Package },
+  { title: 'Kategori', url: '/admin?tab=categories', icon: Layers },
+  { title: 'Unit', url: '/admin?tab=units', icon: Ruler },
+  { title: 'User', url: '/admin?tab=users', icon: UserCog },
 ];
 
 const adminItems = [
