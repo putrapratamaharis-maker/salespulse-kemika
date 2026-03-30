@@ -177,7 +177,39 @@ function ProductTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus produk ini?')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); }
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; }); }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Hapus ${selectedIds.size} produk yang dipilih?`)) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from('products').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} produk dihapus` });
+      setSelectedIds(new Set());
+      fetchAll();
+    }
+    setBulkDeleting(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((i: any) => i.id)));
+    }
   };
 
   const downloadTemplate = () => {
