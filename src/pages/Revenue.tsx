@@ -29,6 +29,8 @@ const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const fetchInvoices = async () => {
     setLoading(true);
