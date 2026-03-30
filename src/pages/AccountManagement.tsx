@@ -158,6 +158,7 @@ export default function AccountManagement() {
       pic_contact: formPicContact.trim(),
       pic_email: formPicEmail.trim(),
       region: formRegion,
+      city: formCity.trim(),
       type: formType,
       status: formStatus,
     };
