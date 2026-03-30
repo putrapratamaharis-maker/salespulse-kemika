@@ -696,6 +696,22 @@ export default function AccountManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Hapus {selectedIds.size} Akun</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Yakin ingin menghapus <strong>{selectedIds.size} akun</strong> yang dipilih? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)}>Batal</Button>
+            <Button variant="destructive" onClick={handleBulkDelete} disabled={saving}>{saving ? 'Menghapus...' : `Hapus ${selectedIds.size} Akun`}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
