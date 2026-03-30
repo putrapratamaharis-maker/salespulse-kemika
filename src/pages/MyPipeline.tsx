@@ -339,6 +339,8 @@ const MyPipeline = () => {
         onOpenChange={setEditDialogOpen}
         onSave={handleSaveEdit}
         accountOptions={accountOptions}
+        salesId={currentUser.id}
+        onAccountCreated={handleAccountCreated}
       />
 
       <DealDetailDialog

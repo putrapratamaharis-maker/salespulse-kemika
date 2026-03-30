@@ -168,17 +168,16 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
             {/* Account */}
-            <div className="space-y-1.5">
-              <Label>Account / Customer Name</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger><SelectValue placeholder="Pilih account" /></SelectTrigger>
-                <SelectContent>
-                  {accountOptions.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <AccountSelectWithCreate
+              accounts={accountOptions}
+              value={accountId}
+              onValueChange={setAccountId}
+              salesId={salesId}
+              onAccountCreated={(acc) => {
+                setAccountId(acc.id);
+                onAccountCreated?.(acc);
+              }}
+            />
 
             {selectedAccount && (
               <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-3">
