@@ -168,7 +168,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   };
 
   const formatRp = (val: number) =>
-    val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
+    val > 0 ? `Rp ${val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
