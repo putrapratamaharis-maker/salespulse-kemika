@@ -351,7 +351,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lead-margin">{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input id="lead-margin" type="number" min={0} max={100} value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-prob">Probability (%)</Label>
