@@ -9,6 +9,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
 
 const stageOptions: { value: DealStage; label: string }[] = [
