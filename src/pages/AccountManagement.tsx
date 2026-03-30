@@ -501,6 +501,17 @@ export default function AccountManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 bg-destructive/10 border-b">
+              <span className="text-sm font-medium text-destructive">{selectedIds.size} akun dipilih</span>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => setBulkDeleteDialogOpen(true)}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Hapus Terpilih
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
+                Batal Pilih
+              </Button>
+            </div>
+          )}
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">Memuat data...</div>
           ) : filtered.length === 0 ? (
@@ -511,6 +522,12 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
                     <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
                   </TableHead>
@@ -534,7 +551,13 @@ export default function AccountManagement() {
               </TableHeader>
               <TableBody>
                 {paginatedAccounts.map(acc => (
-                  <TableRow key={acc.id}>
+                  <TableRow key={acc.id} data-state={selectedIds.has(acc.id) ? 'selected' : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(acc.id)}
+                        onCheckedChange={() => toggleSelect(acc.id)}
+                      />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
