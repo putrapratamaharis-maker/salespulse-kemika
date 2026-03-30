@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash } from 'lucide-react';
 
 interface DealDetailDialogProps {
   deal: Deal | null;
@@ -62,6 +62,9 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
               <InfoRow icon={TrendingUp} label={deal.stage === 'po_secured' || deal.stage === 'invoice_issued' ? 'Gross Margin' : 'Expected Margin'} value={formatPercent(deal.expectedMargin)} />
             )}
             {deal.location && <InfoRow icon={MapPin} label="Location" value={deal.location} />}
+            {deal.poNumber && (deal.stage === 'po_secured' || deal.stage === 'invoice_issued') && (
+              <InfoRow icon={Hash} label={deal.stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'} value={deal.poNumber} highlight />
+            )}
           </div>
 
           {/* Notes */}
