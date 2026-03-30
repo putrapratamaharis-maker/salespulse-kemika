@@ -41,6 +41,15 @@ interface SalesActivity {
   created_at: string;
 }
 
+// Helper to get a signed URL for evidence files (bucket is now private)
+async function getSignedEvidenceUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  const { data, error } = await supabase.storage.from('activity-evidence').createSignedUrl(path, 3600);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
 interface Account {
   id: string;
   name: string;
