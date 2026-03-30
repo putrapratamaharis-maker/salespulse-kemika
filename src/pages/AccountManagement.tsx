@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 
 interface Account {
   id: string;
+  customer_id: string;
   name: string;
   segment: string;
   region: string;
@@ -237,6 +238,7 @@ export default function AccountManagement() {
 
   const exportExcel = () => {
     const exportData = filtered.map(a => ({
+      'Customer ID': a.customer_id || '',
       'Nama Akun': a.name,
       'Nama PIC': a.pic_name || '',
       'Nomor Contact': a.pic_contact || '',
@@ -246,7 +248,7 @@ export default function AccountManagement() {
       'Status': a.status || 'Active',
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
-    ws['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, `data_akun_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -262,9 +264,10 @@ export default function AccountManagement() {
 
     autoTable(doc, {
       startY: 26,
-      head: [['No', 'Nama Akun', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region', 'Status']],
+      head: [['No', 'Customer ID', 'Nama Akun', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region', 'Status']],
       body: filtered.map((a, i) => [
         i + 1,
+        a.customer_id || '-',
         a.name,
         a.pic_name || '-',
         a.pic_contact || '-',
@@ -445,6 +448,9 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
+                    <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">Nama Akun <SortIcon col="name" /></span>
                   </TableHead>
@@ -466,6 +472,7 @@ export default function AccountManagement() {
               <TableBody>
                 {paginatedAccounts.map(acc => (
                   <TableRow key={acc.id}>
+                    <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.region || '-'}</TableCell>

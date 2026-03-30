@@ -17,6 +17,7 @@ export type Database = {
       accounts: {
         Row: {
           created_at: string
+          customer_id: string | null
           id: string
           name: string
           pic_contact: string
@@ -31,6 +32,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          customer_id?: string | null
           id?: string
           name: string
           pic_contact?: string
@@ -45,6 +47,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          customer_id?: string | null
           id?: string
           name?: string
           pic_contact?: string
@@ -729,6 +732,7 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          division: string | null
           email: string
           full_name: string
           id: string
@@ -742,6 +746,7 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          division?: string | null
           email?: string
           full_name?: string
           id?: string
@@ -755,6 +760,7 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          division?: string | null
           email?: string
           full_name?: string
           id?: string

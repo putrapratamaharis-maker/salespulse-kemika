@@ -36,12 +36,14 @@ interface UserWithRole {
   user_id: string;
   full_name: string;
   email: string;
-  segment: string | null;
+  division: string | null;
   region: string | null;
   org_role: OrgRole | null;
   system_role: SystemRole | null;
   has_role: boolean;
 }
+
+const DIVISIONS = ['BOD', 'HR-GA', 'Sales & Marketing', 'FAT', 'WH', 'Lainnya'];
 
 const AdminPanel = () => {
   const { userRole } = useAuth();
@@ -60,7 +62,7 @@ const AdminPanel = () => {
     setLoading(true);
     const { data: profiles, error: pErr } = await supabase
       .from('profiles')
-      .select('user_id, full_name, email, segment, region');
+      .select('user_id, full_name, email, division, region');
 
     if (pErr) {
       toast({ title: 'Error', description: pErr.message, variant: 'destructive' });
@@ -78,7 +80,7 @@ const AdminPanel = () => {
         user_id: p.user_id,
         full_name: p.full_name,
         email: p.email,
-        segment: p.segment,
+        division: p.division,
         region: p.region,
         org_role: role?.org_role ?? null,
         system_role: role?.system_role ?? null,
@@ -192,7 +194,7 @@ const AdminPanel = () => {
                       <TableHead className="text-xs">Email</TableHead>
                       <TableHead className="text-xs">Org Role</TableHead>
                       <TableHead className="text-xs">System Role</TableHead>
-                      <TableHead className="text-xs">Segment</TableHead>
+                      <TableHead className="text-xs">Divisi</TableHead>
                       <TableHead className="text-xs">Region</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -249,7 +251,39 @@ const AdminPanel = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm">{u.segment || '—'}</TableCell>
+                        <TableCell>
+                          {isSuperAdmin ? (
+                            <Select
+                              value={u.division ?? ''}
+                              onValueChange={async (v) => {
+                                setSaving(u.user_id + 'division');
+                                const { error } = await supabase
+                                  .from('profiles')
+                                  .update({ division: v } as any)
+                                  .eq('user_id', u.user_id);
+                                if (error) {
+                                  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                                } else {
+                                  toast({ title: 'Divisi diperbarui!' });
+                                  fetchUsers();
+                                }
+                                setSaving(null);
+                              }}
+                              disabled={saving === u.user_id + 'division'}
+                            >
+                              <SelectTrigger className="h-7 text-xs w-36">
+                                <SelectValue placeholder="Pilih divisi..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DIVISIONS.map(d => (
+                                  <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-sm">{u.division || '—'}</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-sm">{u.region || '—'}</TableCell>
                       </TableRow>
                     ))}
