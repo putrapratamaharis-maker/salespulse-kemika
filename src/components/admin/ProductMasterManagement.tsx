@@ -21,13 +21,17 @@ import autoTable from 'jspdf-autotable';
 // --- Category Management ---
 function CategoryTab() {
   const { toast } = useToast();
-  const [items, setItems] = useState<{ id: string; name: string; description: string | null }[]>([]);
+  const [items, setItems] = useState<{ id: string; name: string; description: string | null; code: string; is_active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editItem, setEditItem] = useState<{ id: string; name: string; description: string } | null>(null);
+  const [editItem, setEditItem] = useState<any | null>(null);
+  const [code, setCode] = useState('');
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [viewItem, setViewItem] = useState<any | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
