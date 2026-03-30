@@ -56,10 +56,10 @@ export function AppSidebar() {
   const { currentUser, setCurrentUser } = useAppContext();
   const location = useLocation();
 
-  const orgRole = currentUser?.orgRole || 'sales_person';
+  const orgRole = currentUser?.orgRole || 'staff_operational';
   const systemRole = currentUser?.systemRole || 'viewer';
-  const isSalesPerson = orgRole === 'sales_person';
-  const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => isSalesPerson || !item.salesOnly);
+  const showSalesMenus = ['sales_person', 'staff_operational'].includes(orgRole) || ['staff', 'admin', 'super_admin'].includes(systemRole);
+  const myPerformanceSubItems = allMyPerformanceSubItems.filter(item => showSalesMenus || !item.salesOnly);
   const hasTeam = ['sales_manager', 'supervisor'].includes(orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(systemRole);
   const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(systemRole);
