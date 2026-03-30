@@ -62,7 +62,7 @@ const AdminPanel = () => {
     setLoading(true);
     const { data: profiles, error: pErr } = await supabase
       .from('profiles')
-      .select('user_id, full_name, email, segment, region');
+      .select('user_id, full_name, email, division, region');
 
     if (pErr) {
       toast({ title: 'Error', description: pErr.message, variant: 'destructive' });
