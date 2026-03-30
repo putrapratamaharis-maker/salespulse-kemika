@@ -716,32 +716,38 @@ function ProductTab() {
 // --- Unit Management ---
 function UnitTab() {
   const { toast } = useToast();
-  const [items, setItems] = useState<{ id: string; name: string }[]>([]);
+  const [items, setItems] = useState<{ id: string; name: string; code: string; is_active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editItem, setEditItem] = useState<{ id: string; name: string } | null>(null);
+  const [editItem, setEditItem] = useState<any | null>(null);
+  const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [viewItem, setViewItem] = useState<any | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
     const { data } = await supabase.from('units').select('*').order('name');
-    setItems(data || []);
+    setItems((data as any) || []);
     setLoading(false);
   };
   useEffect(() => { fetch(); }, []);
 
-  const openAdd = () => { setEditItem(null); setName(''); setDialogOpen(true); };
-  const openEdit = (item: typeof items[0]) => { setEditItem(item); setName(item.name); setDialogOpen(true); };
+  const openAdd = () => { setEditItem(null); setCode(''); setName(''); setIsActive(true); setDialogOpen(true); };
+  const openEdit = (item: typeof items[0]) => { setEditItem(item); setCode(item.code || ''); setName(item.name); setIsActive(item.is_active); setDialogOpen(true); };
+  const openView = (item: typeof items[0]) => { setViewItem(item); setViewOpen(true); };
 
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama unit wajib diisi', variant: 'destructive' }); return; }
     setSaving(true);
+    const payload: any = { name: name.trim(), code: code.trim(), is_active: isActive };
     if (editItem) {
-      const { error } = await supabase.from('units').update({ name: name.trim() }).eq('id', editItem.id);
+      const { error } = await supabase.from('units').update(payload).eq('id', editItem.id);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Unit diperbarui' }); }
     } else {
-      const { error } = await supabase.from('units').insert({ name: name.trim() });
+      const { error } = await supabase.from('units').insert(payload);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Unit ditambahkan' }); }
     }
     setSaving(false);
@@ -765,10 +771,17 @@ function UnitTab() {
           <DialogTrigger asChild>
             <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-sm">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader><DialogTitle>{editItem ? 'Edit Unit' : 'Tambah Unit'}</DialogTitle></DialogHeader>
             <div className="space-y-3 mt-2">
-              <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5"><Label className="text-xs">Kode Unit</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. PCS" /></div>
+                <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+              </div>
+              <label className="flex items-center gap-2 text-sm cursor-pointer">
+                <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                Aktif
+              </label>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
                 <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
@@ -779,16 +792,65 @@ function UnitTab() {
       </CardHeader>
       <CardContent>
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada unit.</p> : (
-          <div className="flex flex-wrap gap-2">
-            {items.map(i => (
-              <div key={i.id} className="flex items-center gap-1 border border-border rounded-md px-2.5 py-1.5 bg-muted/30">
-                <span className="text-sm font-medium">{i.name}</span>
-                <Button variant="ghost" size="sm" className="h-5 w-5 p-0 ml-1" onClick={() => openEdit(i)}><Pencil className="h-3 w-3" /></Button>
-                <Button variant="ghost" size="sm" className="h-5 w-5 p-0 text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-3 w-3" /></Button>
-              </div>
-            ))}
-          </div>
+          <Table>
+            <TableHeader><TableRow>
+              <TableHead className="text-xs">Code</TableHead>
+              <TableHead className="text-xs">Name</TableHead>
+              <TableHead className="text-xs">Status</TableHead>
+              <TableHead className="text-xs text-right">Actions</TableHead>
+            </TableRow></TableHeader>
+            <TableBody>
+              {items.map(i => (
+                <TableRow key={i.id} className={!i.is_active ? 'opacity-60' : ''}>
+                  <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
+                  <TableCell className="text-sm font-medium">{i.name}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>
+                      {i.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openView(i)}>
+                          <Eye className="h-4 w-4 mr-2" /> View Detail
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(i)}>
+                          <Pencil className="h-4 w-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
+
+        {/* View Detail Dialog */}
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent className="sm:max-w-sm">
+            <DialogHeader><DialogTitle>Detail Unit</DialogTitle></DialogHeader>
+            {viewItem && (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mt-2">
+                <span className="text-muted-foreground">Code</span>
+                <span className="font-mono font-medium">{viewItem.code || '—'}</span>
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium">{viewItem.name}</span>
+                <span className="text-muted-foreground">Status</span>
+                <span><Badge variant="outline" className={`text-[10px] ${viewItem.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>{viewItem.is_active ? 'Active' : 'Inactive'}</Badge></span>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );

@@ -891,18 +891,24 @@ export type Database = {
       }
       units: {
         Row: {
+          code: string | null
           created_at: string
           id: string
+          is_active: boolean | null
           name: string
         }
         Insert: {
+          code?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           name: string
         }
         Update: {
+          code?: string | null
           created_at?: string
           id?: string
+          is_active?: boolean | null
           name?: string
         }
         Relationships: []
