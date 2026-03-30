@@ -1,0 +1,1 @@
+ALTER TABLE public.deals ADD COLUMN po_number text NULL DEFAULT '';
