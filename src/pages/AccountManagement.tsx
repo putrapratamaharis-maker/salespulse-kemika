@@ -67,6 +67,10 @@ export default function AccountManagement() {
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
+  const [pendingExportType, setPendingExportType] = useState<'excel' | 'pdf' | null>(null);
 
   // Form state
   const [formCustomerId, setFormCustomerId] = useState('');
@@ -287,12 +291,21 @@ export default function AccountManagement() {
     XLSX.writeFile(wb, 'template_import_akun.xlsx');
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     e.target.value = '';
+    setPendingImportFile(file);
+    setImportConfirmOpen(true);
+  };
+
+  const handleImport = async () => {
+    if (!pendingImportFile || !user) return;
+    setImportConfirmOpen(false);
     setImporting(true);
     try {
+      const file = pendingImportFile;
+      setPendingImportFile(null);
       const data = await file.arrayBuffer();
       const wb = XLSX.read(data);
       const ws = wb.Sheets[wb.SheetNames[0]];
@@ -341,6 +354,18 @@ export default function AccountManagement() {
       toast({ title: 'Error membaca file', description: err.message, variant: 'destructive' });
     }
     setImporting(false);
+  };
+
+  const confirmExport = (type: 'excel' | 'pdf') => {
+    setPendingExportType(type);
+    setExportConfirmOpen(true);
+  };
+
+  const handleExportConfirmed = () => {
+    setExportConfirmOpen(false);
+    if (pendingExportType === 'excel') exportExcel();
+    else if (pendingExportType === 'pdf') exportPdf();
+    setPendingExportType(null);
   };
 
   const exportExcel = () => {
@@ -469,7 +494,7 @@ export default function AccountManagement() {
             <Download className="h-4 w-4 mr-1" /> Template
           </Button>
           <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
             <Button variant="outline" size="sm" asChild disabled={importing}>
               <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
             </Button>
@@ -481,10 +506,10 @@ export default function AccountManagement() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={exportExcel}>
+              <DropdownMenuItem onClick={() => confirmExport('excel')}>
                 <Download className="h-4 w-4 mr-2" /> Export Excel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportPdf}>
+              <DropdownMenuItem onClick={() => confirmExport('pdf')}>
                 <FileText className="h-4 w-4 mr-2" /> Export PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -824,6 +849,38 @@ export default function AccountManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setViewingAccount(null)}>Tutup</Button>
             <Button onClick={() => { if (viewingAccount) { openEdit(viewingAccount); setViewingAccount(null); } }}>Edit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Import Confirmation Dialog */}
+      <Dialog open={importConfirmOpen} onOpenChange={(open) => { if (!open) { setImportConfirmOpen(false); setPendingImportFile(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Import</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Anda akan mengimport file <span className="font-medium text-foreground">"{pendingImportFile?.name}"</span>. Data akun baru akan ditambahkan ke daftar. Lanjutkan?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportConfirmOpen(false); setPendingImportFile(null); }}>Batal</Button>
+            <Button onClick={handleImport}>Ya, Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Confirmation Dialog */}
+      <Dialog open={exportConfirmOpen} onOpenChange={(open) => { if (!open) { setExportConfirmOpen(false); setPendingExportType(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Export</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Anda akan mengekspor <span className="font-medium text-foreground">{filtered.length} akun</span> ke format <span className="font-medium text-foreground">{pendingExportType === 'excel' ? 'Excel (.xlsx)' : 'PDF'}</span>. Lanjutkan?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setExportConfirmOpen(false); setPendingExportType(null); }}>Batal</Button>
+            <Button onClick={handleExportConfirmed}>Ya, Export</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
