@@ -695,6 +695,8 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          purchase_price: number | null
+          selling_price: number | null
           sku: string | null
           unit: string | null
           updated_at: string
@@ -706,6 +708,8 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          purchase_price?: number | null
+          selling_price?: number | null
           sku?: string | null
           unit?: string | null
           updated_at?: string
@@ -717,6 +721,8 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          purchase_price?: number | null
+          selling_price?: number | null
           sku?: string | null
           unit?: string | null
           updated_at?: string
