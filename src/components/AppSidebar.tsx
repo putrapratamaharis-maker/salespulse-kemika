@@ -173,12 +173,49 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        {isAdmin && (
+        {isStaffOrAbove && (
           <SidebarGroup>
             <SidebarGroupLabel className="text-sidebar-muted text-[10px] uppercase tracking-widest">System</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {adminItems.map((item) => (
+                {/* Master Data Management — collapsible */}
+                <SidebarMenuItem>
+                  <Collapsible defaultOpen={isMasterDataActive}>
+                    <CollapsibleTrigger className={`flex items-center w-full gap-2 rounded-md px-2 py-1.5 text-sm transition-colors hover:bg-sidebar-accent/50 text-sidebar-foreground ${isMasterDataActive ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium' : ''}`}>
+                      <Database className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <>
+                          <span className="flex-1 text-left">Master Data</span>
+                          <ChevronDown className="h-3.5 w-3.5 shrink-0 transition-transform duration-200 [&[data-state=open]]:rotate-180" />
+                        </>
+                      )}
+                    </CollapsibleTrigger>
+                    {!collapsed && (
+                      <CollapsibleContent>
+                        <SidebarMenu className="ml-4 mt-0.5 border-l border-sidebar-border pl-2">
+                          {masterDataSubItems.map((sub) => (
+                            <SidebarMenuItem key={sub.title}>
+                              <SidebarMenuButton asChild>
+                                <NavLink
+                                  to={sub.url}
+                                  end
+                                  className="hover:bg-sidebar-accent/50 text-sidebar-foreground text-xs"
+                                  activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                                >
+                                  <sub.icon className="mr-2 h-3.5 w-3.5 shrink-0" />
+                                  <span>{sub.title}</span>
+                                </NavLink>
+                              </SidebarMenuButton>
+                            </SidebarMenuItem>
+                          ))}
+                        </SidebarMenu>
+                      </CollapsibleContent>
+                    )}
+                  </Collapsible>
+                </SidebarMenuItem>
+
+                {/* Admin Panel — only for admin roles */}
+                {isAdmin && adminItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
