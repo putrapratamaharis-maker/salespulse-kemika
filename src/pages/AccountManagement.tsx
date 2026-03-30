@@ -537,24 +537,27 @@ export default function AccountManagement() {
                     />
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
-                    <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
+                    <span className="inline-flex items-center">Code <SortIcon col="customer_id" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
-                    <span className="inline-flex items-center">Nama Akun <SortIcon col="name" /></span>
+                    <span className="inline-flex items-center">Name <SortIcon col="name" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                    <span className="inline-flex items-center">Type <SortIcon col="type" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_name')}>
                     <span className="inline-flex items-center">PIC <SortIcon col="pic_name" /></span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('region')}>
-                    <span className="inline-flex items-center">Region <SortIcon col="region" /></span>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_contact')}>
+                    <span className="inline-flex items-center">Phone <SortIcon col="pic_contact" /></span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('type')}>
-                    <span className="inline-flex items-center">Tipe <SortIcon col="type" /></span>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('city')}>
+                    <span className="inline-flex items-center">City <SortIcon col="city" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status <SortIcon col="status" /></span>
                   </TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -566,19 +569,23 @@ export default function AccountManagement() {
                         onCheckedChange={() => toggleSelect(acc.id)}
                       />
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs font-mono">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
-                    <TableCell className="text-muted-foreground">{acc.region || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.pic_contact || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.city || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(acc)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewingAccount(acc)} title="View Detail">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(acc)} title="Edit">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openDelete(acc)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openDelete(acc)} title="Delete">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
