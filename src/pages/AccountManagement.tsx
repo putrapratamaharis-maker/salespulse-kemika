@@ -63,6 +63,7 @@ export default function AccountManagement() {
   const [importing, setImporting] = useState(false);
 
   // Form state
+  const [formCustomerId, setFormCustomerId] = useState('');
   const [formName, setFormName] = useState('');
   const [formPicName, setFormPicName] = useState('');
   const [formPicContact, setFormPicContact] = useState('');
@@ -70,6 +71,17 @@ export default function AccountManagement() {
   const [formRegion, setFormRegion] = useState('');
   const [formType, setFormType] = useState('Corporate');
   const [formStatus, setFormStatus] = useState('Active');
+
+  const generateCustomerId = () => {
+    const year = new Date().getFullYear();
+    const existingIds = accounts
+      .map(a => a.customer_id)
+      .filter(id => id?.startsWith(`CUST${year}-`))
+      .map(id => parseInt(id.replace(`CUST${year}-`, ''), 10))
+      .filter(n => !isNaN(n));
+    const nextNum = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+    return `CUST${year}-${String(nextNum).padStart(4, '0')}`;
+  };
 
   const allowedRoles = ['super_admin', 'admin', 'staff'];
   const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
