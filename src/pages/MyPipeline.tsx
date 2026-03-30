@@ -39,10 +39,7 @@ const MyPipeline = () => {
   const { currentUser } = useAppContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [dbDeals, setDbDeals] = useState<Deal[]>([]);
-  const [addedDeals, setAddedDeals] = useState<Deal[]>([]);
-  const [editedDeals, setEditedDeals] = useState<Record<string, Deal>>({});
-  const [deletedDealIds, setDeletedDealIds] = useState<Set<string>>(new Set());
+  const [deals, setDeals] = useState<Deal[]>([]);
   const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [sortKey, setSortKey] = useState<'value' | 'probability' | 'expectedCloseDate' | null>(null);
@@ -57,62 +54,107 @@ const MyPipeline = () => {
     }
   }, [currentUser.orgRole, navigate]);
 
+  const fetchDeals = async () => {
+    setLoading(true);
+    const [{ data: dealsData }, { data: accountsData }] = await Promise.all([
+      supabase.from('deals').select('*').eq('sales_id', currentUser.id),
+      supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+    ]);
+
+    const mapped: Deal[] = (dealsData || []).map((d: any) => ({
+      id: d.id,
+      name: d.name,
+      value: d.value,
+      stage: d.stage as DealStage,
+      probability: d.probability,
+      expectedCloseDate: d.expected_close_date,
+      createdAt: d.created_at,
+      daysInStage: d.days_in_stage,
+      updatedAt: d.updated_at,
+      segment: d.segment,
+      accountId: d.account_id,
+      salesId: d.sales_id,
+      poNumber: d.po_number || '',
+    }));
+    setDeals(mapped);
+    setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
+    setLoading(false);
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setLoading(true);
-      const [{ data: dealsData }, { data: accountsData }] = await Promise.all([
-        supabase.from('deals').select('*').eq('sales_id', currentUser.id),
-        supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
-      ]);
-
-      const mapped: Deal[] = (dealsData || []).map((d: any) => ({
-        id: d.id,
-        name: d.name,
-        value: d.value,
-        stage: d.stage as DealStage,
-        probability: d.probability,
-        expectedCloseDate: d.expected_close_date,
-        createdAt: d.created_at,
-        daysInStage: d.days_in_stage,
-        updatedAt: d.updated_at,
-        segment: d.segment,
-        accountId: d.account_id,
-        salesId: d.sales_id,
-      }));
-      setDbDeals(mapped);
-      setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
-      setLoading(false);
-    };
-    fetchData();
+    fetchDeals();
   }, [currentUser.id]);
-
-  const deals = [...dbDeals, ...addedDeals]
-    .filter(d => !deletedDealIds.has(d.id))
-    .map(d => editedDeals[d.id] || d);
 
   const getAccountName = (accountId: string) =>
     localAccounts.find(a => a.id === accountId)?.name || accountId;
 
-  const handleAddDeal = (deal: Deal) => setAddedDeals(prev => [...prev, deal]);
-  const handleEditDeal = (deal: Deal) => { setEditingDeal(deal); setEditDialogOpen(true); };
-  const handleSaveEdit = (updatedDeal: Deal) => setEditedDeals(prev => ({ ...prev, [updatedDeal.id]: updatedDeal }));
-  const handleDeleteDeal = (dealId: string) => { setDeletedDealIds(prev => new Set(prev).add(dealId)); toast({ title: 'Deal berhasil dihapus' }); };
-
-  const handleStageChange = (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => {
-    const deal = deals.find(d => d.id === dealId);
-    if (deal) {
-      const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
-      const updated = {
-        ...deal,
-        stage: newStage,
-        daysInStage: 0,
-        updatedAt: new Date().toISOString().split('T')[0],
-        ...(isFinalStage ? { probability: 100 } : {}),
-        ...(extraData ? { poNumber: extraData.poNumber, expectedCloseDate: extraData.closeDate } : {}),
-      };
-      setEditedDeals(prev => ({ ...prev, [dealId]: updated }));
-      toast({ title: `Deal dipindahkan ke ${newStage.replace('_', ' ')}` });
+  const handleAddDeal = async (deal: Deal) => {
+    const { error } = await supabase.from('deals').insert({
+      name: deal.name,
+      account_id: deal.accountId,
+      sales_id: deal.salesId,
+      segment: deal.segment,
+      stage: deal.stage,
+      value: deal.value,
+      probability: deal.probability,
+      expected_close_date: deal.expectedCloseDate,
+      days_in_stage: 0,
+      po_number: deal.poNumber || '',
+    });
+    if (error) {
+      toast({ title: 'Gagal menyimpan lead', description: error.message, variant: 'destructive' });
+      return;
     }
+    toast({ title: 'Lead berhasil ditambahkan & tersimpan' });
+    fetchDeals();
+  };
+
+  const handleEditDeal = (deal: Deal) => { setEditingDeal(deal); setEditDialogOpen(true); };
+
+  const handleSaveEdit = async (updatedDeal: Deal) => {
+    const { error } = await supabase.from('deals').update({
+      name: updatedDeal.name,
+      account_id: updatedDeal.accountId,
+      segment: updatedDeal.segment,
+      stage: updatedDeal.stage,
+      value: updatedDeal.value,
+      probability: updatedDeal.probability,
+      expected_close_date: updatedDeal.expectedCloseDate,
+      po_number: updatedDeal.poNumber || '',
+    }).eq('id', updatedDeal.id);
+    if (error) {
+      toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Deal berhasil diperbarui' });
+    fetchDeals();
+  };
+
+  const handleDeleteDeal = async (dealId: string) => {
+    const { error } = await supabase.from('deals').delete().eq('id', dealId);
+    if (error) {
+      toast({ title: 'Gagal menghapus deal', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Deal berhasil dihapus' });
+    fetchDeals();
+  };
+
+  const handleStageChange = async (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => {
+    const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
+    const updatePayload: Record<string, any> = {
+      stage: newStage,
+      days_in_stage: 0,
+      ...(isFinalStage ? { probability: 100 } : {}),
+      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate } : {}),
+    };
+    const { error } = await supabase.from('deals').update(updatePayload).eq('id', dealId);
+    if (error) {
+      toast({ title: 'Gagal memindahkan deal', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: `Deal dipindahkan ke ${newStage.replace('_', ' ')}` });
+    fetchDeals();
   };
 
   const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
