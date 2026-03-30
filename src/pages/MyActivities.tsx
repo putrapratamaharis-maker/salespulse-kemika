@@ -530,7 +530,11 @@ const MyActivities = () => {
                 {editingActivity?.evidence_url && !formEvidenceFile && (
                   <p className="text-xs text-muted-foreground">
                     File tersimpan:{' '}
-                    <a href={editingActivity.evidence_url} target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                    <a href="#" onClick={async (e) => {
+                      e.preventDefault();
+                      const url = await getSignedEvidenceUrl(editingActivity.evidence_url);
+                      if (url) window.open(url, '_blank');
+                    }} className="underline text-primary">
                       Lihat file
                     </a>
                   </p>
