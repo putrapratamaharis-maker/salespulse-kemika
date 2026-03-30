@@ -67,6 +67,10 @@ export default function AccountManagement() {
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importConfirmOpen, setImportConfirmOpen] = useState(false);
+  const [pendingImportFile, setPendingImportFile] = useState<File | null>(null);
+  const [exportConfirmOpen, setExportConfirmOpen] = useState(false);
+  const [pendingExportType, setPendingExportType] = useState<'excel' | 'pdf' | null>(null);
 
   // Form state
   const [formCustomerId, setFormCustomerId] = useState('');
