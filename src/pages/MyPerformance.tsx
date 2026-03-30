@@ -77,7 +77,7 @@ const MyPerformance = () => {
   const [acts, setActs] = useState<ActivityRow[]>([]);
 
   useEffect(() => {
-    if (currentUser.orgRole !== 'sales_person') {
+    if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
       navigate('/my-performance/kpis', { replace: true });
     }
   }, [currentUser.orgRole, navigate]);
