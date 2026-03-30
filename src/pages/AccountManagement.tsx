@@ -356,6 +356,18 @@ export default function AccountManagement() {
     setImporting(false);
   };
 
+  const confirmExport = (type: 'excel' | 'pdf') => {
+    setPendingExportType(type);
+    setExportConfirmOpen(true);
+  };
+
+  const handleExportConfirmed = () => {
+    setExportConfirmOpen(false);
+    if (pendingExportType === 'excel') exportExcel();
+    else if (pendingExportType === 'pdf') exportPdf();
+    setPendingExportType(null);
+  };
+
   const exportExcel = () => {
     const exportData = filtered.map(a => ({
       'Customer ID': a.customer_id || '',
