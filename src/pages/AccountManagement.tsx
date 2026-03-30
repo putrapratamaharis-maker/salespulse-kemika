@@ -494,7 +494,7 @@ export default function AccountManagement() {
             <Download className="h-4 w-4 mr-1" /> Template
           </Button>
           <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
             <Button variant="outline" size="sm" asChild disabled={importing}>
               <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
             </Button>
@@ -506,10 +506,10 @@ export default function AccountManagement() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={exportExcel}>
+              <DropdownMenuItem onClick={() => confirmExport('excel')}>
                 <Download className="h-4 w-4 mr-2" /> Export Excel
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportPdf}>
+              <DropdownMenuItem onClick={() => confirmExport('pdf')}>
                 <FileText className="h-4 w-4 mr-2" /> Export PDF
               </DropdownMenuItem>
             </DropdownMenuContent>
