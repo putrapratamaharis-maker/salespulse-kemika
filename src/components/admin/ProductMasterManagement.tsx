@@ -179,10 +179,10 @@ function ProductTab() {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Harga', 'Aktif (Ya/Tidak)'],
-      ['Contoh Produk', 'SKU-001', categories[0]?.name || 'Hardware', units[0]?.name || 'pcs', 100000, 'Ya'],
+      ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Purchase Price', 'Selling Price', 'Aktif (Ya/Tidak)'],
+      ['Contoh Produk', 'SKU-001', categories[0]?.name || 'Hardware', units[0]?.name || 'pcs', 100000, 150000, 'Ya'],
     ]);
-    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
     XLSX.writeFile(wb, 'template_import_produk.xlsx');
