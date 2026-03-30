@@ -129,6 +129,12 @@ function ProductTab() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
+  // Pagination
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [currentPage, setCurrentPage] = useState(1);
+  // View detail
+  const [viewItem, setViewItem] = useState<any | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -146,6 +152,7 @@ function ProductTab() {
 
   const openAdd = () => { setEditItem(null); setName(''); setSku(''); setCategoryId(''); setUnit('pcs'); setPrice(''); setIsActive(true); setDialogOpen(true); };
   const openEdit = (item: any) => { setEditItem(item); setName(item.name); setSku(item.sku || ''); setCategoryId(item.category_id || ''); setUnit(item.unit || 'pcs'); setPrice(String(item.price || '')); setIsActive(item.is_active); setDialogOpen(true); };
+  const openView = (item: any) => { setViewItem(item); setViewOpen(true); };
 
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama produk wajib diisi', variant: 'destructive' }); return; }
@@ -192,7 +199,6 @@ function ProductTab() {
       const ws = wb.Sheets[wb.SheetNames[0]];
       const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
 
-      // Skip header row
       const dataRows = rows.slice(1).filter(r => r[0]?.toString().trim());
       if (dataRows.length === 0) {
         toast({ title: 'File kosong', description: 'Tidak ada data produk ditemukan.', variant: 'destructive' });
@@ -200,7 +206,6 @@ function ProductTab() {
         return;
       }
 
-      // Build category & unit lookup maps (case-insensitive)
       const catMap = new Map(categories.map(c => [c.name.toLowerCase(), c.id]));
       const unitNames = new Set(units.map(u => u.name.toLowerCase()));
 
@@ -244,18 +249,30 @@ function ProductTab() {
     return matchesSearch && matchesCategory && matchesStatus;
   });
 
+  // Pagination logic
+  const totalItems = filteredItems.length;
+  const isShowAll = pageSize === 0;
+  const totalPages = isShowAll ? 1 : Math.ceil(totalItems / pageSize);
+  const safePage = Math.min(currentPage, totalPages || 1);
+  const paginatedItems = isShowAll ? filteredItems : filteredItems.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const fromRow = totalItems === 0 ? 0 : (safePage - 1) * (isShowAll ? totalItems : pageSize) + 1;
+  const toRow = isShowAll ? totalItems : Math.min(safePage * pageSize, totalItems);
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [searchQuery, filterCategory, filterStatus, pageSize]);
+
   const exportExcel = () => {
     const rows = filteredItems.map((i: any, idx: number) => ({
       'No': idx + 1,
+      'Code/SKU': i.sku || '',
       'Nama Produk': i.name,
-      'SKU': i.sku || '',
       'Kategori': i.product_categories?.name || '',
       'Satuan Unit': i.unit || '',
       'Harga': Number(i.price) || 0,
       'Status': i.is_active ? 'Aktif' : 'Non-aktif',
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
     XLSX.writeFile(wb, `data_produk_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -271,11 +288,11 @@ function ProductTab() {
 
     autoTable(doc, {
       startY: 26,
-      head: [['No', 'Nama Produk', 'SKU', 'Kategori', 'Unit', 'Harga (Rp)', 'Status']],
+      head: [['No', 'Code/SKU', 'Nama Produk', 'Kategori', 'Unit', 'Harga (Rp)', 'Status']],
       body: filteredItems.map((i: any, idx: number) => [
         idx + 1,
-        i.name,
         i.sku || '—',
+        i.name,
         i.product_categories?.name || '—',
         i.unit || '—',
         Number(i.price).toLocaleString('id-ID'),
@@ -287,6 +304,8 @@ function ProductTab() {
     doc.save(`data_produk_${new Date().toISOString().slice(0, 10)}.pdf`);
     toast({ title: 'Export PDF berhasil' });
   };
+
+  const PAGE_SIZES = [10, 25, 50, 100, 0]; // 0 = All
 
   return (
     <Card>
@@ -399,36 +418,96 @@ function ProductTab() {
         </div>
 
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : filteredItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">{items.length === 0 ? 'Belum ada produk.' : 'Tidak ada produk yang cocok.'}</p> : (
-          <Table>
-            <TableHeader><TableRow>
-              <TableHead className="text-xs">Nama</TableHead>
-              <TableHead className="text-xs">SKU</TableHead>
-              <TableHead className="text-xs">Kategori</TableHead>
-              <TableHead className="text-xs">Unit</TableHead>
-              <TableHead className="text-xs">Harga</TableHead>
-              <TableHead className="text-xs">Status</TableHead>
-              <TableHead className="text-xs w-20">Aksi</TableHead>
-            </TableRow></TableHeader>
-            <TableBody>
-              {filteredItems.map((i: any) => (
-                <TableRow key={i.id}>
-                  <TableCell className="text-sm font-medium">{i.name}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{i.sku || '—'}</TableCell>
-                  <TableCell className="text-sm">{i.product_categories?.name || '—'}</TableCell>
-                  <TableCell className="text-sm">{i.unit || '—'}</TableCell>
-                  <TableCell className="text-sm">Rp {Number(i.price).toLocaleString('id-ID')}</TableCell>
-                  <TableCell><Badge variant={i.is_active ? 'default' : 'secondary'} className="text-[10px]">{i.is_active ? 'Aktif' : 'Non-aktif'}</Badge></TableCell>
-                  <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(i)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <>
+            <Table>
+              <TableHeader><TableRow>
+                <TableHead className="text-xs">Code/SKU</TableHead>
+                <TableHead className="text-xs">Product Name</TableHead>
+                <TableHead className="text-xs">Category</TableHead>
+                <TableHead className="text-xs">Unit</TableHead>
+                <TableHead className="text-xs">Price</TableHead>
+                <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs w-28">Actions</TableHead>
+              </TableRow></TableHeader>
+              <TableBody>
+                {paginatedItems.map((i: any) => (
+                  <TableRow key={i.id}>
+                    <TableCell className="text-sm text-muted-foreground font-mono">{i.sku || '—'}</TableCell>
+                    <TableCell className="text-sm font-medium">{i.name}</TableCell>
+                    <TableCell className="text-sm">{i.product_categories?.name || '—'}</TableCell>
+                    <TableCell className="text-sm">{i.unit || '—'}</TableCell>
+                    <TableCell className="text-sm">Rp {Number(i.price).toLocaleString('id-ID')}</TableCell>
+                    <TableCell><Badge variant={i.is_active ? 'default' : 'secondary'} className="text-[10px]">{i.is_active ? 'Active' : 'Non-Active'}</Badge></TableCell>
+                    <TableCell>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="View Details" onClick={() => openView(i)}><Eye className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Edit" onClick={() => openEdit(i)}><Pencil className="h-3.5 w-3.5" /></Button>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" title="Delete" onClick={() => handleDelete(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Rows per page</span>
+                <Select value={String(pageSize)} onValueChange={v => setPageSize(Number(v))}>
+                  <SelectTrigger className="h-7 w-[70px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {PAGE_SIZES.map(s => (
+                      <SelectItem key={s} value={String(s)}>{s === 0 ? 'All' : s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  {totalItems === 0 ? '0' : `${fromRow}–${toRow}`} of {totalItems}
+                </span>
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage <= 1 || isShowAll} onClick={() => setCurrentPage(safePage - 1)}>
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="outline" size="icon" className="h-7 w-7" disabled={safePage >= totalPages || isShowAll} onClick={() => setCurrentPage(safePage + 1)}>
+                  <ChevronRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          </>
         )}
+
+        {/* View Details Dialog */}
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle>Detail Produk</DialogTitle></DialogHeader>
+            {viewItem && (
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <span className="text-muted-foreground">Code/SKU</span>
+                  <span className="font-medium font-mono">{viewItem.sku || '—'}</span>
+                  <span className="text-muted-foreground">Product Name</span>
+                  <span className="font-medium">{viewItem.name}</span>
+                  <span className="text-muted-foreground">Category</span>
+                  <span>{viewItem.product_categories?.name || '—'}</span>
+                  <span className="text-muted-foreground">Unit</span>
+                  <span>{viewItem.unit || '—'}</span>
+                  <span className="text-muted-foreground">Price</span>
+                  <span>Rp {Number(viewItem.price).toLocaleString('id-ID')}</span>
+                  <span className="text-muted-foreground">Status</span>
+                  <span><Badge variant={viewItem.is_active ? 'default' : 'secondary'} className="text-[10px]">{viewItem.is_active ? 'Active' : 'Non-Active'}</Badge></span>
+                  <span className="text-muted-foreground">Created</span>
+                  <span>{new Date(viewItem.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                  <span className="text-muted-foreground">Updated</span>
+                  <span>{new Date(viewItem.updated_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
