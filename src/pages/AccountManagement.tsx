@@ -469,6 +469,7 @@ export default function AccountManagement() {
               <TableBody>
                 {paginatedAccounts.map(acc => (
                   <TableRow key={acc.id}>
+                    <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.region || '-'}</TableCell>
