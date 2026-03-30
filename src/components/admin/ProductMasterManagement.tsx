@@ -151,8 +151,8 @@ function ProductTab() {
   };
   useEffect(() => { fetchAll(); }, []);
 
-  const openAdd = () => { setEditItem(null); setName(''); setSku(''); setCategoryId(''); setUnit('pcs'); setPrice(''); setIsActive(true); setDialogOpen(true); };
-  const openEdit = (item: any) => { setEditItem(item); setName(item.name); setSku(item.sku || ''); setCategoryId(item.category_id || ''); setUnit(item.unit || 'pcs'); setPrice(String(item.price || '')); setIsActive(item.is_active); setDialogOpen(true); };
+  const openAdd = () => { setEditItem(null); setName(''); setSku(''); setCategoryId(''); setUnit('pcs'); setPrice(''); setSellingPrice(''); setIsActive(true); setDialogOpen(true); };
+  const openEdit = (item: any) => { setEditItem(item); setName(item.name); setSku(item.sku || ''); setCategoryId(item.category_id || ''); setUnit(item.unit || 'pcs'); setPrice(String(item.purchase_price || item.price || '')); setSellingPrice(String(item.selling_price || '')); setIsActive(item.is_active); setDialogOpen(true); };
   const openView = (item: any) => { setViewItem(item); setViewOpen(true); };
 
   const handleSave = async () => {
