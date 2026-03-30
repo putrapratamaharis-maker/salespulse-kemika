@@ -168,7 +168,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   };
 
   const formatRp = (val: number) =>
-    val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
+    val > 0 ? `Rp ${val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-';
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -296,14 +296,13 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
                   <div className="grid grid-cols-4 gap-2">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Satuan Unit</Label>
-                      <Select value={product.unit} onValueChange={v => updateProduct(idx, 'unit', v)}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {dbUnits.map(u => (
-                            <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Input
+                        className="h-9 text-sm bg-muted"
+                        value={product.unit}
+                        readOnly
+                        disabled
+                        placeholder="Auto dari produk"
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Qty</Label>
@@ -313,44 +312,26 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
                       <Label className="text-xs">Price/Unit (Rp)</Label>
                       <Input
                         className="h-9 text-sm"
-                        type="text"
-                        inputMode="numeric"
-                        value={product.pricePerUnit ? `Rp ${product.pricePerUnit.toLocaleString('id-ID')}` : ''}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9]/g, '');
-                          updateProduct(idx, 'pricePerUnit', Number(raw) || 0);
-                        }}
-                        onFocus={e => {
-                          const raw = String(product.pricePerUnit || '');
-                          e.target.value = raw;
-                          e.target.type = 'number';
-                        }}
-                        onBlur={e => {
-                          e.target.type = 'text';
-                        }}
-                        placeholder="Rp 0"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min={0}
+                        value={product.pricePerUnit || ''}
+                        onChange={e => updateProduct(idx, 'pricePerUnit', Number(e.target.value) || 0)}
+                        placeholder="0"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Biaya Lainnya (Rp)</Label>
                       <Input
                         className="h-9 text-sm"
-                        type="text"
-                        inputMode="numeric"
-                        value={product.otherCost ? `Rp ${product.otherCost.toLocaleString('id-ID')}` : ''}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9]/g, '');
-                          updateProduct(idx, 'otherCost', Number(raw) || 0);
-                        }}
-                        onFocus={e => {
-                          const raw = String(product.otherCost || '');
-                          e.target.value = raw;
-                          e.target.type = 'number';
-                        }}
-                        onBlur={e => {
-                          e.target.type = 'text';
-                        }}
-                        placeholder="Rp 0"
+                        type="number"
+                        inputMode="decimal"
+                        step="0.01"
+                        min={0}
+                        value={product.otherCost || ''}
+                        onChange={e => updateProduct(idx, 'otherCost', Number(e.target.value) || 0)}
+                        placeholder="0"
                       />
                     </div>
                   </div>
@@ -370,7 +351,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lead-margin">{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input id="lead-margin" type="number" min={0} max={100} value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-prob">Probability (%)</Label>
