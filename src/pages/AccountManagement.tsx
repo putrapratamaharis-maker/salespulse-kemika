@@ -151,6 +151,42 @@ export default function AccountManagement() {
     if (!user) return;
     setSaving(true);
 
+    // Duplicate detection
+    const duplicateWarnings: string[] = [];
+    const excludeId = editingAccount?.id;
+
+    if (formCustomerId.trim()) {
+      const { data: cidDups } = await supabase
+        .from('accounts')
+        .select('id, customer_id, name')
+        .eq('customer_id', formCustomerId.trim());
+      const cidMatches = (cidDups || []).filter(a => a.id !== excludeId);
+      if (cidMatches.length > 0) {
+        duplicateWarnings.push(`Customer ID "${formCustomerId.trim()}" sudah digunakan oleh akun "${cidMatches[0].name}".`);
+      }
+    }
+
+    if (formName.trim()) {
+      const { data: nameDups } = await supabase
+        .from('accounts')
+        .select('id, customer_id, name')
+        .ilike('name', formName.trim());
+      const nameMatches = (nameDups || []).filter(a => a.id !== excludeId);
+      if (nameMatches.length > 0) {
+        duplicateWarnings.push(`Nama akun "${formName.trim()}" sudah ada (Customer ID: ${nameMatches[0].customer_id || '-'}).`);
+      }
+    }
+
+    if (duplicateWarnings.length > 0) {
+      const proceed = window.confirm(
+        `⚠️ Potensi duplikasi terdeteksi:\n\n${duplicateWarnings.join('\n')}\n\nApakah Anda tetap ingin melanjutkan?`
+      );
+      if (!proceed) {
+        setSaving(false);
+        return;
+      }
+    }
+
     const payload = {
       customer_id: formCustomerId.trim(),
       name: formName.trim(),
