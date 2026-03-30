@@ -29,6 +29,7 @@ function CategoryTab() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [isActive, setIsActive] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
