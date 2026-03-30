@@ -242,10 +242,10 @@ export default function AccountManagement() {
   // --- Import / Export ---
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Customer ID', 'Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'Status'],
-      ['CUST2026-0101', 'PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Active'],
+      ['Customer ID', 'Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'City', 'Status'],
+      ['CUST2026-0101', 'PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Jakarta Selatan', 'Active'],
     ]);
-    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, 'template_import_akun.xlsx');
@@ -315,10 +315,11 @@ export default function AccountManagement() {
       'Email': a.pic_email || '',
       'Tipe': a.type,
       'Region': a.region || '',
+      'City': a.city || '',
       'Status': a.status || 'Active',
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
-    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, `data_akun_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -551,6 +552,9 @@ export default function AccountManagement() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_contact')}>
                     <span className="inline-flex items-center">Phone <SortIcon col="pic_contact" /></span>
                   </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('region')}>
+                    <span className="inline-flex items-center">Region <SortIcon col="region" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('city')}>
                     <span className="inline-flex items-center">City <SortIcon col="city" /></span>
                   </TableHead>
@@ -574,6 +578,7 @@ export default function AccountManagement() {
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_contact || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{acc.region || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.city || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
