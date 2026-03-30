@@ -105,6 +105,7 @@ export default function AccountManagement() {
 
   const openCreate = () => {
     setEditingAccount(null);
+    setFormCustomerId(generateCustomerId());
     setFormName('');
     setFormPicName('');
     setFormPicContact('');
@@ -117,6 +118,7 @@ export default function AccountManagement() {
 
   const openEdit = (acc: Account) => {
     setEditingAccount(acc);
+    setFormCustomerId(acc.customer_id || '');
     setFormName(acc.name);
     setFormPicName(acc.pic_name || '');
     setFormPicContact(acc.pic_contact || '');
