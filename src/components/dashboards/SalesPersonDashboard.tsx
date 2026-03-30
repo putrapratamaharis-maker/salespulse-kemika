@@ -1,48 +1,77 @@
+import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
-import { getUserInvoices, getUserDeals, getUserTarget, getUserActivities } from '@/data/mockData';
-import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle, CreditCard, Banknote } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle, CreditCard, Banknote, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 export function SalesPersonDashboard() {
   const { currentUser } = useAppContext();
-  const invoices = getUserInvoices(currentUser.id);
-  const deals = getUserDeals(currentUser.id);
-  const target = getUserTarget(currentUser.id);
-  const activities = getUserActivities(currentUser.id);
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [deals, setDeals] = useState<any[]>([]);
+  const [target, setTarget] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
 
   const now = new Date();
+  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const sid = currentUser.id;
+      const [invRes, dealRes, tgtRes, actRes] = await Promise.all([
+        supabase.from('invoices').select('*').eq('sales_id', sid),
+        supabase.from('deals').select('*').eq('sales_id', sid),
+        supabase.from('targets').select('*').eq('user_id', sid).eq('month', currentMonthStr).limit(1),
+        supabase.from('sales_activities').select('*').eq('sales_id', sid).order('activity_date', { ascending: false }).limit(10),
+      ]);
+      setInvoices(invRes.data || []);
+      setDeals(dealRes.data || []);
+      setTarget(tgtRes.data?.[0] || null);
+      setActivities(actRes.data || []);
+      setLoading(false);
+    };
+    fetchData();
+  }, [currentUser.id, currentMonthStr]);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
-  // MTD invoices
   const mtdInvoices = invoices.filter(i => {
-    const d = new Date(i.issueDate);
+    const d = new Date(i.issue_date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
-  const revenueMTD = mtdInvoices.reduce((s, i) => s + i.netSales, 0);
-  const grossProfitMTD = mtdInvoices.reduce((s, i) => s + i.grossProfit, 0);
+  const revenueMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const grossProfitMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
 
-  // YTD invoices
-  const ytdInvoices = invoices.filter(i => new Date(i.issueDate).getFullYear() === currentYear);
-  const revenueYTD = ytdInvoices.reduce((s, i) => s + i.netSales, 0);
+  const ytdInvoices = invoices.filter(i => new Date(i.issue_date).getFullYear() === currentYear);
+  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
 
   const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
-  const targetVal = target?.revenueTarget || 1;
+  const targetVal = target?.revenue_target || 1;
   const achievementPct = (revenueMTD / targetVal) * 100;
-  const outstandingAR = invoices.filter(inv => !inv.paidDate).reduce((s, inv) => s + inv.netSales, 0);
+  const outstandingAR = invoices.filter(inv => !inv.paid_date).reduce((s: number, inv: any) => s + (inv.net_sales || 0), 0);
 
-  const openDeals = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage));
-  const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
-  const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
+  const finalStages = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
+  const openDeals = deals.filter(d => !finalStages.includes(d.stage));
+  const weightedForecast = openDeals.reduce((s: number, d: any) => s + d.value * d.probability / 100, 0);
 
-  const overdueInvoices = invoices.filter(inv => !inv.paidDate && new Date(inv.dueDate) < new Date());
+  const overdueInvoices = invoices.filter(inv => !inv.paid_date && new Date(inv.due_date) < now);
   const nearingDeals = deals.filter(d => {
-    if (['closed_won', 'closed_lost'].includes(d.stage)) return false;
-    const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
+    if (finalStages.includes(d.stage)) return false;
+    const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return days <= 30 && days >= 0;
   });
 
@@ -53,17 +82,16 @@ export function SalesPersonDashboard() {
         <p className="text-sm text-muted-foreground">Personal sales dashboard — {currentUser.name}</p>
       </div>
 
-      {/* Row 1 — same structure as Executive Summary row 1 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
-        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={12.5} changeLabel="vs last month" icon={DollarSign} autoFitText />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText />
         <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.2} changeLabel="confidence" icon={TrendingUp} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
         <KPICard label="Weekly Activities" value={String(activities.length)} changeLabel={`${activities.length >= 5 ? 'On track' : 'Below minimum'}`} status={activities.length >= 5 ? 'green' : 'red'} icon={Clock} autoFitText />
       </div>
 
@@ -89,12 +117,12 @@ export function SalesPersonDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {nearingDeals.map(d => (
+                  {nearingDeals.map((d: any) => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={d.stage.replace('_', ' ')} /></TableCell>
-                      <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
+                      <TableCell className="text-sm">{formatDate(d.expected_close_date)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -123,11 +151,11 @@ export function SalesPersonDashboard() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {overdueInvoices.map(inv => (
+                  {overdueInvoices.map((inv: any) => (
                     <TableRow key={inv.id}>
-                      <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(inv.netSales)}</TableCell>
-                      <TableCell className="text-sm text-status-red">{formatDate(inv.dueDate)}</TableCell>
+                      <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                      <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
+                      <TableCell className="text-sm text-status-red">{formatDate(inv.due_date)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -151,9 +179,9 @@ export function SalesPersonDashboard() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activities.slice(0, 5).map(act => (
+              {activities.slice(0, 5).map((act: any) => (
                 <TableRow key={act.id}>
-                  <TableCell className="text-sm">{formatDate(act.date)}</TableCell>
+                  <TableCell className="text-sm">{formatDate(act.activity_date)}</TableCell>
                   <TableCell><StatusBadge status="green" label={act.type} /></TableCell>
                   <TableCell className="text-sm">{act.notes}</TableCell>
                 </TableRow>

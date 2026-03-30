@@ -1,31 +1,61 @@
+import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatDate } from '@/types/sales';
-import { mockInvoices } from '@/data/mockData';
-import { CreditCard, AlertTriangle, Clock, CheckCircle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { CreditCard, AlertTriangle, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
+interface InvoiceRow {
+  id: string;
+  invoice_number: string;
+  net_sales: number;
+  issue_date: string;
+  due_date: string;
+  paid_date: string | null;
+}
+
 const ARCashflow = () => {
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, issue_date, due_date, paid_date').order('due_date', { ascending: true });
+      setInvoices((data || []) as InvoiceRow[]);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
   const now = new Date();
-  const outstanding = mockInvoices.filter(inv => !inv.paidDate);
-  const totalOutstanding = outstanding.reduce((s, inv) => s + inv.netSales, 0);
-  const paid = mockInvoices.filter(inv => inv.paidDate);
-  const totalPaid = paid.reduce((s, inv) => s + inv.netSales, 0);
+  const outstanding = invoices.filter(inv => !inv.paid_date);
+  const totalOutstanding = outstanding.reduce((s, inv) => s + inv.net_sales, 0);
+  const paid = invoices.filter(inv => inv.paid_date);
+  const totalPaid = paid.reduce((s, inv) => s + inv.net_sales, 0);
 
-  const overdue = outstanding.filter(inv => new Date(inv.dueDate) < now);
-  const totalOverdue = overdue.reduce((s, inv) => s + inv.netSales, 0);
+  const overdue = outstanding.filter(inv => new Date(inv.due_date) < now);
+  const totalOverdue = overdue.reduce((s, inv) => s + inv.net_sales, 0);
 
-  // Aging buckets
-  const current = outstanding.filter(inv => new Date(inv.dueDate) >= now);
+  const current = outstanding.filter(inv => new Date(inv.due_date) >= now);
   const overdue30 = outstanding.filter(inv => {
-    const diff = (now.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24);
+    const diff = (now.getTime() - new Date(inv.due_date).getTime()) / (1000 * 60 * 60 * 24);
     return diff > 0 && diff <= 30;
   });
   const overdue60 = outstanding.filter(inv => {
-    const diff = (now.getTime() - new Date(inv.dueDate).getTime()) / (1000 * 60 * 60 * 24);
+    const diff = (now.getTime() - new Date(inv.due_date).getTime()) / (1000 * 60 * 60 * 24);
     return diff > 30 && diff <= 60;
   });
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -47,7 +77,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-green">Current (Not Due)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(current.reduce((s, i) => s + i.netSales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDR(current.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{current.length} invoices</div>
           </CardContent>
         </Card>
@@ -56,7 +86,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-yellow">1-30 Days Overdue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(overdue30.reduce((s, i) => s + i.netSales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDR(overdue30.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{overdue30.length} invoices</div>
           </CardContent>
         </Card>
@@ -65,7 +95,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-red">31-60 Days Overdue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(overdue60.reduce((s, i) => s + i.netSales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDR(overdue60.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{overdue60.length} invoices</div>
           </CardContent>
         </Card>
@@ -88,13 +118,13 @@ const ARCashflow = () => {
             </TableHeader>
             <TableBody>
               {outstanding.map(inv => {
-                const isOverdue = new Date(inv.dueDate) < now;
+                const isOverdue = new Date(inv.due_date) < now;
                 return (
                   <TableRow key={inv.id}>
-                    <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.netSales)}</TableCell>
-                    <TableCell className="text-sm">{formatDate(inv.issueDate)}</TableCell>
-                    <TableCell className="text-sm">{formatDate(inv.dueDate)}</TableCell>
+                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(inv.issue_date)}</TableCell>
+                    <TableCell className="text-sm">{formatDate(inv.due_date)}</TableCell>
                     <TableCell>
                       <StatusBadge status={isOverdue ? 'red' : 'green'} label={isOverdue ? 'Overdue' : 'Current'} />
                     </TableCell>

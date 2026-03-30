@@ -3,11 +3,6 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
-import {
-  getUserInvoices, getUserDeals, getUserTarget, getUserActivities,
-  getSubordinates, getAllDownstreamIds, mockInvoices, mockDeals,
-  mockActivities, mockCoachingNotes, mockUsers, mockTargets
-} from '@/data/mockData';
 import { Target, Percent, TrendingUp, Award, CheckCircle, XCircle, Loader2, Users } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -36,82 +31,72 @@ interface ComputedKPI {
   targetFormatted: string;
 }
 
+interface DBContext {
+  invoices: any[];
+  deals: any[];
+  activities: any[];
+  targets: any[];
+  profiles: any[];
+  subordinateIds: string[];
+}
+
 function computeKPIValue(
   dataSource: string,
   userId: string,
-  orgRole: string
+  orgRole: string,
+  ctx: DBContext
 ): number {
   const isTeamRole = ['supervisor', 'sales_manager', 'representative_management'].includes(orgRole);
-  const userIds = isTeamRole ? [userId, ...getAllDownstreamIds(userId)] : [userId];
-  const salesIds = isTeamRole ? getAllDownstreamIds(userId) : [userId];
+  const salesIds = isTeamRole ? ctx.subordinateIds : [userId];
 
-  const invoices = mockInvoices.filter(i => salesIds.includes(i.salesId));
-  const deals = mockDeals.filter(d => salesIds.includes(d.salesId));
-  const activities = mockActivities.filter(a => salesIds.includes(a.salesId));
-  const revenue = invoices.reduce((s, i) => s + i.netSales, 0);
-  const grossProfit = invoices.reduce((s, i) => s + i.grossProfit, 0);
-  const targets = mockTargets.filter(t => salesIds.includes(t.userId));
-  const totalTarget = targets.reduce((s, t) => s + t.revenueTarget, 0) || 1;
+  const invoices = ctx.invoices.filter((i: any) => salesIds.includes(i.sales_id));
+  const deals = ctx.deals.filter((d: any) => salesIds.includes(d.sales_id));
+  const activities = ctx.activities.filter((a: any) => salesIds.includes(a.sales_id));
+  const revenue = invoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const grossProfit = invoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
+  const targets = ctx.targets.filter((t: any) => salesIds.includes(t.user_id));
+  const totalTarget = targets.reduce((s: number, t: any) => s + (t.revenue_target || 0), 0) || 1;
 
   switch (dataSource) {
     case 'revenue_achievement':
       return (revenue / totalTarget) * 100;
-
     case 'margin_compliance':
       return revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-
     case 'win_rate': {
       const total = deals.length;
-      const won = deals.filter(d => d.stage === 'po_secured').length;
+      const won = deals.filter((d: any) => d.stage === 'po_secured').length;
       return total > 0 ? (won / total) * 100 : 0;
     }
-
     case 'activity_count':
       return activities.length;
-
     case 'deal_volume':
-      return deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage)).length;
-
+      return deals.filter((d: any) => !['closed_won', 'closed_lost', 'po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage)).length;
     case 'pipeline_health': {
-      const pipelineVal = deals.filter(d => !['closed_won', 'closed_lost'].includes(d.stage))
-        .reduce((s, d) => s + d.value, 0);
+      const pipelineVal = deals.filter((d: any) => !['closed_won', 'closed_lost', 'po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage))
+        .reduce((s: number, d: any) => s + d.value, 0);
       const remaining = Math.max(totalTarget - revenue, 1);
       return (pipelineVal / remaining) * 100;
     }
-
     case 'team_activity_compliance': {
-      const subordinates = getAllDownstreamIds(userId)
-        .map(id => mockUsers.find(u => u.id === id))
-        .filter(u => u?.orgRole === 'sales_person');
-      if (subordinates.length === 0) return 0;
-      const onTrack = subordinates.filter(u => {
-        const acts = mockActivities.filter(a => a.salesId === u!.id);
+      const subProfiles = ctx.profiles.filter((p: any) => ctx.subordinateIds.includes(p.user_id));
+      if (subProfiles.length === 0) return 0;
+      const onTrack = subProfiles.filter((p: any) => {
+        const acts = ctx.activities.filter((a: any) => a.sales_id === p.user_id);
         return acts.length >= 5;
       });
-      return (onTrack.length / subordinates.length) * 100;
+      return (onTrack.length / subProfiles.length) * 100;
     }
-
     case 'coaching_notes_given':
-      return mockCoachingNotes.filter(cn => cn.supervisorId === userId).length;
-
+      return 0; // placeholder until coaching_notes table
     case 'collection_rate': {
-      const allInv = mockInvoices.filter(i => salesIds.includes(i.salesId));
-      const paid = allInv.filter(i => i.paidDate);
+      const allInv = ctx.invoices.filter((i: any) => salesIds.includes(i.sales_id));
+      const paid = allInv.filter((i: any) => i.paid_date);
       return allInv.length > 0 ? (paid.length / allInv.length) * 100 : 0;
     }
-
-    case 'rep_coverage': {
-      const regions = new Set(mockUsers.filter(u => u.orgRole === 'sales_person').map(u => u.region));
-      const coveredRegions = new Set(
-        mockUsers.filter(u => u.orgRole === 'sales_person' && mockActivities.some(a => a.salesId === u.id))
-          .map(u => u.region)
-      );
-      return regions.size > 0 ? (coveredRegions.size / regions.size) * 100 : 0;
-    }
-
-    case 'segment_specific':
+    case 'rep_coverage':
       return 75; // placeholder
-
+    case 'segment_specific':
+      return 75;
     default:
       return 0;
   }
@@ -142,28 +127,60 @@ const MyKPIs = () => {
   const { currentUser } = useAppContext();
   const [definitions, setDefinitions] = useState<KPIDefinition[]>([]);
   const [loading, setLoading] = useState(true);
+  const [dbCtx, setDbCtx] = useState<DBContext>({ invoices: [], deals: [], activities: [], targets: [], profiles: [], subordinateIds: [] });
 
   useEffect(() => {
-    async function fetchKPIs() {
+    async function fetchAll() {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('kpi_definitions')
-        .select('*')
-        .eq('org_role', currentUser.orgRole)
-        .eq('is_active', true)
-        .order('display_order');
 
-      if (data && !error) {
-        setDefinitions(data as KPIDefinition[]);
-      }
+      // Get profile to find subordinates
+      const { data: myProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      // Get subordinates recursively
+      const { data: allProfiles } = await supabase.from('profiles').select('id, user_id, full_name, supervisor_id, segment');
+
+      const profileList = allProfiles || [];
+      const getSubIds = (supervisorProfileId: string): string[] => {
+        const direct = profileList.filter(p => p.supervisor_id === supervisorProfileId);
+        const ids: string[] = [];
+        for (const d of direct) {
+          ids.push(d.user_id);
+          ids.push(...getSubIds(d.id));
+        }
+        return ids;
+      };
+
+      const subordinateIds = myProfile ? getSubIds(myProfile.id) : [];
+      const allRelevantIds = [currentUser.id, ...subordinateIds];
+
+      const [{ data: defs }, { data: invoices }, { data: deals }, { data: activities }, { data: targets }] = await Promise.all([
+        supabase.from('kpi_definitions').select('*').eq('org_role', currentUser.orgRole).eq('is_active', true).order('display_order'),
+        supabase.from('invoices').select('sales_id, net_sales, gross_profit, paid_date').in('sales_id', allRelevantIds),
+        supabase.from('deals').select('sales_id, value, stage').in('sales_id', allRelevantIds),
+        supabase.from('sales_activities').select('sales_id').in('sales_id', allRelevantIds),
+        supabase.from('targets').select('user_id, revenue_target').in('user_id', allRelevantIds),
+      ]);
+
+      setDefinitions((defs || []) as KPIDefinition[]);
+      setDbCtx({
+        invoices: invoices || [],
+        deals: deals || [],
+        activities: activities || [],
+        targets: targets || [],
+        profiles: profileList,
+        subordinateIds,
+      });
       setLoading(false);
     }
-    fetchKPIs();
-  }, [currentUser.orgRole]);
+    fetchAll();
+  }, [currentUser.id, currentUser.orgRole]);
 
-  // Compute KPI values
   const computedKPIs: ComputedKPI[] = definitions.map(def => {
-    const value = computeKPIValue(def.data_source, currentUser.id, currentUser.orgRole);
+    const value = computeKPIValue(def.data_source, currentUser.id, currentUser.orgRole, dbCtx);
     const target = def.default_target;
     const weight = def.default_weight;
     const status = getKPIStatus(value, target);
@@ -171,11 +188,7 @@ const MyKPIs = () => {
 
     return {
       definition: def,
-      value,
-      target,
-      weight,
-      score,
-      status,
+      value, target, weight, score, status,
       formatted: formatKPIValue(def.data_source, value),
       targetFormatted: formatTarget(def.data_source, target),
     };
@@ -184,11 +197,8 @@ const MyKPIs = () => {
   const compositeScore = computedKPIs.reduce((s, k) => s + k.score, 0);
   const isTeamRole = ['supervisor', 'sales_manager', 'representative_management'].includes(currentUser.orgRole);
 
-  // Team member breakdown for team roles
   const teamMembers = isTeamRole
-    ? getAllDownstreamIds(currentUser.id)
-        .map(id => mockUsers.find(u => u.id === id))
-        .filter(u => u && u.orgRole === 'sales_person')
+    ? dbCtx.profiles.filter(p => dbCtx.subordinateIds.includes(p.user_id))
     : [];
 
   if (loading) {
@@ -208,7 +218,6 @@ const MyKPIs = () => {
         </p>
       </div>
 
-      {/* Composite Score */}
       <Card className="border-2 border-accent/30">
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
@@ -228,21 +237,12 @@ const MyKPIs = () => {
         </CardContent>
       </Card>
 
-      {/* KPI Cards - top 4 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {computedKPIs.slice(0, 4).map(kpi => (
-          <KPICard
-            key={kpi.definition.id}
-            label={kpi.definition.name}
-            value={kpi.formatted}
-            status={kpi.status}
-            icon={Target}
-            autoFitText
-          />
+          <KPICard key={kpi.definition.id} label={kpi.definition.name} value={kpi.formatted} status={kpi.status} icon={Target} autoFitText />
         ))}
       </div>
 
-      {/* KPI Breakdown */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">KPI Breakdown</CardTitle>
@@ -269,7 +269,6 @@ const MyKPIs = () => {
         </CardContent>
       </Card>
 
-      {/* Team Member Breakdown for Supervisor/Manager */}
       {isTeamRole && teamMembers.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
@@ -290,17 +289,13 @@ const MyKPIs = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {teamMembers.map(member => {
-                  if (!member) return null;
-                  // Compute individual KPIs for this member using sales_person definitions
+                {teamMembers.map((member: any) => {
                   const memberKPIs = definitions.map(def => {
-                    const val = computeKPIValue(def.data_source, member.id, 'sales_person');
+                    const val = computeKPIValue(def.data_source, member.user_id, 'sales_person', dbCtx);
                     const target = def.default_target;
                     const weight = def.default_weight;
                     return {
-                      value: val,
-                      target,
-                      weight,
+                      value: val, target, weight,
                       score: Math.min((val / (target || 1)) * 100, 150) * weight / 100,
                       status: getKPIStatus(val, target),
                       formatted: formatKPIValue(def.data_source, val),
@@ -309,8 +304,8 @@ const MyKPIs = () => {
                   const memberComposite = memberKPIs.reduce((s, k) => s + k.score, 0);
 
                   return (
-                    <TableRow key={member.id}>
-                      <TableCell className="text-sm font-medium">{member.name}</TableCell>
+                    <TableRow key={member.user_id}>
+                      <TableCell className="text-sm font-medium">{member.full_name}</TableCell>
                       {memberKPIs.slice(0, 4).map((k, i) => (
                         <TableCell key={i}>
                           <StatusBadge status={k.status} label={k.formatted} />
@@ -328,44 +323,51 @@ const MyKPIs = () => {
         </Card>
       )}
 
-      {/* Deal Scorecard for sales_person */}
       {currentUser.orgRole === 'sales_person' && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {(() => {
-            const deals = getUserDeals(currentUser.id);
-             const won = deals.filter(d => d.stage === 'po_secured').length;
-             const lost = deals.filter(d => d.stage === 'lost').length;
-            const active = deals.length - won - lost;
-            return (
-              <>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <CheckCircle className="h-8 w-8 text-status-green mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-foreground">{won}</p>
-                    <p className="text-xs text-muted-foreground">Deals Won</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <XCircle className="h-8 w-8 text-status-red mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-foreground">{lost}</p>
-                    <p className="text-xs text-muted-foreground">Deals Lost</p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="pt-6 text-center">
-                    <TrendingUp className="h-8 w-8 text-accent mx-auto mb-2" />
-                    <p className="text-2xl font-bold text-foreground">{active}</p>
-                    <p className="text-xs text-muted-foreground">Active Deals</p>
-                  </CardContent>
-                </Card>
-              </>
-            );
-          })()}
-        </div>
+        <DealScorecard userId={currentUser.id} />
       )}
     </div>
   );
 };
+
+function DealScorecard({ userId }: { userId: string }) {
+  const [deals, setDeals] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase.from('deals').select('stage').eq('sales_id', userId).then(({ data }) => {
+      setDeals(data || []);
+    });
+  }, [userId]);
+
+  const won = deals.filter(d => d.stage === 'po_secured').length;
+  const lost = deals.filter(d => d.stage === 'lost').length;
+  const active = deals.length - won - lost;
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <Card>
+        <CardContent className="pt-6 text-center">
+          <CheckCircle className="h-8 w-8 text-status-green mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{won}</p>
+          <p className="text-xs text-muted-foreground">Deals Won</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="pt-6 text-center">
+          <XCircle className="h-8 w-8 text-status-red mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{lost}</p>
+          <p className="text-xs text-muted-foreground">Deals Lost</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardContent className="pt-6 text-center">
+          <TrendingUp className="h-8 w-8 text-accent mx-auto mb-2" />
+          <p className="text-2xl font-bold text-foreground">{active}</p>
+          <p className="text-xs text-muted-foreground">Active Deals</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
 export default MyKPIs;

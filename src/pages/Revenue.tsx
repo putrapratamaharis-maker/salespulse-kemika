@@ -1,24 +1,61 @@
+import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
-import { mockInvoices } from '@/data/mockData';
-import { DollarSign, Percent, TrendingUp, CreditCard } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { monthlyRevenueData } from '@/data/mockData';
+
+interface InvoiceRow {
+  id: string;
+  invoice_number: string;
+  net_sales: number;
+  gross_profit: number;
+  issue_date: string;
+  due_date: string;
+  paid_date: string | null;
+  segment: string;
+}
 
 const Revenue = () => {
-  const totalRevenue = mockInvoices.reduce((s, i) => s + i.netSales, 0);
-  const totalGP = mockInvoices.reduce((s, i) => s + i.grossProfit, 0);
-  const marginPct = totalRevenue > 0 ? (totalGP / totalRevenue) * 100 : 0;
-  const compliantInvoices = mockInvoices.filter(i => i.netSales > 0 && (i.grossProfit / i.netSales) * 100 >= 17).length;
-  const marginCompliance = mockInvoices.length > 0 ? (compliantInvoices / mockInvoices.length) * 100 : 0;
+  const [loading, setLoading] = useState(true);
+  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
 
-  const trendData = monthlyRevenueData.map(d => ({
-    month: d.month,
-    total: d.B2G + d.B2B + d.B2C,
-  }));
+  useEffect(() => {
+    const fetch = async () => {
+      setLoading(true);
+      const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
+      setInvoices((data || []) as InvoiceRow[]);
+      setLoading(false);
+    };
+    fetch();
+  }, []);
+
+  const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
+  const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
+  const marginPct = totalRevenue > 0 ? (totalGP / totalRevenue) * 100 : 0;
+  const compliantInvoices = invoices.filter(i => i.net_sales > 0 && (i.gross_profit / i.net_sales) * 100 >= 17).length;
+  const marginCompliance = invoices.length > 0 ? (compliantInvoices / invoices.length) * 100 : 0;
+
+  // Build trend from invoice data grouped by month
+  const monthlyMap = new Map<string, number>();
+  invoices.forEach(inv => {
+    const month = inv.issue_date.slice(0, 7); // YYYY-MM
+    monthlyMap.set(month, (monthlyMap.get(month) || 0) + inv.net_sales);
+  });
+  const trendData = Array.from(monthlyMap.entries())
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([month, total]) => ({ month, total: total / 1_000_000 }));
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -68,16 +105,16 @@ const Revenue = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {mockInvoices.map(inv => {
-                const m = inv.netSales > 0 ? (inv.grossProfit / inv.netSales) * 100 : 0;
+              {invoices.map(inv => {
+                const m = inv.net_sales > 0 ? (inv.gross_profit / inv.net_sales) * 100 : 0;
                 return (
                   <TableRow key={inv.id}>
-                    <TableCell className="text-sm font-medium">{inv.invoiceNumber}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.netSales)}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.grossProfit)}</TableCell>
+                    <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
-                    <TableCell>{inv.paidDate ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
+                    <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
                   </TableRow>
                 );
               })}
