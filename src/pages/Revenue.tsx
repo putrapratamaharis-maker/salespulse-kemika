@@ -3,11 +3,16 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Percent, TrendingUp, CreditCard, Loader2 } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
+import EditInvoiceDialog from '@/components/invoices/EditInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 interface InvoiceRow {
   id: string;
