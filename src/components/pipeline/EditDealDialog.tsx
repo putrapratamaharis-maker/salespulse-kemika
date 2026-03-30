@@ -111,7 +111,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       productName: prod.name,
       category: cat?.name || '',
       unit: prod.unit || 'pcs',
-      pricePerUnit: Number(prod.price) || 0,
+      pricePerUnit: Number(prod.selling_price) || Number(prod.price) || 0,
     } : p));
   };
 
