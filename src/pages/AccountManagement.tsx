@@ -315,6 +315,7 @@ export default function AccountManagement() {
       'Email': a.pic_email || '',
       'Tipe': a.type,
       'Region': a.region || '',
+      'City': a.city || '',
       'Status': a.status || 'Active',
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
