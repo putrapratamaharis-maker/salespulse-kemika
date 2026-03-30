@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
-import { mockDeals, mockAccounts, mockUsers } from '@/data/mockData';
-import { TrendingUp, BarChart3, AlertTriangle, Users } from 'lucide-react';
+import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { supabase } from '@/integrations/supabase/client';
+import { TrendingUp, BarChart3, AlertTriangle, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -12,30 +12,75 @@ import { AllOpenDealsTable } from '@/components/pipeline/AllOpenDealsTable';
 
 const Pipeline = () => {
   const [salesFilter, setSalesFilter] = useState<string>('all');
-  const [localDeals, setLocalDeals] = useState(mockDeals);
+  const [loading, setLoading] = useState(true);
 
+  // DB state
+  const [dbDeals, setDbDeals] = useState<Deal[]>([]);
+  const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+  const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([]);
 
+  useEffect(() => {
+    async function fetchData() {
+      setLoading(true);
+      const [{ data: deals }, { data: accounts }, { data: profiles }] = await Promise.all([
+        supabase.from('deals').select('*'),
+        supabase.from('accounts').select('id, name'),
+        supabase.from('profiles').select('user_id, full_name').eq('is_active', true),
+      ]);
+
+      // Map accounts
+      const accMap = new Map((accounts || []).map(a => [a.id, a.name]));
+      setAccountMap(accMap);
+
+      // Map profiles for sales names
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p.full_name]));
+
+      // Convert deals
+      const mappedDeals: Deal[] = (deals || []).map(d => ({
+        id: d.id,
+        accountId: d.account_id,
+        salesId: d.sales_id,
+        name: d.name,
+        segment: d.segment as any,
+        stage: d.stage as DealStage,
+        value: Number(d.value),
+        probability: d.probability,
+        expectedCloseDate: d.expected_close_date,
+        createdAt: d.created_at,
+        updatedAt: d.updated_at,
+        daysInStage: d.days_in_stage,
+      }));
+      setDbDeals(mappedDeals);
+
+      // Get unique sales users from deals
+      const salesIds = [...new Set(mappedDeals.map(d => d.salesId))];
+      setSalesUsers(salesIds.map(id => ({
+        id,
+        name: profileMap.get(id) || id,
+      })));
+
+      setLoading(false);
+    }
+    fetchData();
+  }, []);
+
+  const [localDeals, setLocalDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    setLocalDeals(dbDeals);
+  }, [dbDeals]);
 
   const handleStageChange = (dealId: string, newStage: DealStage) => {
     const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
     setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0, ...(isFinalStage ? { probability: 100 } : {}) } : d));
   };
 
-  // Get sales users who have deals
-  const salesWithDeals = useMemo(() => {
-    const salesIds = [...new Set(mockDeals.map(d => d.salesId))];
-    return salesIds
-      .map(id => mockUsers.find(u => u.id === id))
-      .filter(Boolean) as typeof mockUsers;
-  }, []);
-
   const getSalesName = (salesId: string) =>
-    mockUsers.find(u => u.id === salesId)?.name || salesId;
+    salesUsers.find(u => u.id === salesId)?.name || salesId;
 
   const getAccountName = (accountId: string) =>
-    mockAccounts.find(a => a.id === accountId)?.name || accountId;
+    accountMap.get(accountId) || accountId;
 
-  // Company-wide pipeline — aggregates deals from ALL sales users (or filtered)
   const allDeals = salesFilter === 'all'
     ? localDeals
     : localDeals.filter(d => d.salesId === salesFilter);
@@ -43,9 +88,6 @@ const Pipeline = () => {
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
   const stuckDeals = openDeals.filter(d => d.daysInStage > 10);
-
-
-
 
   // Stage breakdown
   const stages: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
@@ -62,22 +104,30 @@ const Pipeline = () => {
     color: STAGE_COLORS[stage],
   })).filter(s => s.value > 0);
 
-  // Sales comparison data — always from ALL deals (ignores filter)
+  // Sales comparison data
   const salesComparisonData = useMemo(() => {
     const allOpen = localDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
     const salesIds = [...new Set(allOpen.map(d => d.salesId))];
     return salesIds.map(id => {
       const userDeals = allOpen.filter(d => d.salesId === id);
       return {
-        name: (mockUsers.find(u => u.id === id)?.name || id).split(' ')[0],
+        name: (salesUsers.find(u => u.id === id)?.name || id).split(' ')[0],
         pipeline: userDeals.reduce((s, d) => s + d.value, 0),
         forecast: userDeals.reduce((s, d) => s + d.value * d.probability / 100, 0),
         deals: userDeals.length,
       };
     }).sort((a, b) => b.pipeline - a.pipeline);
-  }, [localDeals]);
+  }, [localDeals, salesUsers]);
 
   const filterLabel = salesFilter === 'all' ? 'all sales team' : getSalesName(salesFilter);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -94,7 +144,7 @@ const Pipeline = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all" className="text-xs">All Sales Person</SelectItem>
-              {salesWithDeals.map(u => (
+              {salesUsers.map(u => (
                 <SelectItem key={u.id} value={u.id} className="text-xs">{u.name}</SelectItem>
               ))}
             </SelectContent>
@@ -104,7 +154,7 @@ const Pipeline = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} change={8.5} changeLabel="reliability" icon={TrendingUp} autoFitText />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
         <KPICard label="Stuck Deals" value={String(stuckDeals.length)} status={stuckDeals.length > 0 ? 'yellow' : 'green'} icon={AlertTriangle} autoFitText />
       </div>
 
@@ -139,7 +189,8 @@ const Pipeline = () => {
           </ResponsiveContainer>
         </CardContent>
       </Card>
-      {/* Kanban Board — read-only view */}
+
+      {/* Kanban Board */}
       <KanbanBoard
         deals={allDeals}
         getAccountName={getAccountName}
@@ -169,7 +220,7 @@ const Pipeline = () => {
         deals={allDeals}
         getSalesName={getSalesName}
         getAccountName={getAccountName}
-        salesPersons={salesWithDeals.map(u => ({ id: u.id, name: u.name }))}
+        salesPersons={salesUsers}
       />
     </div>
   );
