@@ -152,6 +152,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
+      poNumber,
     };
 
     onSave(updated);
