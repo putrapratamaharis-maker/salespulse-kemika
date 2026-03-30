@@ -751,6 +751,7 @@ export type Database = {
           email: string
           full_name: string
           id: string
+          is_active: boolean
           position_id: string | null
           region: string | null
           segment: string | null
@@ -765,6 +766,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_active?: boolean
           position_id?: string | null
           region?: string | null
           segment?: string | null
@@ -779,6 +781,7 @@ export type Database = {
           email?: string
           full_name?: string
           id?: string
+          is_active?: boolean
           position_id?: string | null
           region?: string | null
           segment?: string | null
@@ -999,6 +1002,10 @@ export type Database = {
         | "supervisor"
         | "sales_person"
         | "representative_management"
+        | "ceo_director"
+        | "commissioner"
+        | "manager"
+        | "staff_operational"
       system_role: "super_admin" | "admin" | "staff" | "viewer"
     }
     CompositeTypes: {
@@ -1169,6 +1176,10 @@ export const Constants = {
         "supervisor",
         "sales_person",
         "representative_management",
+        "ceo_director",
+        "commissioner",
+        "manager",
+        "staff_operational",
       ],
       system_role: ["super_admin", "admin", "staff", "viewer"],
     },
