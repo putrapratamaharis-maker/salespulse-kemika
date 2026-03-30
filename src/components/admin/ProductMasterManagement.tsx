@@ -859,6 +859,9 @@ function UnitTab() {
   const [saving, setSaving] = useState(false);
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
