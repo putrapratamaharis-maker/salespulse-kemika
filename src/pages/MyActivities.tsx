@@ -243,8 +243,8 @@ const MyActivities = () => {
         setSubmitting(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('activity-evidence').getPublicUrl(filePath);
-      evidenceUrl = urlData.publicUrl;
+      // Store just the file path, not the full URL (bucket is now private)
+      evidenceUrl = filePath;
     }
 
     const payload = {
