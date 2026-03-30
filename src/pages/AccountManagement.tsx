@@ -55,7 +55,8 @@ export default function AccountManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortCol, setSortCol] = useState<keyof Account | ''>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const pageSize = 15;
+  const [pageSize, setPageSize] = useState(15);
+  const PAGE_SIZE_OPTIONS = [10, 25, 50, 100, 'all'] as const;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
