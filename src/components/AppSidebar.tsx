@@ -66,10 +66,10 @@ export function AppSidebar() {
   const isAdmin = ['super_admin', 'admin'].includes(systemRole);
   const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(systemRole);
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
+  const isMasterDataActive = location.pathname === '/accounts' || (location.pathname === '/admin' && ['products', 'categories', 'units', 'users'].some(t => location.search.includes(`tab=${t}`)));
 
   const visibleNav = navItems.filter(item => {
     if (item.url === '/team-performance' && !hasTeam) return false;
-    if (item.url === '/accounts' && !isStaffOrAbove) return false;
     return true;
   });
 
