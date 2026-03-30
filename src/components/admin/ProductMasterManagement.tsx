@@ -272,11 +272,12 @@ function ProductTab() {
       'Nama Produk': i.name,
       'Kategori': i.product_categories?.name || '',
       'Satuan Unit': i.unit || '',
-      'Harga': Number(i.price) || 0,
+      'Purchase Price': Number(i.purchase_price || i.price) || 0,
+      'Selling Price': Number(i.selling_price) || 0,
       'Status': i.is_active ? 'Aktif' : 'Non-aktif',
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
     XLSX.writeFile(wb, `data_produk_${new Date().toISOString().slice(0, 10)}.xlsx`);
