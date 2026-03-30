@@ -100,23 +100,68 @@ function CategoryTab() {
       <CardContent>
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada kategori.</p> : (
           <Table>
-            <TableHeader><TableRow><TableHead className="text-xs">Nama</TableHead><TableHead className="text-xs">Deskripsi</TableHead><TableHead className="text-xs w-20">Aksi</TableHead></TableRow></TableHeader>
+            <TableHeader><TableRow>
+              <TableHead className="text-xs">Code</TableHead>
+              <TableHead className="text-xs">Name</TableHead>
+              <TableHead className="text-xs">Description</TableHead>
+              <TableHead className="text-xs">Status</TableHead>
+              <TableHead className="text-xs text-right">Actions</TableHead>
+            </TableRow></TableHeader>
             <TableBody>
               {items.map(i => (
-                <TableRow key={i.id}>
+                <TableRow key={i.id} className={!i.is_active ? 'opacity-60' : ''}>
+                  <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{i.description || '—'}</TableCell>
                   <TableCell>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => openEdit(i)}><Pencil className="h-3.5 w-3.5" /></Button>
-                      <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                    </div>
+                    <Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>
+                      {i.is_active ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openView(i)}>
+                          <Eye className="h-4 w-4 mr-2" /> View Detail
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openEdit(i)}>
+                          <Pencil className="h-4 w-4 mr-2" /> Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
+                          <Trash2 className="h-4 w-4 mr-2" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
         )}
+
+        {/* View Detail Dialog */}
+        <Dialog open={viewOpen} onOpenChange={setViewOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader><DialogTitle>Detail Kategori</DialogTitle></DialogHeader>
+            {viewItem && (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mt-2">
+                <span className="text-muted-foreground">Code</span>
+                <span className="font-mono font-medium">{viewItem.code || '—'}</span>
+                <span className="text-muted-foreground">Name</span>
+                <span className="font-medium">{viewItem.name}</span>
+                <span className="text-muted-foreground">Description</span>
+                <span>{viewItem.description || '—'}</span>
+                <span className="text-muted-foreground">Status</span>
+                <span><Badge variant="outline" className={`text-[10px] ${viewItem.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>{viewItem.is_active ? 'Active' : 'Inactive'}</Badge></span>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </CardContent>
     </Card>
   );
