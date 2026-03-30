@@ -208,10 +208,31 @@ function CategoryTab() {
           </Dialog>
         </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-3">
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
+            <span className="text-xs font-medium">{selectedIds.size} kategori dipilih</span>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>Aktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>Nonaktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={exportSelectedExcel}>
+              <FileSpreadsheet className="h-3 w-3" /> Export Terpilih
+            </Button>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
+          </div>
+        )}
+
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada kategori.</p> : (
           <Table>
             <TableHeader><TableRow>
+              <TableHead className="w-10">
+                <Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleCatSelectAll} />
+              </TableHead>
               <TableHead className="text-xs">Code</TableHead>
               <TableHead className="text-xs">Name</TableHead>
               <TableHead className="text-xs">Description</TableHead>
@@ -220,7 +241,8 @@ function CategoryTab() {
             </TableRow></TableHeader>
             <TableBody>
               {items.map(i => (
-                <TableRow key={i.id} className={!i.is_active ? 'opacity-60' : ''}>
+                <TableRow key={i.id} className={`${!i.is_active ? 'opacity-60' : ''} ${selectedIds.has(i.id) ? 'bg-muted/40' : ''}`}>
+                  <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleCatSelect(i.id)} /></TableCell>
                   <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{i.description || '—'}</TableCell>
