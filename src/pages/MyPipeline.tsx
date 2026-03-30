@@ -63,7 +63,7 @@ const MyPipeline = () => {
     .map(d => editedDeals[d.id] || d);
 
   const getAccountName = (accountId: string) =>
-    mockAccounts.find(a => a.id === accountId)?.name || accountId;
+    localAccounts.find(a => a.id === accountId)?.name || accountId;
 
   const handleAddDeal = (deal: Deal) => {
     setAddedDeals(prev => [...prev, deal]);
