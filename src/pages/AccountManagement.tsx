@@ -746,6 +746,45 @@ export default function AccountManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View Detail Dialog */}
+      <Dialog open={!!viewingAccount} onOpenChange={open => { if (!open) setViewingAccount(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detail Akun</DialogTitle>
+          </DialogHeader>
+          {viewingAccount && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div><span className="text-muted-foreground">Code:</span></div>
+                <div className="font-mono">{viewingAccount.customer_id || '-'}</div>
+                <div><span className="text-muted-foreground">Name:</span></div>
+                <div className="font-medium">{viewingAccount.name}</div>
+                <div><span className="text-muted-foreground">Type:</span></div>
+                <div>{viewingAccount.type}</div>
+                <div><span className="text-muted-foreground">PIC:</span></div>
+                <div>{viewingAccount.pic_name || '-'}</div>
+                <div><span className="text-muted-foreground">Phone:</span></div>
+                <div>{viewingAccount.pic_contact || '-'}</div>
+                <div><span className="text-muted-foreground">Email:</span></div>
+                <div>{viewingAccount.pic_email || '-'}</div>
+                <div><span className="text-muted-foreground">Region:</span></div>
+                <div>{viewingAccount.region || '-'}</div>
+                <div><span className="text-muted-foreground">City:</span></div>
+                <div>{viewingAccount.city || '-'}</div>
+                <div><span className="text-muted-foreground">Status:</span></div>
+                <div><Badge variant="outline" className={statusColor(viewingAccount.status || 'Active')}>{viewingAccount.status || 'Active'}</Badge></div>
+                <div><span className="text-muted-foreground">Created:</span></div>
+                <div>{new Date(viewingAccount.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingAccount(null)}>Tutup</Button>
+            <Button onClick={() => { if (viewingAccount) { openEdit(viewingAccount); setViewingAccount(null); } }}>Edit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
