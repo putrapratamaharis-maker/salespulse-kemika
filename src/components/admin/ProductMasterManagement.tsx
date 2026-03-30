@@ -216,7 +216,8 @@ function ProductTab() {
         const catName = row[2]?.toString().trim() || '';
         const unitName = row[3]?.toString().trim() || 'pcs';
         const prodPrice = Number(row[4]) || 0;
-        const activeStr = (row[5]?.toString().trim() || 'Ya').toLowerCase();
+        const sellingPr = Number(row[5]) || 0;
+        const activeStr = (row[6]?.toString().trim() || 'Ya').toLowerCase();
         const active = !['tidak', 'no', 'false', '0', 'non-aktif'].includes(activeStr);
 
         return {
@@ -225,6 +226,8 @@ function ProductTab() {
           category_id: catMap.get(catName.toLowerCase()) || null,
           unit: unitNames.has(unitName.toLowerCase()) ? unitName : 'pcs',
           price: prodPrice,
+          purchase_price: prodPrice,
+          selling_price: sellingPr,
           is_active: active,
         };
       }).filter(p => p.name);
