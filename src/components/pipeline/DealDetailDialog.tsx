@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash } from 'lucide-react';
 
 interface DealDetailDialogProps {
   deal: Deal | null;
