@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
 import EditInvoiceDialog from '@/components/invoices/EditInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -23,23 +25,80 @@ interface InvoiceRow {
   due_date: string;
   paid_date: string | null;
   segment: string;
+  account_name?: string;
 }
+
+const MONTHS = [
+  { value: '01', label: 'Januari' }, { value: '02', label: 'Februari' },
+  { value: '03', label: 'Maret' }, { value: '04', label: 'April' },
+  { value: '05', label: 'Mei' }, { value: '06', label: 'Juni' },
+  { value: '07', label: 'Juli' }, { value: '08', label: 'Agustus' },
+  { value: '09', label: 'September' }, { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
+];
 
 const Revenue = () => {
   const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [allInvoices, setAllInvoices] = useState<InvoiceRow[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
 
+  // Filters
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterMonth, setFilterMonth] = useState<string>('all');
+  const [filterYear, setFilterYear] = useState<string>('all');
+
   const fetchInvoices = async () => {
     setLoading(true);
-    const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
-    setInvoices((data || []) as InvoiceRow[]);
+    const { data } = await supabase
+      .from('invoices')
+      .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
+      .order('issue_date', { ascending: false });
+
+    const mapped = (data || []).map((row: any) => ({
+      id: row.id,
+      invoice_number: row.invoice_number,
+      net_sales: row.net_sales,
+      gross_profit: row.gross_profit,
+      issue_date: row.issue_date,
+      due_date: row.due_date,
+      paid_date: row.paid_date,
+      segment: row.segment,
+      account_name: row.accounts?.name || '',
+    }));
+    setAllInvoices(mapped);
     setLoading(false);
   };
 
   useEffect(() => { fetchInvoices(); }, [refreshKey]);
+
+  // Available years from data
+  const availableYears = useMemo(() => {
+    const years = new Set(allInvoices.map(i => i.issue_date.slice(0, 4)));
+    return Array.from(years).sort().reverse();
+  }, [allInvoices]);
+
+  // Filtered invoices
+  const invoices = useMemo(() => {
+    let filtered = allInvoices;
+
+    if (filterYear !== 'all') {
+      filtered = filtered.filter(i => i.issue_date.startsWith(filterYear));
+    }
+    if (filterMonth !== 'all') {
+      filtered = filtered.filter(i => i.issue_date.slice(5, 7) === filterMonth);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(i =>
+        i.invoice_number.toLowerCase().includes(q) ||
+        (i.account_name || '').toLowerCase().includes(q)
+      );
+    }
+
+    return filtered;
+  }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
   const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
   const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
@@ -50,7 +109,7 @@ const Revenue = () => {
   // Build trend from invoice data grouped by month
   const monthlyMap = new Map<string, number>();
   invoices.forEach(inv => {
-    const month = inv.issue_date.slice(0, 7); // YYYY-MM
+    const month = inv.issue_date.slice(0, 7);
     monthlyMap.set(month, (monthlyMap.get(month) || 0) + inv.net_sales);
   });
   const trendData = Array.from(monthlyMap.entries())
@@ -68,6 +127,7 @@ const Revenue = () => {
   const exportData = (type: 'xlsx' | 'csv') => {
     const rows = invoices.map(inv => ({
       'Invoice #': inv.invoice_number,
+      'Account': inv.account_name || '',
       'Net Sales': inv.net_sales,
       'Gross Profit': inv.gross_profit,
       'Margin %': inv.net_sales > 0 ? +((inv.gross_profit / inv.net_sales) * 100).toFixed(2) : 0,
@@ -102,6 +162,41 @@ const Revenue = () => {
         <NewInvoiceDialog onCreated={() => setRefreshKey(k => k + 1)} />
       </div>
 
+      {/* Period Filter Bar */}
+      <div className="flex flex-wrap items-center gap-3">
+        <Select value={filterYear} onValueChange={setFilterYear}>
+          <SelectTrigger className="w-[120px]">
+            <SelectValue placeholder="Tahun" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Tahun</SelectItem>
+            {availableYears.map(y => (
+              <SelectItem key={y} value={y}>{y}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={filterMonth} onValueChange={setFilterMonth}>
+          <SelectTrigger className="w-[140px]">
+            <SelectValue placeholder="Bulan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Semua Bulan</SelectItem>
+            {MONTHS.map(m => (
+              <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Cari nomor invoice atau nama akun..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
         <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText />
@@ -128,7 +223,14 @@ const Revenue = () => {
 
       <Card>
         <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-sm font-semibold">Invoice Details</CardTitle>
+          <CardTitle className="text-sm font-semibold">
+            Invoice Details
+            {invoices.length !== allInvoices.length && (
+              <span className="ml-2 text-xs font-normal text-muted-foreground">
+                ({invoices.length} dari {allInvoices.length})
+              </span>
+            )}
+          </CardTitle>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1.5">
@@ -146,6 +248,7 @@ const Revenue = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">Invoice #</TableHead>
+                <TableHead className="text-xs">Akun</TableHead>
                 <TableHead className="text-xs">Net Sales</TableHead>
                 <TableHead className="text-xs">Gross Profit</TableHead>
                 <TableHead className="text-xs">Margin %</TableHead>
@@ -155,11 +258,19 @@ const Revenue = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
+              {invoices.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                    Tidak ada invoice ditemukan
+                  </TableCell>
+                </TableRow>
+              )}
               {invoices.map(inv => {
                 const m = inv.net_sales > 0 ? (inv.gross_profit / inv.net_sales) * 100 : 0;
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
                     <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
                     <TableCell className="text-sm">{formatIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
