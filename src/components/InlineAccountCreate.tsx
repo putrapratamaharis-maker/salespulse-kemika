@@ -27,6 +27,7 @@ interface InlineAccountCreateProps {
 
 export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: InlineAccountCreateProps) {
   const { toast } = useToast();
+  const [customerId, setCustomerId] = useState('');
   const [name, setName] = useState('');
   const [picName, setPicName] = useState('');
   const [picContact, setPicContact] = useState('');
@@ -35,6 +36,23 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
   const [type, setType] = useState('Corporate');
   const [status, setStatus] = useState('Active');
   const [saving, setSaving] = useState(false);
+
+  // Auto-generate Customer ID on mount
+  useState(() => {
+    const generateId = async () => {
+      const year = new Date().getFullYear();
+      const { data } = await supabase
+        .from('accounts')
+        .select('customer_id')
+        .like('customer_id', `CUST${year}-%`);
+      const nums = (data || [])
+        .map(a => parseInt(a.customer_id?.replace(`CUST${year}-`, '') || '0', 10))
+        .filter(n => !isNaN(n));
+      const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
+      setCustomerId(`CUST${year}-${String(next).padStart(4, '0')}`);
+    };
+    generateId();
+  });
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -46,6 +64,7 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
       const { data, error } = await supabase
         .from('accounts')
         .insert({
+          customer_id: customerId.trim(),
           name: name.trim(),
           pic_name: picName.trim(),
           pic_contact: picContact.trim(),
@@ -77,9 +96,15 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Nama Akun Pelanggan/Customer *</Label>
-        <Input className="h-9 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Customer ID</Label>
+          <Input className="h-9 text-sm font-mono" value={customerId} onChange={e => setCustomerId(e.target.value)} placeholder="CUST2026-XXXX" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Nama Akun Pelanggan/Customer *</Label>
+          <Input className="h-9 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs">Nama PIC</Label>
