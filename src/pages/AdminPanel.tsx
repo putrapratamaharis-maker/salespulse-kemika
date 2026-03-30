@@ -251,7 +251,39 @@ const AdminPanel = () => {
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-sm">{u.segment || '—'}</TableCell>
+                        <TableCell>
+                          {isSuperAdmin ? (
+                            <Select
+                              value={u.division ?? ''}
+                              onValueChange={async (v) => {
+                                setSaving(u.user_id + 'division');
+                                const { error } = await supabase
+                                  .from('profiles')
+                                  .update({ division: v } as any)
+                                  .eq('user_id', u.user_id);
+                                if (error) {
+                                  toast({ title: 'Error', description: error.message, variant: 'destructive' });
+                                } else {
+                                  toast({ title: 'Divisi diperbarui!' });
+                                  fetchUsers();
+                                }
+                                setSaving(null);
+                              }}
+                              disabled={saving === u.user_id + 'division'}
+                            >
+                              <SelectTrigger className="h-7 text-xs w-36">
+                                <SelectValue placeholder="Pilih divisi..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {DIVISIONS.map(d => (
+                                  <SelectItem key={d} value={d} className="text-xs">{d}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : (
+                            <span className="text-sm">{u.division || '—'}</span>
+                          )}
+                        </TableCell>
                         <TableCell className="text-sm">{u.region || '—'}</TableCell>
                       </TableRow>
                     ))}
