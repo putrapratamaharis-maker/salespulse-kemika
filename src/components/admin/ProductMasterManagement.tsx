@@ -122,6 +122,7 @@ function ProductTab() {
   const [categoryId, setCategoryId] = useState('');
   const [unit, setUnit] = useState('');
   const [price, setPrice] = useState('');
+  const [sellingPrice, setSellingPrice] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
