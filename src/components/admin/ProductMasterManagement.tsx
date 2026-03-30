@@ -33,6 +33,8 @@ function CategoryTab() {
   const [importing, setImporting] = useState(false);
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetch = async () => {
     setLoading(true);
