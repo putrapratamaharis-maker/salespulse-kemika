@@ -72,6 +72,7 @@ const MyPipeline = () => {
         stage: d.stage as DealStage,
         probability: d.probability,
         expectedCloseDate: d.expected_close_date,
+        createdAt: d.created_at,
         daysInStage: d.days_in_stage,
         updatedAt: d.updated_at,
         segment: d.segment,
