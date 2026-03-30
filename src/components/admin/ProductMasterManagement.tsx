@@ -41,8 +41,9 @@ function CategoryTab() {
   };
   useEffect(() => { fetch(); }, []);
 
-  const openAdd = () => { setEditItem(null); setName(''); setDescription(''); setDialogOpen(true); };
-  const openEdit = (item: typeof items[0]) => { setEditItem({ id: item.id, name: item.name, description: item.description || '' }); setName(item.name); setDescription(item.description || ''); setDialogOpen(true); };
+  const openAdd = () => { setEditItem(null); setCode(''); setName(''); setDescription(''); setIsActive(true); setDialogOpen(true); };
+  const openEdit = (item: typeof items[0]) => { setEditItem(item); setCode(item.code || ''); setName(item.name); setDescription(item.description || ''); setIsActive(item.is_active); setDialogOpen(true); };
+  const openView = (item: typeof items[0]) => { setViewItem(item); setViewOpen(true); };
 
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama wajib diisi', variant: 'destructive' }); return; }
