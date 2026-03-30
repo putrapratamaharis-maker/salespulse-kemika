@@ -224,18 +224,28 @@ export default function AccountManagement() {
       }
       const validTypes = new Set(TYPES.map(t => t.toLowerCase()));
       const validProvinces = new Set(PROVINCES.map(p => p.toLowerCase()));
+      let nextId = (() => {
+        const year = new Date().getFullYear();
+        const existingIds = accounts
+          .map(a => a.customer_id)
+          .filter(id => id?.startsWith(`CUST${year}-`))
+          .map(id => parseInt(id.replace(`CUST${year}-`, ''), 10))
+          .filter(n => !isNaN(n));
+        return existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      })();
       const payloads = dataRows.map(row => {
-        const name = row[0]?.toString().trim() || '';
-        const picName = row[1]?.toString().trim() || '';
-        const picContact = row[2]?.toString().trim() || '';
-        const picEmail = row[3]?.toString().trim() || '';
-        const typeRaw = row[4]?.toString().trim() || 'Corporate';
-        const regionRaw = row[5]?.toString().trim() || '';
-        const statusRaw = row[6]?.toString().trim() || 'Active';
+        const customerId = row[0]?.toString().trim() || `CUST${new Date().getFullYear()}-${String(nextId++).padStart(4, '0')}`;
+        const name = row[1]?.toString().trim() || '';
+        const picName = row[2]?.toString().trim() || '';
+        const picContact = row[3]?.toString().trim() || '';
+        const picEmail = row[4]?.toString().trim() || '';
+        const typeRaw = row[5]?.toString().trim() || 'Corporate';
+        const regionRaw = row[6]?.toString().trim() || '';
+        const statusRaw = row[7]?.toString().trim() || 'Active';
         const type = TYPES.find(t => t.toLowerCase() === typeRaw.toLowerCase()) || 'Corporate';
         const region = PROVINCES.find(p => p.toLowerCase() === regionRaw.toLowerCase()) || regionRaw;
         const status = statusRaw.toLowerCase() === 'non-active' || statusRaw.toLowerCase() === 'non-aktif' || statusRaw.toLowerCase() === 'inactive' ? 'Non-Active' : 'Active';
-        return { name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
+        return { customer_id: customerId, name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
       }).filter(p => p.name);
 
       const { error, data: inserted } = await supabase.from('accounts').insert(payloads).select();
