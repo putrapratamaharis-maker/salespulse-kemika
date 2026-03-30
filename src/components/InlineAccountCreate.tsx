@@ -96,9 +96,15 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
           <X className="h-3.5 w-3.5" />
         </Button>
       </div>
-      <div className="space-y-1.5">
-        <Label className="text-xs">Nama Akun Pelanggan/Customer *</Label>
-        <Input className="h-9 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+      <div className="grid grid-cols-2 gap-2">
+        <div className="space-y-1.5">
+          <Label className="text-xs">Customer ID</Label>
+          <Input className="h-9 text-sm font-mono" value={customerId} onChange={e => setCustomerId(e.target.value)} placeholder="CUST2026-XXXX" />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-xs">Nama Akun Pelanggan/Customer *</Label>
+          <Input className="h-9 text-sm" value={name} onChange={e => setName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+        </div>
       </div>
       <div className="space-y-1.5">
         <Label className="text-xs">Nama PIC</Label>
