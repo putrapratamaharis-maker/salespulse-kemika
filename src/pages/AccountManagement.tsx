@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, FileText, Loader2 } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -57,10 +58,12 @@ export default function AccountManagement() {
   const pageSize = 15;
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Form state
   const [formCustomerId, setFormCustomerId] = useState('');
@@ -189,9 +192,44 @@ export default function AccountManagement() {
     } else {
       toast({ title: 'Akun berhasil dihapus' });
       setDeleteDialogOpen(false);
+      selectedIds.delete(deletingAccount.id);
+      setSelectedIds(new Set(selectedIds));
       fetchAccounts();
     }
     setSaving(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setSaving(true);
+    const { error } = await supabase.from('accounts').delete().in('id', Array.from(selectedIds));
+    if (error) {
+      toast({ title: 'Gagal menghapus', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `${selectedIds.size} akun berhasil dihapus` });
+      setBulkDeleteDialogOpen(false);
+      setSelectedIds(new Set());
+      fetchAccounts();
+    }
+    setSaving(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (paginatedAccounts.every(a => selectedIds.has(a.id))) {
+      const next = new Set(selectedIds);
+      paginatedAccounts.forEach(a => next.delete(a.id));
+      setSelectedIds(next);
+    } else {
+      const next = new Set(selectedIds);
+      paginatedAccounts.forEach(a => next.add(a.id));
+      setSelectedIds(next);
+    }
   };
 
   // --- Import / Export ---
@@ -463,6 +501,17 @@ export default function AccountManagement() {
           </div>
         </CardHeader>
         <CardContent className="p-0">
+          {selectedIds.size > 0 && (
+            <div className="flex items-center gap-3 px-4 py-2 bg-destructive/10 border-b">
+              <span className="text-sm font-medium text-destructive">{selectedIds.size} akun dipilih</span>
+              <Button variant="destructive" size="sm" className="h-7 text-xs" onClick={() => setBulkDeleteDialogOpen(true)}>
+                <Trash2 className="h-3.5 w-3.5 mr-1" /> Hapus Terpilih
+              </Button>
+              <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>
+                Batal Pilih
+              </Button>
+            </div>
+          )}
           {loading ? (
             <div className="p-8 text-center text-muted-foreground text-sm">Memuat data...</div>
           ) : filtered.length === 0 ? (
@@ -473,6 +522,12 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-10">
+                    <Checkbox
+                      checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
+                      onCheckedChange={toggleSelectAll}
+                    />
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
                     <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
                   </TableHead>
@@ -496,7 +551,13 @@ export default function AccountManagement() {
               </TableHeader>
               <TableBody>
                 {paginatedAccounts.map(acc => (
-                  <TableRow key={acc.id}>
+                  <TableRow key={acc.id} data-state={selectedIds.has(acc.id) ? 'selected' : undefined}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(acc.id)}
+                        onCheckedChange={() => toggleSelect(acc.id)}
+                      />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
@@ -632,6 +693,22 @@ export default function AccountManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleDelete} disabled={saving}>{saving ? 'Menghapus...' : 'Hapus'}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Delete Confirmation */}
+      <Dialog open={bulkDeleteDialogOpen} onOpenChange={setBulkDeleteDialogOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Hapus {selectedIds.size} Akun</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Yakin ingin menghapus <strong>{selectedIds.size} akun</strong> yang dipilih? Tindakan ini tidak dapat dibatalkan.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)}>Batal</Button>
+            <Button variant="destructive" onClick={handleBulkDelete} disabled={saving}>{saving ? 'Menghapus...' : `Hapus ${selectedIds.size} Akun`}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
