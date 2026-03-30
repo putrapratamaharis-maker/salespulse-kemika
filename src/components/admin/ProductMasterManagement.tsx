@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler, Upload, Download, FileDown, FileSpreadsheet, FileText, Eye, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Pencil, Trash2, Loader2, FolderTree, Package, Ruler, Upload, Download, FileDown, FileSpreadsheet, FileText, Eye, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -122,6 +122,7 @@ function ProductTab() {
   const [categoryId, setCategoryId] = useState('');
   const [unit, setUnit] = useState('');
   const [price, setPrice] = useState('');
+  const [sellingPrice, setSellingPrice] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
@@ -150,14 +151,14 @@ function ProductTab() {
   };
   useEffect(() => { fetchAll(); }, []);
 
-  const openAdd = () => { setEditItem(null); setName(''); setSku(''); setCategoryId(''); setUnit('pcs'); setPrice(''); setIsActive(true); setDialogOpen(true); };
-  const openEdit = (item: any) => { setEditItem(item); setName(item.name); setSku(item.sku || ''); setCategoryId(item.category_id || ''); setUnit(item.unit || 'pcs'); setPrice(String(item.price || '')); setIsActive(item.is_active); setDialogOpen(true); };
+  const openAdd = () => { setEditItem(null); setName(''); setSku(''); setCategoryId(''); setUnit('pcs'); setPrice(''); setSellingPrice(''); setIsActive(true); setDialogOpen(true); };
+  const openEdit = (item: any) => { setEditItem(item); setName(item.name); setSku(item.sku || ''); setCategoryId(item.category_id || ''); setUnit(item.unit || 'pcs'); setPrice(String(item.purchase_price || item.price || '')); setSellingPrice(String(item.selling_price || '')); setIsActive(item.is_active); setDialogOpen(true); };
   const openView = (item: any) => { setViewItem(item); setViewOpen(true); };
 
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama produk wajib diisi', variant: 'destructive' }); return; }
     setSaving(true);
-    const payload = { name: name.trim(), sku: sku.trim() || null, category_id: categoryId || null, unit: unit || 'pcs', price: Number(price) || 0, is_active: isActive };
+    const payload = { name: name.trim(), sku: sku.trim() || null, category_id: categoryId || null, unit: unit || 'pcs', price: Number(price) || 0, purchase_price: Number(price) || 0, selling_price: Number(sellingPrice) || 0, is_active: isActive };
     if (editItem) {
       const { error } = await supabase.from('products').update(payload).eq('id', editItem.id);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk diperbarui' }); }
@@ -371,13 +372,14 @@ function ProductTab() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Harga (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
-                  <div className="space-y-1.5 flex items-end">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                      Aktif
-                    </label>
-                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Purchase Price (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Selling Price (Rp)</Label><Input type="number" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} placeholder="0" /></div>
+                </div>
+                <div className="space-y-1.5 flex items-end">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                    Aktif
+                  </label>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
@@ -421,29 +423,56 @@ function ProductTab() {
           <>
             <Table>
               <TableHeader><TableRow>
-                <TableHead className="text-xs">Code/SKU</TableHead>
+                <TableHead className="text-xs">SKU</TableHead>
                 <TableHead className="text-xs">Product Name</TableHead>
                 <TableHead className="text-xs">Category</TableHead>
                 <TableHead className="text-xs">Unit</TableHead>
-                <TableHead className="text-xs">Price</TableHead>
+                <TableHead className="text-xs text-right">Purchase Price</TableHead>
+                <TableHead className="text-xs text-right">Selling Price</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
-                <TableHead className="text-xs w-28">Actions</TableHead>
+                <TableHead className="text-xs text-right">Actions</TableHead>
               </TableRow></TableHeader>
               <TableBody>
                 {paginatedItems.map((i: any) => (
                   <TableRow key={i.id}>
-                    <TableCell className="text-sm text-muted-foreground font-mono">{i.sku || '—'}</TableCell>
-                    <TableCell className="text-sm font-medium">{i.name}</TableCell>
+                    <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="text-sm font-medium">{i.name}</div>
+                        {i.sku && <div className="text-xs text-muted-foreground">{i.sku}</div>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm">{i.product_categories?.name || '—'}</TableCell>
                     <TableCell className="text-sm">{i.unit || '—'}</TableCell>
-                    <TableCell className="text-sm">Rp {Number(i.price).toLocaleString('id-ID')}</TableCell>
-                    <TableCell><Badge variant={i.is_active ? 'default' : 'secondary'} className="text-[10px]">{i.is_active ? 'Active' : 'Non-Active'}</Badge></TableCell>
+                    <TableCell className="text-sm text-right">Rp {Number(i.purchase_price || i.price || 0).toLocaleString('id-ID')}</TableCell>
+                    <TableCell className="text-sm text-right">{Number(i.selling_price) ? `Rp ${Number(i.selling_price).toLocaleString('id-ID')}` : '-'}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="View Details" onClick={() => openView(i)}><Eye className="h-3.5 w-3.5" /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" title="Edit" onClick={() => openEdit(i)}><Pencil className="h-3.5 w-3.5" /></Button>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" title="Delete" onClick={() => handleDelete(i.id)}><Trash2 className="h-3.5 w-3.5" /></Button>
-                      </div>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}
+                      >
+                        {i.is_active ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openView(i)}>
+                            <Eye className="h-4 w-4 mr-2" /> View Detail
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEdit(i)}>
+                            <Pencil className="h-4 w-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -495,8 +524,10 @@ function ProductTab() {
                   <span>{viewItem.product_categories?.name || '—'}</span>
                   <span className="text-muted-foreground">Unit</span>
                   <span>{viewItem.unit || '—'}</span>
-                  <span className="text-muted-foreground">Price</span>
-                  <span>Rp {Number(viewItem.price).toLocaleString('id-ID')}</span>
+                   <span className="text-muted-foreground">Purchase Price</span>
+                   <span>Rp {Number(viewItem.purchase_price || viewItem.price || 0).toLocaleString('id-ID')}</span>
+                   <span className="text-muted-foreground">Selling Price</span>
+                   <span>{Number(viewItem.selling_price) ? `Rp ${Number(viewItem.selling_price).toLocaleString('id-ID')}` : '-'}</span>
                   <span className="text-muted-foreground">Status</span>
                   <span><Badge variant={viewItem.is_active ? 'default' : 'secondary'} className="text-[10px]">{viewItem.is_active ? 'Active' : 'Non-Active'}</Badge></span>
                   <span className="text-muted-foreground">Created</span>
