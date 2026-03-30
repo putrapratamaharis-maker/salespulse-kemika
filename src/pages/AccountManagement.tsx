@@ -264,9 +264,10 @@ export default function AccountManagement() {
 
     autoTable(doc, {
       startY: 26,
-      head: [['No', 'Nama Akun', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region', 'Status']],
+      head: [['No', 'Customer ID', 'Nama Akun', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region', 'Status']],
       body: filtered.map((a, i) => [
         i + 1,
+        a.customer_id || '-',
         a.name,
         a.pic_name || '-',
         a.pic_contact || '-',
