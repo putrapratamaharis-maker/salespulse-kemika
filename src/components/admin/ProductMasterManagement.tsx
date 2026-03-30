@@ -293,14 +293,15 @@ function ProductTab() {
 
     autoTable(doc, {
       startY: 26,
-      head: [['No', 'Code/SKU', 'Nama Produk', 'Kategori', 'Unit', 'Harga (Rp)', 'Status']],
+      head: [['No', 'Code/SKU', 'Nama Produk', 'Kategori', 'Unit', 'Purchase Price (Rp)', 'Selling Price (Rp)', 'Status']],
       body: filteredItems.map((i: any, idx: number) => [
         idx + 1,
         i.sku || '—',
         i.name,
         i.product_categories?.name || '—',
         i.unit || '—',
-        Number(i.price).toLocaleString('id-ID'),
+        Number(i.purchase_price || i.price || 0).toLocaleString('id-ID'),
+        Number(i.selling_price || 0).toLocaleString('id-ID'),
         i.is_active ? 'Aktif' : 'Non-aktif',
       ]),
       styles: { fontSize: 8 },
