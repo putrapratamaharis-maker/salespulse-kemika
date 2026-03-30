@@ -21,9 +21,6 @@ const ORG_ROLES = [
   { value: 'manager', label: 'Manager' },
   { value: 'supervisor', label: 'Supervisor' },
   { value: 'staff_operational', label: 'Staff & Operational' },
-  // Legacy values kept for backward compat display
-  { value: 'sales_manager', label: 'Sales Manager' },
-  { value: 'sales_person', label: 'Sales Person' },
 ];
 
 const SYSTEM_ROLES = [
