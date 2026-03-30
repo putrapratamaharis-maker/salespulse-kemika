@@ -3,11 +3,16 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Percent, TrendingUp, CreditCard, Loader2 } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
+import EditInvoiceDialog from '@/components/invoices/EditInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 interface InvoiceRow {
   id: string;
@@ -24,6 +29,8 @@ const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -49,6 +56,33 @@ const Revenue = () => {
   const trendData = Array.from(monthlyMap.entries())
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, total]) => ({ month, total: total / 1_000_000 }));
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Yakin ingin menghapus invoice ini?')) return;
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    if (error) { toast.error('Gagal menghapus: ' + error.message); return; }
+    toast.success('Invoice dihapus');
+    setRefreshKey(k => k + 1);
+  };
+
+  const exportData = (type: 'xlsx' | 'csv') => {
+    const rows = invoices.map(inv => ({
+      'Invoice #': inv.invoice_number,
+      'Net Sales': inv.net_sales,
+      'Gross Profit': inv.gross_profit,
+      'Margin %': inv.net_sales > 0 ? +((inv.gross_profit / inv.net_sales) * 100).toFixed(2) : 0,
+      'Segment': inv.segment,
+      'Issue Date': inv.issue_date,
+      'Due Date': inv.due_date,
+      'Paid Date': inv.paid_date || '',
+      'Status': inv.paid_date ? 'Paid' : 'Outstanding',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+    XLSX.writeFile(wb, `invoices.${type}`);
+    toast.success(`Exported as ${type.toUpperCase()}`);
+  };
 
   if (loading) {
     return (
@@ -93,8 +127,19 @@ const Revenue = () => {
       </Card>
 
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Invoice Details</CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Download className="h-4 w-4" /> Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportData('xlsx')}>Export Excel (.xlsx)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportData('csv')}>Export CSV (.csv)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardHeader>
         <CardContent>
           <Table>
@@ -106,6 +151,7 @@ const Revenue = () => {
                 <TableHead className="text-xs">Margin %</TableHead>
                 <TableHead className="text-xs">Segment</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -119,6 +165,23 @@ const Revenue = () => {
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditInvoice(inv); setEditOpen(true); }}>
+                            <Pencil className="h-4 w-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(inv.id)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -126,6 +189,13 @@ const Revenue = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <EditInvoiceDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        invoice={editInvoice}
+        onUpdated={() => setRefreshKey(k => k + 1)}
+      />
     </div>
   );
 };
