@@ -20,6 +20,8 @@ import ARCashflow from "./pages/ARCashflow";
 import ProfilePage from "./pages/ProfilePage";
 import AdminPanel from "./pages/AdminPanel";
 import AccountManagement from "./pages/AccountManagement";
+import UserManagement from "./pages/UserManagement";
+import ProductMaster from "./pages/ProductMaster";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
