@@ -55,6 +55,7 @@ export interface Deal {
   notes?: string;
   expectedMargin?: number;
   products?: DealProduct[];
+  poNumber?: string;
 }
 
 
