@@ -80,7 +80,7 @@ const AdminPanel = () => {
         user_id: p.user_id,
         full_name: p.full_name,
         email: p.email,
-        segment: p.segment,
+        division: p.division,
         region: p.region,
         org_role: role?.org_role ?? null,
         system_role: role?.system_role ?? null,
