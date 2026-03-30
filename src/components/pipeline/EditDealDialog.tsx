@@ -79,6 +79,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [probability, setProbability] = useState('');
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [poNumber, setPoNumber] = useState('');
 
   useEffect(() => {
     if (deal) {
@@ -91,6 +92,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setProbability(String(deal.probability));
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
+      setPoNumber(deal.poNumber || '');
     }
   }, [deal]);
 
@@ -150,6 +152,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
+      poNumber,
     };
 
     onSave(updated);
@@ -224,7 +227,18 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               </Select>
             </div>
 
-            {/* Products */}
+            {/* No. PO/SP/SPK or No. Invoice - shown for final stages */}
+            {(stage === 'po_secured' || stage === 'invoice_issued') && (
+              <div className="space-y-1.5">
+                <Label>{stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'}</Label>
+                <Input
+                  value={poNumber}
+                  onChange={e => setPoNumber(e.target.value)}
+                  placeholder={stage === 'invoice_issued' ? 'Contoh: INV-2026-001' : 'Contoh: PO-2026-001'}
+                />
+              </div>
+            )}
+
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Product / Item</Label>
