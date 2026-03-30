@@ -524,8 +524,10 @@ function ProductTab() {
                   <span>{viewItem.product_categories?.name || '—'}</span>
                   <span className="text-muted-foreground">Unit</span>
                   <span>{viewItem.unit || '—'}</span>
-                  <span className="text-muted-foreground">Price</span>
-                  <span>Rp {Number(viewItem.price).toLocaleString('id-ID')}</span>
+                   <span className="text-muted-foreground">Purchase Price</span>
+                   <span>Rp {Number(viewItem.purchase_price || viewItem.price || 0).toLocaleString('id-ID')}</span>
+                   <span className="text-muted-foreground">Selling Price</span>
+                   <span>{Number(viewItem.selling_price) ? `Rp ${Number(viewItem.selling_price).toLocaleString('id-ID')}` : '-'}</span>
                   <span className="text-muted-foreground">Status</span>
                   <span><Badge variant={viewItem.is_active ? 'default' : 'secondary'} className="text-[10px]">{viewItem.is_active ? 'Active' : 'Non-Active'}</Badge></span>
                   <span className="text-muted-foreground">Created</span>
