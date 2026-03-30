@@ -4,9 +4,8 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
-import { getUserDeals } from '@/data/mockData';
 import { supabase } from '@/integrations/supabase/client';
-import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
+import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
@@ -39,6 +38,8 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 const MyPipeline = () => {
   const { currentUser } = useAppContext();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [dbDeals, setDbDeals] = useState<Deal[]>([]);
   const [addedDeals, setAddedDeals] = useState<Deal[]>([]);
   const [editedDeals, setEditedDeals] = useState<Record<string, Deal>>({});
   const [deletedDealIds, setDeletedDealIds] = useState<Set<string>>(new Set());
@@ -48,40 +49,53 @@ const MyPipeline = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
 
-  // Redirect non-sales_person to KPIs page
   useEffect(() => {
     if (currentUser.orgRole !== 'sales_person') {
       navigate('/my-performance/kpis', { replace: true });
     }
   }, [currentUser.orgRole, navigate]);
 
-  // Personal only — show only the logged-in user's own deals
-  const baseDeals = useMemo(() => getUserDeals(currentUser.id), [currentUser.id]);
-  const deals = [...baseDeals, ...addedDeals]
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const [{ data: dealsData }, { data: accountsData }] = await Promise.all([
+        supabase.from('deals').select('*').eq('sales_id', currentUser.id),
+        supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+      ]);
+
+      const mapped: Deal[] = (dealsData || []).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        value: d.value,
+        stage: d.stage as DealStage,
+        probability: d.probability,
+        expectedCloseDate: d.expected_close_date,
+        daysInStage: d.days_in_stage,
+        updatedAt: d.updated_at,
+        segment: d.segment,
+        accountId: d.account_id,
+        salesId: d.sales_id,
+      }));
+      setDbDeals(mapped);
+      setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
+      setLoading(false);
+    };
+    fetchData();
+  }, [currentUser.id]);
+
+  const deals = [...dbDeals, ...addedDeals]
     .filter(d => !deletedDealIds.has(d.id))
     .map(d => editedDeals[d.id] || d);
 
   const getAccountName = (accountId: string) =>
     localAccounts.find(a => a.id === accountId)?.name || accountId;
 
-  const handleAddDeal = (deal: Deal) => {
-    setAddedDeals(prev => [...prev, deal]);
-  };
-
-  const handleEditDeal = (deal: Deal) => {
-    setEditingDeal(deal);
-    setEditDialogOpen(true);
-  };
-
-  const handleSaveEdit = (updatedDeal: Deal) => {
-    setEditedDeals(prev => ({ ...prev, [updatedDeal.id]: updatedDeal }));
-  };
-
-  const handleDeleteDeal = (dealId: string) => {
-    setDeletedDealIds(prev => new Set(prev).add(dealId));
-    toast({ title: 'Deal berhasil dihapus' });
-  };
+  const handleAddDeal = (deal: Deal) => setAddedDeals(prev => [...prev, deal]);
+  const handleEditDeal = (deal: Deal) => { setEditingDeal(deal); setEditDialogOpen(true); };
+  const handleSaveEdit = (updatedDeal: Deal) => setEditedDeals(prev => ({ ...prev, [updatedDeal.id]: updatedDeal }));
+  const handleDeleteDeal = (dealId: string) => { setDeletedDealIds(prev => new Set(prev).add(dealId)); toast({ title: 'Deal berhasil dihapus' }); };
 
   const handleStageChange = (dealId: string, newStage: DealStage) => {
     const deal = deals.find(d => d.id === dealId);
@@ -93,12 +107,22 @@ const MyPipeline = () => {
     }
   };
 
+  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
+    setLocalAccounts(prev => [...prev, account]);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   const activeDeals = deals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
   const pipelineValue = activeDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = activeDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
-  const avgProbability = activeDeals.length > 0
-    ? activeDeals.reduce((s, d) => s + d.probability, 0) / activeDeals.length
-    : 0;
+  const avgProbability = activeDeals.length > 0 ? activeDeals.reduce((s, d) => s + d.probability, 0) / activeDeals.length : 0;
 
   const nearingClose = activeDeals.filter(d => {
     const days = (new Date(d.expectedCloseDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
@@ -118,38 +142,11 @@ const MyPipeline = () => {
 
   const stageSummary = stageOrder.filter(s => !['canceled', 'lost'].includes(s)).map(stage => {
     const stageDeals = deals.filter(d => d.stage === stage);
-    return {
-      stage,
-      label: stageLabels[stage],
-      count: stageDeals.length,
-      value: stageDeals.reduce((s, d) => s + d.value, 0),
-      color: stageColors[stage],
-    };
+    return { stage, label: stageLabels[stage], count: stageDeals.length, value: stageDeals.reduce((s, d) => s + d.value, 0), color: stageColors[stage] };
   });
-
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
-  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
-
-  useEffect(() => {
-    const fetchAccounts = async () => {
-      const { data } = await supabase
-        .from('accounts')
-        .select('id, name, pic_contact, pic_email')
-        .eq('status', 'Active')
-        .order('name');
-      setLocalAccounts(
-        (data || []).map(a => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email }))
-      );
-    };
-    fetchAccounts();
-  }, []);
-
   const accountOptions = localAccounts;
-
-  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
-    setLocalAccounts(prev => [...prev, account]);
-  };
 
   return (
     <div className="space-y-6">
@@ -161,7 +158,6 @@ const MyPipeline = () => {
         <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       </div>
 
-      {/* Pipeline KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard label="Pipeline Value" value={formatIDRFull(pipelineValue)} icon={DollarSign} autoFitText />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
@@ -169,22 +165,13 @@ const MyPipeline = () => {
         <KPICard label="Avg Probability" value={formatPercent(avgProbability)} status={avgProbability >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
       </div>
 
-      {/* Row 2 KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} change={nextMonthClose.reduce((s, d) => s + d.value, 0) > 0 ? undefined : undefined} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText />
+        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText />
         <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
       </div>
 
-      {/* Kanban Board */}
-      <KanbanBoard
-        deals={deals}
-        getAccountName={getAccountName}
-        onEdit={handleEditDeal}
-        onDelete={handleDeleteDeal}
-        onStageChange={handleStageChange}
-      />
+      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onStageChange={handleStageChange} />
 
-      {/* Stage Funnel */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold">Pipeline Funnel</CardTitle>
@@ -193,12 +180,8 @@ const MyPipeline = () => {
           <div className="space-y-3">
             {stageSummary.map(s => (
               <div key={s.stage} className="flex items-center gap-3">
-                <div className="w-28 shrink-0">
-                  <StatusBadge status={s.color} label={s.label} />
-                </div>
-                <div className="flex-1">
-                  <Progress value={(s.value / maxStageValue) * 100} className="h-2" />
-                </div>
+                <div className="w-28 shrink-0"><StatusBadge status={s.color} label={s.label} /></div>
+                <div className="flex-1"><Progress value={(s.value / maxStageValue) * 100} className="h-2" /></div>
                 <span className="text-sm font-medium w-12 text-right">{s.count}</span>
                 <span className="text-sm text-muted-foreground w-28 text-right">{formatIDR(s.value)}</span>
               </div>
@@ -208,7 +191,6 @@ const MyPipeline = () => {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Nearing Close */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -221,14 +203,12 @@ const MyPipeline = () => {
               <p className="text-sm text-muted-foreground">No deals closing soon.</p>
             ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Deal</TableHead>
-                    <TableHead className="text-xs">Value</TableHead>
-                    <TableHead className="text-xs">Prob.</TableHead>
-                    <TableHead className="text-xs">Close Date</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Prob.</TableHead>
+                  <TableHead className="text-xs">Close Date</TableHead>
+                </TableRow></TableHeader>
                 <TableBody>
                   {nearingClose.map(d => (
                     <TableRow key={d.id}>
@@ -244,7 +224,6 @@ const MyPipeline = () => {
           </CardContent>
         </Card>
 
-        {/* Stale Deals */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -257,14 +236,12 @@ const MyPipeline = () => {
               <p className="text-sm text-muted-foreground">No stale deals. Keep it up!</p>
             ) : (
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Deal</TableHead>
-                    <TableHead className="text-xs">Stage</TableHead>
-                    <TableHead className="text-xs">Days</TableHead>
-                    <TableHead className="text-xs">Value</TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Stage</TableHead>
+                  <TableHead className="text-xs">Days</TableHead>
+                  <TableHead className="text-xs">Value</TableHead>
+                </TableRow></TableHeader>
                 <TableBody>
                   {staleDeals.map(d => (
                     <TableRow key={d.id}>
@@ -281,21 +258,14 @@ const MyPipeline = () => {
         </Card>
       </div>
 
-      {/* All Deals Table */}
       {(() => {
         const toggleSort = (key: 'value' | 'probability' | 'expectedCloseDate') => {
-          if (sortKey === key) {
-            setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
-          } else {
-            setSortKey(key);
-            setSortDir('desc');
-          }
+          if (sortKey === key) setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+          else { setSortKey(key); setSortDir('desc'); }
         };
         const SortIcon = ({ col }: { col: string }) => {
           if (sortKey !== col) return <ArrowUpDown className="inline h-3 w-3 ml-1 text-muted-foreground" />;
-          return sortDir === 'asc'
-            ? <ArrowUp className="inline h-3 w-3 ml-1 text-primary" />
-            : <ArrowDown className="inline h-3 w-3 ml-1 text-primary" />;
+          return sortDir === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-1 text-primary" /> : <ArrowDown className="inline h-3 w-3 ml-1 text-primary" />;
         };
         const sortedDeals = [...deals].sort((a, b) => {
           if (!sortKey) return 0;
@@ -307,27 +277,17 @@ const MyPipeline = () => {
         });
         return (
           <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">All Deals</CardTitle>
-            </CardHeader>
+            <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">All Deals</CardTitle></CardHeader>
             <CardContent>
               <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Deal</TableHead>
-                    <TableHead className="text-xs">Account</TableHead>
-                    <TableHead className="text-xs">Stage</TableHead>
-                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>
-                      Value <SortIcon col="value" />
-                    </TableHead>
-                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>
-                      Probability <SortIcon col="probability" />
-                    </TableHead>
-                    <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>
-                      Expected Close <SortIcon col="expectedCloseDate" />
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
+                <TableHeader><TableRow>
+                  <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Account</TableHead>
+                  <TableHead className="text-xs">Stage</TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value <SortIcon col="value" /></TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
+                </TableRow></TableHeader>
                 <TableBody>
                   {sortedDeals.map(d => (
                     <TableRow key={d.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailDeal(d)}>
@@ -346,23 +306,8 @@ const MyPipeline = () => {
         );
       })()}
 
-      {/* Edit Deal Dialog */}
-      <EditDealDialog
-        deal={editingDeal}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        onSave={handleSaveEdit}
-        accountOptions={accountOptions}
-        salesId={currentUser.id}
-        onAccountCreated={handleAccountCreated}
-      />
-
-      <DealDetailDialog
-        deal={detailDeal}
-        open={!!detailDeal}
-        onOpenChange={(open) => !open && setDetailDeal(null)}
-        getAccountName={getAccountName}
-      />
+      <EditDealDialog deal={editingDeal} open={editDialogOpen} onOpenChange={setEditDialogOpen} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
+      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} />
     </div>
   );
 };

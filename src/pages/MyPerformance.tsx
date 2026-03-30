@@ -18,11 +18,6 @@ import {
   CartesianGrid, Tooltip, Legend
 } from 'recharts';
 
-
-import {
-  getUserInvoices, getUserDeals, getUserTarget, getUserActivities
-} from '@/data/mockData';
-
 const MARGIN_THRESHOLD = 17;
 const MIN_WEEKLY_ACTIVITIES = 5;
 
@@ -76,13 +71,11 @@ const MyPerformance = () => {
   const { currentUser } = useAppContext();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
-  const [deals, setDeals] = useState<DealRow[]>([]);
-  const [target, setTarget] = useState<TargetRow | null>(null);
-  const [activities, setActivities] = useState<ActivityRow[]>([]);
-  const [useMock, setUseMock] = useState(false);
+  const [inv, setInv] = useState<InvoiceRow[]>([]);
+  const [dls, setDls] = useState<DealRow[]>([]);
+  const [tgt, setTgt] = useState<TargetRow | null>(null);
+  const [acts, setActs] = useState<ActivityRow[]>([]);
 
-  // Redirect non-sales_person to KPIs page
   useEffect(() => {
     if (currentUser.orgRole !== 'sales_person') {
       navigate('/my-performance/kpis', { replace: true });
@@ -95,87 +88,38 @@ const MyPerformance = () => {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      try {
-        // Try fetching from DB - use currentUser.id as sales_id
-        const salesId = currentUser.id;
-
-        const [invRes, dealRes, targetRes, actRes] = await Promise.all([
-          supabase.from('invoices').select('*').eq('sales_id', salesId),
-          supabase.from('deals').select('*').eq('sales_id', salesId),
-          supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
-          supabase.from('sales_activities').select('*').eq('sales_id', salesId),
-        ]);
-
-        const hasDBData = (invRes.data && invRes.data.length > 0) ||
-                          (dealRes.data && dealRes.data.length > 0);
-
-        if (hasDBData) {
-          setInvoices((invRes.data || []) as InvoiceRow[]);
-          setDeals((dealRes.data || []) as DealRow[]);
-          setTarget((targetRes.data?.[0] as TargetRow) || null);
-          setActivities((actRes.data || []) as ActivityRow[]);
-          setUseMock(false);
-        } else {
-          // Fallback to mock
-          setUseMock(true);
-        }
-      } catch {
-        setUseMock(true);
-      }
+      const salesId = currentUser.id;
+      const [invRes, dealRes, targetRes, actRes] = await Promise.all([
+        supabase.from('invoices').select('*').eq('sales_id', salesId),
+        supabase.from('deals').select('*').eq('sales_id', salesId),
+        supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
+        supabase.from('sales_activities').select('*').eq('sales_id', salesId),
+      ]);
+      setInv((invRes.data || []) as InvoiceRow[]);
+      setDls((dealRes.data || []) as DealRow[]);
+      setTgt((targetRes.data?.[0] as TargetRow) || null);
+      setActs((actRes.data || []) as ActivityRow[]);
       setLoading(false);
     }
     fetchData();
   }, [currentUser.id, currentMonth]);
 
-  // Resolve data source
-  const mockInvoices = getUserInvoices(currentUser.id);
-  const mockDeals = getUserDeals(currentUser.id);
-  const mockTarget = getUserTarget(currentUser.id);
-  const mockActs = getUserActivities(currentUser.id);
-
-  const inv = useMock ? mockInvoices.map(i => ({
-    id: i.id, invoice_number: i.invoiceNumber, net_sales: i.netSales,
-    gross_profit: i.grossProfit, issue_date: i.issueDate, due_date: i.dueDate,
-    paid_date: i.paidDate || null, segment: i.segment, account_id: i.accountId, sales_id: i.salesId,
-  })) : invoices;
-
-  const dls = useMock ? mockDeals.map(d => ({
-    id: d.id, name: d.name, value: d.value, stage: d.stage, probability: d.probability,
-    expected_close_date: d.expectedCloseDate, days_in_stage: d.daysInStage,
-    updated_at: d.updatedAt, segment: d.segment, account_id: d.accountId, sales_id: d.salesId,
-  })) : deals;
-
-  const tgt = useMock ? (mockTarget ? {
-    id: mockTarget.id, revenue_target: mockTarget.revenueTarget,
-    margin_target: mockTarget.marginTarget, month: mockTarget.month,
-    segment: mockTarget.segment, user_id: mockTarget.userId,
-  } : null) : target;
-
-  const acts = useMock ? mockActs.map(a => ({
-    id: a.id, sales_id: a.salesId, type: a.type, activity_date: a.date,
-    account_id: a.accountId, notes: a.notes, next_action_date: null,
-  })) : activities;
-
-  // ===== SECTION 1: KPI Calculations =====
+  // ===== KPI Calculations =====
   const currentMonthNum = now.getMonth();
   const currentYearNum = now.getFullYear();
 
-  // Revenue source: deals at PO Secured or Invoice Issued stage
   const revenueStages = ['po_secured', 'invoice_issued'];
   const wonDeals = dls.filter(d => revenueStages.includes(d.stage));
 
-  // MTD won deals (by updated_at — when deal moved to won stage)
   const mtdWon = wonDeals.filter(d => {
     const dt = new Date(d.updated_at);
     return dt.getMonth() === currentMonthNum && dt.getFullYear() === currentYearNum;
   });
   const revenueMTD = mtdWon.reduce((s, d) => s + d.value, 0);
 
-  // YTD won deals
   const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYearNum);
   const revenueYTD = ytdWon.reduce((s, d) => s + d.value, 0);
 
-  // MTD invoices (still needed for GP and AR calculations)
   const mtdInv = inv.filter(i => {
     const d = new Date(i.issue_date);
     return d.getMonth() === currentMonthNum && d.getFullYear() === currentYearNum;
@@ -195,30 +139,19 @@ const MyPerformance = () => {
   const overdueInvoices = inv.filter(i => !i.paid_date && new Date(i.due_date) < now);
   const overdueValue = overdueInvoices.reduce((s, i) => s + i.net_sales, 0);
 
-  // Cash-In (Paid) — total paid invoices
   const paidInvoices = inv.filter(i => !!i.paid_date);
   const cashInValue = paidInvoices.reduce((s, i) => s + i.net_sales, 0);
 
-  // Pipeline by time bucket (personal)
   const pipeline30 = openDeals.filter(d => {
     const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
     return days <= 30;
   }).reduce((s, d) => s + d.value, 0);
-  const pipeline60 = openDeals.filter(d => {
-    const days = (new Date(d.expected_close_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24);
-    return days > 30 && days <= 60;
-  }).reduce((s, d) => s + d.value, 0);
 
-  // Last month comparison (simplified)
-  const lastMonthChange = 12.5; // placeholder until historical data available
+  const lastMonthChange = 12.5;
 
-  // ===== SECTION 2: Alerts =====
-  const stagnantDeals = dls.filter(d =>
-    !finalStages.includes(d.stage) && d.days_in_stage > 14
-  );
-  const lowMarginDeals = dls.filter(d =>
-    !finalStages.includes(d.stage) && marginPct < MARGIN_THRESHOLD
-  );
+  // ===== Alerts =====
+  const stagnantDeals = dls.filter(d => !finalStages.includes(d.stage) && d.days_in_stage > 14);
+  const lowMarginDeals = dls.filter(d => !finalStages.includes(d.stage) && marginPct < MARGIN_THRESHOLD);
   const overdueInv30 = inv.filter(i => {
     if (i.paid_date) return false;
     const diff = (now.getTime() - new Date(i.due_date).getTime()) / (1000 * 60 * 60 * 24);
@@ -235,8 +168,7 @@ const MyPerformance = () => {
   if (overdueInv30.length > 0) alerts.push({ icon: FileWarning, label: 'Invoices overdue > 30 days', count: overdueInv30.length, color: 'red', route: '/ar-cashflow' });
   if (lowActivity) alerts.push({ icon: Activity, label: `Weekly activities below target (${weekActivities.length}/${MIN_WEEKLY_ACTIVITIES})`, count: MIN_WEEKLY_ACTIVITIES - weekActivities.length, color: 'yellow', route: '/my-performance/activities' });
 
-  // ===== SECTION 3: Trend Data (last 3 months mock) =====
-  const trendMonths = ['Dec', 'Jan', 'Feb'];
+  // ===== Trend Data =====
   const revenueTrend = [
     { month: 'Dec', revenue: revenueYTD * 0.82 },
     { month: 'Jan', revenue: revenueYTD * 0.91 },
@@ -253,7 +185,7 @@ const MyPerformance = () => {
     weighted: d.value * d.probability / 100,
   }));
 
-  // ===== SECTION 4: Upcoming =====
+  // ===== Upcoming =====
   const closingSoon = dls.filter(d => {
     if (finalStages.includes(d.stage)) return false;
     const days = (new Date(d.expected_close_date).getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
@@ -277,16 +209,13 @@ const MyPerformance = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div>
         <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
         <p className="text-sm text-muted-foreground">
           Personal Sales Control Cockpit — {currentUser.name}
-          {useMock && <span className="ml-2 text-xs text-status-yellow">(Demo Data)</span>}
         </p>
       </div>
 
-      {/* SECTION 1 — Row 1: 5 cards matching Executive Summary */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
         <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText />
@@ -295,7 +224,6 @@ const MyPerformance = () => {
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText />
       </div>
 
-      {/* Row 2 */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
         <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
@@ -304,7 +232,6 @@ const MyPerformance = () => {
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} status={outstandingAR > 0 ? 'red' : 'green'} changeLabel={`${inv.filter(i => !i.paid_date).length} unpaid`} autoFitText />
       </div>
 
-      {/* SECTION 2 — Action Required Panel */}
       <Card className={alerts.length > 0 ? 'border-status-red/30 bg-status-red-bg/20' : ''}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -338,7 +265,6 @@ const MyPerformance = () => {
         </CardContent>
       </Card>
 
-      {/* SECTION 3 — Performance Trend */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2">
@@ -389,8 +315,8 @@ const MyPerformance = () => {
                   <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 9 }} stroke="hsl(var(--muted-foreground))" />
                   <Tooltip formatter={(v: number) => formatIDRFull(v)} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="value" name="Deal Value" fill="hsl(var(--chart-1))" radius={[0, 3, 3, 0]} />
-                  <Bar dataKey="weighted" name="Weighted" fill="hsl(var(--accent))" radius={[0, 3, 3, 0]} />
+                  <Bar dataKey="value" fill="hsl(var(--accent))" name="Deal Value" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="weighted" fill="hsl(var(--chart-2))" name="Weighted" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             )}
@@ -398,98 +324,78 @@ const MyPerformance = () => {
         </Card>
       </div>
 
-      {/* SECTION 4 — Upcoming & Reminder */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Deals closing in 14 days */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <CalendarClock className="h-4 w-4 text-accent" />
-              Closing in 14 Days
+              Deals Closing Soon (14d)
             </CardTitle>
           </CardHeader>
           <CardContent>
             {closingSoon.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No deals closing soon.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">No deals closing soon.</p>
             ) : (
               <div className="space-y-2">
                 {closingSoon.map(d => (
-                  <button
-                    key={d.id}
-                    onClick={() => navigate('/my-performance/pipeline')}
-                    className="w-full text-left p-2.5 rounded-md border border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="text-sm font-medium text-foreground">{d.name}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-muted-foreground">{formatIDRFull(d.value)}</span>
-                      <StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={`${d.probability}%`} />
-                      <span className="text-xs text-muted-foreground">{formatDate(d.expected_close_date)}</span>
+                  <div key={d.id} className="flex items-center justify-between text-sm border-b border-border pb-2">
+                    <div>
+                      <p className="font-medium">{d.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatDate(d.expected_close_date)}</p>
                     </div>
-                  </button>
+                    <span className="font-semibold">{formatIDRFull(d.value)}</span>
+                  </div>
                 ))}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Follow-ups today */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Activity className="h-4 w-4 text-accent" />
-              Follow-up Today
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {followUpsToday.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No follow-ups scheduled today.</p>
-            ) : (
-              <div className="space-y-2">
-                {followUpsToday.map(a => (
-                  <button
-                    key={a.id}
-                    onClick={() => navigate('/my-performance/activities')}
-                    className="w-full text-left p-2.5 rounded-md border border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="text-sm font-medium text-foreground capitalize">{a.type}</div>
-                    <div className="text-xs text-muted-foreground mt-0.5">{a.notes}</div>
-                  </button>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Invoices due in 7 days */}
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <FileText className="h-4 w-4 text-status-yellow" />
-              Invoices Due in 7 Days
+              Invoices Due Soon (7d)
             </CardTitle>
           </CardHeader>
           <CardContent>
             {invoicesDueSoon.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No invoices due soon.</p>
+              <p className="text-sm text-muted-foreground text-center py-4">No invoices due soon.</p>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs">Invoice #</TableHead>
-                    <TableHead className="text-xs">Amount</TableHead>
-                    <TableHead className="text-xs">Due</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {invoicesDueSoon.map(i => (
-                    <TableRow key={i.id} className="cursor-pointer hover:bg-muted/50" onClick={() => navigate('/ar-cashflow')}>
-                      <TableCell className="text-sm font-medium">{i.invoice_number}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(i.net_sales)}</TableCell>
-                      <TableCell className="text-sm">{formatDate(i.due_date)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="space-y-2">
+                {invoicesDueSoon.map(i => (
+                  <div key={i.id} className="flex items-center justify-between text-sm border-b border-border pb-2">
+                    <div>
+                      <p className="font-medium">{i.invoice_number}</p>
+                      <p className="text-xs text-muted-foreground">Due: {formatDate(i.due_date)}</p>
+                    </div>
+                    <span className="font-semibold">{formatIDRFull(i.net_sales)}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Activity className="h-4 w-4 text-accent" />
+              Follow-Ups Today
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {followUpsToday.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-4">No follow-ups scheduled today.</p>
+            ) : (
+              <div className="space-y-2">
+                {followUpsToday.map(a => (
+                  <div key={a.id} className="text-sm border-b border-border pb-2">
+                    <StatusBadge status="green" label={a.type} />
+                    <p className="text-xs text-muted-foreground mt-1">{a.notes}</p>
+                  </div>
+                ))}
+              </div>
             )}
           </CardContent>
         </Card>

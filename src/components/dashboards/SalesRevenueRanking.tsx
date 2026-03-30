@@ -1,8 +1,9 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Trophy } from 'lucide-react';
+import { Trophy, Loader2 } from 'lucide-react';
 import { formatIDR, formatPercent } from '@/types/sales';
-import { mockUsers, mockInvoices, mockTargets } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 
 interface SalesRanking {
   name: string;
@@ -10,26 +11,6 @@ interface SalesRanking {
   revenue: number;
   target: number;
   achievementPct: number;
-}
-
-function buildRanking(filterMonth?: string): SalesRanking[] {
-  const salesPersons = mockUsers.filter(u => u.orgRole === 'sales_person');
-
-  return salesPersons.map(sp => {
-    const invoices = filterMonth
-      ? mockInvoices.filter(inv => inv.salesId === sp.id && inv.issueDate.startsWith(filterMonth))
-      : mockInvoices.filter(inv => inv.salesId === sp.id);
-    const revenue = invoices.reduce((s, inv) => s + inv.netSales, 0);
-
-    const targets = filterMonth
-      ? mockTargets.filter(t => t.userId === sp.id && t.month === filterMonth)
-      : mockTargets.filter(t => t.userId === sp.id);
-    const target = targets.reduce((s, t) => s + t.revenueTarget, 0);
-
-    const achievementPct = target > 0 ? (revenue / target) * 100 : 0;
-
-    return { name: sp.name, segment: sp.segment, revenue, target, achievementPct };
-  }).sort((a, b) => b.revenue - a.revenue);
 }
 
 function RankMedal({ rank }: { rank: number }) {
@@ -57,7 +38,7 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
         {data.map((sp, i) => {
           const kontribusi = totalRevenue > 0 ? (sp.revenue / totalRevenue) * 100 : 0;
           return (
-            <TableRow key={sp.name}>
+            <TableRow key={sp.name + i}>
               <TableCell className="text-xs"><RankMedal rank={i + 1} /></TableCell>
               <TableCell className="text-xs font-medium">{sp.name}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{sp.segment}</TableCell>
@@ -78,12 +59,66 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
 }
 
 export function SalesRevenueRanking() {
-  const currentMonth = '2026-02'; // Current mock month
-  const mtdData = buildRanking(currentMonth);
-  const ytdData = buildRanking(); // All invoices as YTD proxy
+  const [loading, setLoading] = useState(true);
+  const [mtdData, setMtdData] = useState<SalesRanking[]>([]);
+  const [ytdData, setYtdData] = useState<SalesRanking[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      const now = new Date();
+      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const currentYear = now.getFullYear();
+
+      const [{ data: profiles }, { data: invoices }, { data: targets }] = await Promise.all([
+        supabase.from('profiles').select('user_id, full_name, segment'),
+        supabase.from('invoices').select('sales_id, net_sales, issue_date'),
+        supabase.from('targets').select('user_id, revenue_target, month'),
+      ]);
+
+      const profileList = profiles || [];
+      const invoiceList = invoices || [];
+      const targetList = targets || [];
+
+      const buildRanking = (filterMonth?: string): SalesRanking[] => {
+        return profileList.map(p => {
+          const inv = filterMonth
+            ? invoiceList.filter(i => i.sales_id === p.user_id && i.issue_date.startsWith(filterMonth))
+            : invoiceList.filter(i => i.sales_id === p.user_id && i.issue_date.startsWith(String(currentYear)));
+          const revenue = inv.reduce((s, i) => s + (i.net_sales || 0), 0);
+
+          const tgts = filterMonth
+            ? targetList.filter(t => t.user_id === p.user_id && t.month === filterMonth)
+            : targetList.filter(t => t.user_id === p.user_id);
+          const target = tgts.reduce((s, t) => s + (t.revenue_target || 0), 0);
+
+          return {
+            name: p.full_name,
+            segment: p.segment || '',
+            revenue,
+            target,
+            achievementPct: target > 0 ? (revenue / target) * 100 : 0,
+          };
+        }).filter(r => r.revenue > 0).sort((a, b) => b.revenue - a.revenue);
+      };
+
+      setMtdData(buildRanking(currentMonth));
+      setYtdData(buildRanking());
+      setLoading(false);
+    };
+    fetchData();
+  }, []);
 
   const mtdTotal = mtdData.reduce((s, d) => s + d.revenue, 0);
   const ytdTotal = ytdData.reduce((s, d) => s + d.revenue, 0);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-12">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
