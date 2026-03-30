@@ -3,7 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { UserPlus, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { UserPlus, X, ChevronsUpDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -206,6 +209,9 @@ export function AccountSelectWithCreate({
   accounts, value, onValueChange, salesId, onAccountCreated, label = 'Account/Customer', optional = false,
 }: AccountSelectWithCreateProps) {
   const [showCreate, setShowCreate] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const selectedAccount = accounts.find(a => a.id === value);
 
   return (
     <div className="space-y-2">
@@ -230,14 +236,42 @@ export function AccountSelectWithCreate({
           onCancel={() => setShowCreate(false)}
         />
       ) : (
-        <Select value={value} onValueChange={onValueChange}>
-          <SelectTrigger><SelectValue placeholder="Pilih account" /></SelectTrigger>
-          <SelectContent>
-            {accounts.map(a => (
-              <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-full justify-between font-normal"
+            >
+              {selectedAccount ? selectedAccount.name : 'Cari atau pilih account...'}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Ketik nama akun..." />
+              <CommandList>
+                <CommandEmpty>Tidak ditemukan.</CommandEmpty>
+                <CommandGroup>
+                  {accounts.map(a => (
+                    <CommandItem
+                      key={a.id}
+                      value={a.name}
+                      onSelect={() => {
+                        onValueChange(a.id);
+                        setOpen(false);
+                      }}
+                    >
+                      <Check className={cn("mr-2 h-4 w-4", value === a.id ? "opacity-100" : "opacity-0")} />
+                      {a.name}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
       )}
     </div>
   );
