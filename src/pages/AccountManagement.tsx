@@ -132,6 +132,7 @@ export default function AccountManagement() {
     setFormPicContact(acc.pic_contact || '');
     setFormPicEmail(acc.pic_email || '');
     setFormRegion(acc.region);
+    setFormCity(acc.city || '');
     setFormType(acc.type);
     setFormStatus(acc.status || 'Active');
     setDialogOpen(true);
