@@ -162,7 +162,6 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     };
 
     onAdd(newDeal);
-    toast({ title: 'Lead berhasil ditambahkan' });
     resetForm();
     setOpen(false);
   };
