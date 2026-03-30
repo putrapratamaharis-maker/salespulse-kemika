@@ -60,9 +60,12 @@ const Revenue = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Revenue & Margin</h2>
-        <p className="text-sm text-muted-foreground">Financial performance and margin compliance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Revenue & Margin</h2>
+          <p className="text-sm text-muted-foreground">Financial performance and margin compliance</p>
+        </div>
+        <NewInvoiceDialog onCreated={() => setRefreshKey(k => k + 1)} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
