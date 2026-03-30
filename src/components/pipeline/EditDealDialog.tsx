@@ -79,6 +79,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [probability, setProbability] = useState('');
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [poNumber, setPoNumber] = useState('');
 
   useEffect(() => {
     if (deal) {
