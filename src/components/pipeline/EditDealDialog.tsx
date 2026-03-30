@@ -92,6 +92,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setProbability(String(deal.probability));
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
+      setPoNumber(deal.poNumber || '');
     }
   }, [deal]);
 
