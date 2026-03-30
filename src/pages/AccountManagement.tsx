@@ -63,6 +63,7 @@ export default function AccountManagement() {
   const [importing, setImporting] = useState(false);
 
   // Form state
+  const [formCustomerId, setFormCustomerId] = useState('');
   const [formName, setFormName] = useState('');
   const [formPicName, setFormPicName] = useState('');
   const [formPicContact, setFormPicContact] = useState('');
@@ -70,6 +71,17 @@ export default function AccountManagement() {
   const [formRegion, setFormRegion] = useState('');
   const [formType, setFormType] = useState('Corporate');
   const [formStatus, setFormStatus] = useState('Active');
+
+  const generateCustomerId = () => {
+    const year = new Date().getFullYear();
+    const existingIds = accounts
+      .map(a => a.customer_id)
+      .filter(id => id?.startsWith(`CUST${year}-`))
+      .map(id => parseInt(id.replace(`CUST${year}-`, ''), 10))
+      .filter(n => !isNaN(n));
+    const nextNum = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+    return `CUST${year}-${String(nextNum).padStart(4, '0')}`;
+  };
 
   const allowedRoles = ['super_admin', 'admin', 'staff'];
   const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
@@ -93,6 +105,7 @@ export default function AccountManagement() {
 
   const openCreate = () => {
     setEditingAccount(null);
+    setFormCustomerId(generateCustomerId());
     setFormName('');
     setFormPicName('');
     setFormPicContact('');
@@ -105,6 +118,7 @@ export default function AccountManagement() {
 
   const openEdit = (acc: Account) => {
     setEditingAccount(acc);
+    setFormCustomerId(acc.customer_id || '');
     setFormName(acc.name);
     setFormPicName(acc.pic_name || '');
     setFormPicContact(acc.pic_contact || '');
@@ -129,6 +143,7 @@ export default function AccountManagement() {
     setSaving(true);
 
     const payload = {
+      customer_id: formCustomerId.trim(),
       name: formName.trim(),
       pic_name: formPicName.trim(),
       pic_contact: formPicContact.trim(),
@@ -182,10 +197,10 @@ export default function AccountManagement() {
   // --- Import / Export ---
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'Status'],
-      ['PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Active'],
+      ['Customer ID', 'Nama Akun*', 'Nama PIC', 'Nomor Contact', 'Email', 'Tipe', 'Region (Provinsi)', 'Status'],
+      ['CUST2026-0101', 'PT Contoh', 'Budi Santoso', '081234567890', 'budi@contoh.com', 'Corporate', 'DKI Jakarta', 'Active'],
     ]);
-    ws['!cols'] = [{ wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, 'template_import_akun.xlsx');
@@ -209,18 +224,28 @@ export default function AccountManagement() {
       }
       const validTypes = new Set(TYPES.map(t => t.toLowerCase()));
       const validProvinces = new Set(PROVINCES.map(p => p.toLowerCase()));
+      let nextId = (() => {
+        const year = new Date().getFullYear();
+        const existingIds = accounts
+          .map(a => a.customer_id)
+          .filter(id => id?.startsWith(`CUST${year}-`))
+          .map(id => parseInt(id.replace(`CUST${year}-`, ''), 10))
+          .filter(n => !isNaN(n));
+        return existingIds.length > 0 ? Math.max(...existingIds) + 1 : 1;
+      })();
       const payloads = dataRows.map(row => {
-        const name = row[0]?.toString().trim() || '';
-        const picName = row[1]?.toString().trim() || '';
-        const picContact = row[2]?.toString().trim() || '';
-        const picEmail = row[3]?.toString().trim() || '';
-        const typeRaw = row[4]?.toString().trim() || 'Corporate';
-        const regionRaw = row[5]?.toString().trim() || '';
-        const statusRaw = row[6]?.toString().trim() || 'Active';
+        const customerId = row[0]?.toString().trim() || `CUST${new Date().getFullYear()}-${String(nextId++).padStart(4, '0')}`;
+        const name = row[1]?.toString().trim() || '';
+        const picName = row[2]?.toString().trim() || '';
+        const picContact = row[3]?.toString().trim() || '';
+        const picEmail = row[4]?.toString().trim() || '';
+        const typeRaw = row[5]?.toString().trim() || 'Corporate';
+        const regionRaw = row[6]?.toString().trim() || '';
+        const statusRaw = row[7]?.toString().trim() || 'Active';
         const type = TYPES.find(t => t.toLowerCase() === typeRaw.toLowerCase()) || 'Corporate';
         const region = PROVINCES.find(p => p.toLowerCase() === regionRaw.toLowerCase()) || regionRaw;
         const status = statusRaw.toLowerCase() === 'non-active' || statusRaw.toLowerCase() === 'non-aktif' || statusRaw.toLowerCase() === 'inactive' ? 'Non-Active' : 'Active';
-        return { name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
+        return { customer_id: customerId, name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
       }).filter(p => p.name);
 
       const { error, data: inserted } = await supabase.from('accounts').insert(payloads).select();
@@ -534,9 +559,15 @@ export default function AccountManagement() {
             <DialogTitle>{editingAccount ? 'Edit Akun' : 'Tambah Akun Baru'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Nama Akun Pelanggan/Customer *</Label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Customer ID</Label>
+                <Input value={formCustomerId} onChange={e => setFormCustomerId(e.target.value)} placeholder="CUST2026-XXXX" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nama Akun Pelanggan/Customer *</Label>
+                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Nama PIC</Label>
