@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Search } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -136,6 +137,9 @@ function ProductTab() {
   // View detail
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
@@ -174,7 +178,39 @@ function ProductTab() {
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus produk ini?')) return;
     const { error } = await supabase.from('products').delete().eq('id', id);
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); }
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk dihapus' }); fetchAll(); setSelectedIds(prev => { const n = new Set(prev); n.delete(id); return n; }); }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Hapus ${selectedIds.size} produk yang dipilih?`)) return;
+    setBulkDeleting(true);
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from('products').delete().in('id', ids);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} produk dihapus` });
+      setSelectedIds(new Set());
+      fetchAll();
+    }
+    setBulkDeleting(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const n = new Set(prev);
+      if (n.has(id)) n.delete(id); else n.add(id);
+      return n;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === paginatedItems.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedItems.map((i: any) => i.id)));
+    }
   };
 
   const downloadTemplate = () => {
@@ -424,10 +460,27 @@ function ProductTab() {
           </Select>
         </div>
 
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/50 px-3 py-2">
+            <span className="text-xs font-medium">{selectedIds.size} produk dipilih</span>
+            <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus Terpilih
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
+          </div>
+        )}
+
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : filteredItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">{items.length === 0 ? 'Belum ada produk.' : 'Tidak ada produk yang cocok.'}</p> : (
           <>
             <Table>
               <TableHeader><TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="text-xs">SKU</TableHead>
                 <TableHead className="text-xs">Product Name</TableHead>
                 <TableHead className="text-xs">Category</TableHead>
@@ -439,7 +492,13 @@ function ProductTab() {
               </TableRow></TableHeader>
               <TableBody>
                 {paginatedItems.map((i: any) => (
-                  <TableRow key={i.id}>
+                  <TableRow key={i.id} className={selectedIds.has(i.id) ? 'bg-muted/40' : ''}>
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(i.id)}
+                        onCheckedChange={() => toggleSelect(i.id)}
+                      />
+                    </TableCell>
                     <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
                     <TableCell>
                       <div>
