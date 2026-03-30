@@ -98,11 +98,18 @@ const MyPipeline = () => {
   const handleSaveEdit = (updatedDeal: Deal) => setEditedDeals(prev => ({ ...prev, [updatedDeal.id]: updatedDeal }));
   const handleDeleteDeal = (dealId: string) => { setDeletedDealIds(prev => new Set(prev).add(dealId)); toast({ title: 'Deal berhasil dihapus' }); };
 
-  const handleStageChange = (dealId: string, newStage: DealStage) => {
+  const handleStageChange = (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => {
     const deal = deals.find(d => d.id === dealId);
     if (deal) {
       const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
-      const updated = { ...deal, stage: newStage, daysInStage: 0, updatedAt: new Date().toISOString().split('T')[0], ...(isFinalStage ? { probability: 100 } : {}) };
+      const updated = {
+        ...deal,
+        stage: newStage,
+        daysInStage: 0,
+        updatedAt: new Date().toISOString().split('T')[0],
+        ...(isFinalStage ? { probability: 100 } : {}),
+        ...(extraData ? { poNumber: extraData.poNumber, expectedCloseDate: extraData.closeDate } : {}),
+      };
       setEditedDeals(prev => ({ ...prev, [dealId]: updated }));
       toast({ title: `Deal dipindahkan ke ${newStage.replace('_', ' ')}` });
     }
