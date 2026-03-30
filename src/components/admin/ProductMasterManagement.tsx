@@ -372,13 +372,14 @@ function ProductTab() {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Harga (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
-                  <div className="space-y-1.5 flex items-end">
-                    <label className="flex items-center gap-2 text-sm cursor-pointer">
-                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                      Aktif
-                    </label>
-                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Purchase Price (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Selling Price (Rp)</Label><Input type="number" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} placeholder="0" /></div>
+                </div>
+                <div className="space-y-1.5 flex items-end">
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                    Aktif
+                  </label>
                 </div>
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
