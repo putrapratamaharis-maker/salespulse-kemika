@@ -119,7 +119,7 @@ export default function UserManagement() {
     // Update profile (division, is_active)
     const { error: profileErr } = await supabase
       .from('profiles')
-      .update({ division: editDivision || null, is_active: editIsActive } as any)
+      .update({ division: editDivision || null, is_active: editIsActive })
       .eq('user_id', editUser.user_id);
 
     if (profileErr) {
