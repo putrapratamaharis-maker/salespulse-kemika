@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 
 interface Account {
   id: string;
+  customer_id: string;
   name: string;
   segment: string;
   region: string;
