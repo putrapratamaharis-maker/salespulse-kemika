@@ -4,7 +4,8 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
-import { getUserDeals, mockAccounts } from '@/data/mockData';
+import { getUserDeals } from '@/data/mockData';
+import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -62,7 +63,7 @@ const MyPipeline = () => {
     .map(d => editedDeals[d.id] || d);
 
   const getAccountName = (accountId: string) =>
-    mockAccounts.find(a => a.id === accountId)?.name || accountId;
+    localAccounts.find(a => a.id === accountId)?.name || accountId;
 
   const handleAddDeal = (deal: Deal) => {
     setAddedDeals(prev => [...prev, deal]);
@@ -128,9 +129,22 @@ const MyPipeline = () => {
 
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
-  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>(() =>
-    mockAccounts.map(a => ({ id: a.id, name: a.name, picContact: a.picContact, picEmail: a.picEmail }))
-  );
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
+
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      const { data } = await supabase
+        .from('accounts')
+        .select('id, name, pic_contact, pic_email')
+        .eq('status', 'Active')
+        .order('name');
+      setLocalAccounts(
+        (data || []).map(a => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email }))
+      );
+    };
+    fetchAccounts();
+  }, []);
+
   const accountOptions = localAccounts;
 
   const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
@@ -339,6 +353,8 @@ const MyPipeline = () => {
         onOpenChange={setEditDialogOpen}
         onSave={handleSaveEdit}
         accountOptions={accountOptions}
+        salesId={currentUser.id}
+        onAccountCreated={handleAccountCreated}
       />
 
       <DealDetailDialog

@@ -9,6 +9,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
 
 const stageOptions: { value: DealStage; label: string }[] = [
@@ -33,6 +34,8 @@ interface EditDealDialogProps {
   onOpenChange: (open: boolean) => void;
   onSave: (deal: Deal) => void;
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
+  salesId: string;
+  onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
 }
 
 const emptyProduct = (): DealProduct => ({
@@ -45,20 +48,20 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions }: EditDealDialogProps) {
+export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated }: EditDealDialogProps) {
   const { toast } = useToast();
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
-  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number }[]>([]);
+  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number; selling_price: number | null }[]>([]);
   const [dbUnits, setDbUnits] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const fetchMasters = async () => {
       const [{ data: cats }, { data: prods }, { data: units }] = await Promise.all([
-        supabase.from('product_categories').select('id, name').order('name'),
-        supabase.from('products').select('id, name, category_id, unit, price').eq('is_active', true).order('name'),
-        supabase.from('units').select('id, name').order('name'),
+        supabase.from('product_categories').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('products').select('id, name, category_id, unit, price, selling_price').eq('is_active', true).order('name'),
+        supabase.from('units').select('id, name').eq('is_active', true).order('name'),
       ]);
       setDbCategories(cats || []);
       setDbProducts(prods || []);
@@ -108,7 +111,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       productName: prod.name,
       category: cat?.name || '',
       unit: prod.unit || 'pcs',
-      pricePerUnit: Number(prod.price) || 0,
+      pricePerUnit: Number(prod.selling_price) || Number(prod.price) || 0,
     } : p));
   };
 
@@ -165,17 +168,16 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
             {/* Account */}
-            <div className="space-y-1.5">
-              <Label>Account / Customer Name</Label>
-              <Select value={accountId} onValueChange={setAccountId}>
-                <SelectTrigger><SelectValue placeholder="Pilih account" /></SelectTrigger>
-                <SelectContent>
-                  {accountOptions.map(a => (
-                    <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <AccountSelectWithCreate
+              accounts={accountOptions}
+              value={accountId}
+              onValueChange={setAccountId}
+              salesId={salesId}
+              onAccountCreated={(acc) => {
+                setAccountId(acc.id);
+                onAccountCreated?.(acc);
+              }}
+            />
 
             {selectedAccount && (
               <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-3">

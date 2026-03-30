@@ -51,15 +51,15 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
-  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number }[]>([]);
+  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number; selling_price: number | null }[]>([]);
   const [dbUnits, setDbUnits] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const fetchMasters = async () => {
       const [{ data: cats }, { data: prods }, { data: units }] = await Promise.all([
-        supabase.from('product_categories').select('id, name').order('name'),
-        supabase.from('products').select('id, name, category_id, unit, price').eq('is_active', true).order('name'),
-        supabase.from('units').select('id, name').order('name'),
+        supabase.from('product_categories').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('products').select('id, name, category_id, unit, price, selling_price').eq('is_active', true).order('name'),
+        supabase.from('units').select('id, name').eq('is_active', true).order('name'),
       ]);
       setDbCategories(cats || []);
       setDbProducts(prods || []);
@@ -117,7 +117,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       productName: prod.name,
       category: cat?.name || '',
       unit: prod.unit || 'pcs',
-      pricePerUnit: Number(prod.price) || 0,
+      pricePerUnit: Number(prod.selling_price) || Number(prod.price) || 0,
     } : p));
   };
 
