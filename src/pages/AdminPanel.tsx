@@ -36,12 +36,14 @@ interface UserWithRole {
   user_id: string;
   full_name: string;
   email: string;
-  segment: string | null;
+  division: string | null;
   region: string | null;
   org_role: OrgRole | null;
   system_role: SystemRole | null;
   has_role: boolean;
 }
+
+const DIVISIONS = ['BOD', 'HR-GA', 'Sales & Marketing', 'FAT', 'WH', 'Lainnya'];
 
 const AdminPanel = () => {
   const { userRole } = useAuth();
