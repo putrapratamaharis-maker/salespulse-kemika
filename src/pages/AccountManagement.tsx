@@ -852,6 +852,38 @@ export default function AccountManagement() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Import Confirmation Dialog */}
+      <Dialog open={importConfirmOpen} onOpenChange={(open) => { if (!open) { setImportConfirmOpen(false); setPendingImportFile(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Import</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Anda akan mengimport file <span className="font-medium text-foreground">"{pendingImportFile?.name}"</span>. Data akun baru akan ditambahkan ke daftar. Lanjutkan?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setImportConfirmOpen(false); setPendingImportFile(null); }}>Batal</Button>
+            <Button onClick={handleImport}>Ya, Import</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Export Confirmation Dialog */}
+      <Dialog open={exportConfirmOpen} onOpenChange={(open) => { if (!open) { setExportConfirmOpen(false); setPendingExportType(null); } }}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Export</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Anda akan mengekspor <span className="font-medium text-foreground">{filtered.length} akun</span> ke format <span className="font-medium text-foreground">{pendingExportType === 'excel' ? 'Excel (.xlsx)' : 'PDF'}</span>. Lanjutkan?
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => { setExportConfirmOpen(false); setPendingExportType(null); }}>Batal</Button>
+            <Button onClick={handleExportConfirmed}>Ya, Export</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
