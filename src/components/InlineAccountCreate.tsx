@@ -60,7 +60,41 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
       return;
     }
     setSaving(true);
+
+    // Duplicate detection
     try {
+      const duplicateWarnings: string[] = [];
+
+      if (customerId.trim()) {
+        const { data: cidDups } = await supabase
+          .from('accounts')
+          .select('id, customer_id, name')
+          .eq('customer_id', customerId.trim());
+        if (cidDups && cidDups.length > 0) {
+          duplicateWarnings.push(`Customer ID "${customerId.trim()}" sudah digunakan oleh akun "${cidDups[0].name}".`);
+        }
+      }
+
+      if (name.trim()) {
+        const { data: nameDups } = await supabase
+          .from('accounts')
+          .select('id, customer_id, name')
+          .ilike('name', name.trim());
+        if (nameDups && nameDups.length > 0) {
+          duplicateWarnings.push(`Nama akun "${name.trim()}" sudah ada (Customer ID: ${nameDups[0].customer_id || '-'}).`);
+        }
+      }
+
+      if (duplicateWarnings.length > 0) {
+        const proceed = window.confirm(
+          `⚠️ Potensi duplikasi terdeteksi:\n\n${duplicateWarnings.join('\n')}\n\nApakah Anda tetap ingin melanjutkan?`
+        );
+        if (!proceed) {
+          setSaving(false);
+          return;
+        }
+      }
+
       const { data, error } = await supabase
         .from('accounts')
         .insert({
