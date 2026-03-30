@@ -213,6 +213,42 @@ function ProductTab() {
     }
   };
 
+  const handleBulkSetStatus = async (active: boolean) => {
+    if (selectedIds.size === 0) return;
+    const label = active ? 'aktifkan' : 'nonaktifkan';
+    if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${selectedIds.size} produk yang dipilih?`)) return;
+    const ids = Array.from(selectedIds);
+    const { error } = await supabase.from('products').update({ is_active: active } as any).in('id', ids);
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `${ids.length} produk di-${label}` });
+      setSelectedIds(new Set());
+      fetchAll();
+    }
+  };
+
+  const exportSelectedExcel = () => {
+    const selected = items.filter((i: any) => selectedIds.has(i.id));
+    if (selected.length === 0) return;
+    const rows = selected.map((i: any, idx: number) => ({
+      'No': idx + 1,
+      'Code/SKU': i.sku || '',
+      'Nama Produk': i.name,
+      'Kategori': i.product_categories?.name || '',
+      'Satuan Unit': i.unit || '',
+      'Purchase Price': Number(i.purchase_price || i.price) || 0,
+      'Selling Price': Number(i.selling_price) || 0,
+      'Status': i.is_active ? 'Aktif' : 'Non-aktif',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selected Products');
+    XLSX.writeFile(wb, `produk_terpilih_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: `${selected.length} produk diekspor ke Excel` });
+  };
+
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Purchase Price', 'Selling Price', 'Aktif (Ya/Tidak)'],
@@ -462,10 +498,21 @@ function ProductTab() {
 
         {/* Bulk action bar */}
         {selectedIds.size > 0 && (
-          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/50 px-3 py-2">
+          <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
             <span className="text-xs font-medium">{selectedIds.size} produk dipilih</span>
+            <div className="h-4 w-px bg-border" />
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>
+              Aktifkan
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>
+              Nonaktifkan
+            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={exportSelectedExcel}>
+              <FileSpreadsheet className="h-3 w-3" /> Export Terpilih
+            </Button>
+            <div className="h-4 w-px bg-border" />
             <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>
-              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus Terpilih
+              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus
             </Button>
             <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
           </div>
