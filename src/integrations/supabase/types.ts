@@ -630,21 +630,27 @@ export type Database = {
       }
       product_categories: {
         Row: {
+          code: string | null
           created_at: string
           description: string | null
           id: string
+          is_active: boolean | null
           name: string
         }
         Insert: {
+          code?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean | null
           name: string
         }
         Update: {
+          code?: string | null
           created_at?: string
           description?: string | null
           id?: string
+          is_active?: boolean | null
           name?: string
         }
         Relationships: []
