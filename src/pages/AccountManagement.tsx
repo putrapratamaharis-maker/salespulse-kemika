@@ -445,6 +445,9 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
+                    <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">Nama Akun <SortIcon col="name" /></span>
                   </TableHead>
