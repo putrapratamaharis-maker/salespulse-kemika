@@ -267,19 +267,30 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
         </CardContent>
       </Card>
 
-      {/* Stage Change Confirmation */}
-      <AlertDialog open={!!stageConfirm} onOpenChange={(open) => !open && setStageConfirm(null)}>
+      {/* Stage Transition Form for PO Secured / Invoice Issued */}
+      {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
+        <StageTransitionDialog
+          open={true}
+          onOpenChange={(open) => !open && setStageConfirm(null)}
+          dealName={stageConfirm.deal.name}
+          targetStage={stageConfirm.targetStage}
+          onConfirm={(data) => {
+            if (onStageChange) {
+              onStageChange(stageConfirm.deal.id, stageConfirm.targetStage, data);
+            }
+            setStageConfirm(null);
+          }}
+        />
+      )}
+
+      {/* Simple Confirmation for Canceled / Lost */}
+      <AlertDialog open={!!stageConfirm && (stageConfirm?.targetStage === 'canceled' || stageConfirm?.targetStage === 'lost')} onOpenChange={(open) => !open && setStageConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Perpindahan Stage</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin memindahkan deal "{stageConfirm?.deal.name}" ke tahap <span className="font-semibold">{stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}</span>?
-              {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
-                <span className="block mt-1 text-xs">Probability akan otomatis diatur ke 100%.</span>
-              )}
-              {stageConfirm && (stageConfirm.targetStage === 'canceled' || stageConfirm.targetStage === 'lost') && (
-                <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageLabels[stageConfirm.targetStage]}.</span>
-              )}
+              <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
