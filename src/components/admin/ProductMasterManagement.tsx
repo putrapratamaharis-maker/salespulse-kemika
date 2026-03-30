@@ -499,6 +499,13 @@ function ProductTab() {
                         onCheckedChange={() => toggleSelect(i.id)}
                       />
                     </TableCell>
+                    <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="text-sm font-medium">{i.name}</div>
+                        {i.sku && <div className="text-xs text-muted-foreground">{i.sku}</div>}
+                      </div>
+                    </TableCell>
                     <TableCell className="text-sm">{i.product_categories?.name || '—'}</TableCell>
                     <TableCell className="text-sm">{i.unit || '—'}</TableCell>
                     <TableCell className="text-sm text-right">Rp {Number(i.purchase_price || i.price || 0).toLocaleString('id-ID')}</TableCell>
