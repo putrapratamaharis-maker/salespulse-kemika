@@ -68,35 +68,109 @@ function CategoryTab() {
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Kategori dihapus' }); fetch(); }
   };
 
+  const downloadTemplate = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['Kode Kategori', 'Nama Kategori*', 'Deskripsi', 'Aktif (Ya/Tidak)'],
+      ['CAT-001', 'Pestisida', 'Produk pembasmi hama', 'Ya'],
+    ]);
+    ws['!cols'] = [{ wch: 18 }, { wch: 25 }, { wch: 30 }, { wch: 18 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Categories');
+    XLSX.writeFile(wb, 'template_import_kategori.xlsx');
+  };
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    setImporting(true);
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      const dataRows = rows.slice(1).filter(r => r[1]?.toString().trim());
+      if (dataRows.length === 0) {
+        toast({ title: 'File kosong', variant: 'destructive' });
+        setImporting(false);
+        return;
+      }
+      const payloads: any[] = dataRows.map(row => {
+        const activeStr = (row[3]?.toString().trim() || 'Ya').toLowerCase();
+        return {
+          code: row[0]?.toString().trim() || '',
+          name: row[1]?.toString().trim() || '',
+          description: row[2]?.toString().trim() || null,
+          is_active: !['tidak', 'no', 'false', '0', 'non-aktif'].includes(activeStr),
+        };
+      }).filter(p => p.name);
+      const { error, data: inserted } = await supabase.from('product_categories').insert(payloads).select();
+      if (error) { toast({ title: 'Import gagal', description: error.message, variant: 'destructive' }); }
+      else { toast({ title: 'Import berhasil', description: `${inserted?.length || payloads.length} kategori ditambahkan.` }); fetch(); }
+    } catch (err: any) { toast({ title: 'Error membaca file', description: err.message, variant: 'destructive' }); }
+    setImporting(false);
+  };
+
+  const exportExcel = () => {
+    const rows = items.map((i, idx) => ({
+      'No': idx + 1,
+      'Kode': i.code || '',
+      'Nama Kategori': i.name,
+      'Deskripsi': i.description || '',
+      'Status': i.is_active ? 'Aktif' : 'Non-aktif',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Categories');
+    XLSX.writeFile(wb, `data_kategori_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: 'Export Excel berhasil' });
+  };
+
   return (
     <Card>
       <CardHeader className="pb-3 flex flex-row items-center justify-between">
         <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <FolderTree className="h-4 w-4 text-accent" /> Product Categories
+          <Badge variant="secondary" className="text-[10px] ml-1">{items.length}</Badge>
         </CardTitle>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader><DialogTitle>{editItem ? 'Edit Kategori' : 'Tambah Kategori'}</DialogTitle></DialogHeader>
-            <div className="space-y-3 mt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5"><Label className="text-xs">Kode Kategori</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CAT-001" /></div>
-                <div className="space-y-1.5"><Label className="text-xs">Nama Kategori</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pestisida" /></div>
+        <div className="flex items-center gap-1.5">
+          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
+            <Download className="h-3 w-3" /> Template
+          </Button>
+          <label>
+            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+            </Button>
+          </label>
+          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}>
+            <FileDown className="h-3 w-3" /> Ekspor
+          </Button>
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader><DialogTitle>{editItem ? 'Edit Kategori' : 'Tambah Kategori'}</DialogTitle></DialogHeader>
+              <div className="space-y-3 mt-2">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5"><Label className="text-xs">Kode Kategori</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CAT-001" /></div>
+                  <div className="space-y-1.5"><Label className="text-xs">Nama Kategori</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pestisida" /></div>
+                </div>
+                <div className="space-y-1.5"><Label className="text-xs">Deskripsi (opsional)</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Deskripsi singkat" /></div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                  Aktif
+                </label>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
+                </div>
               </div>
-              <div className="space-y-1.5"><Label className="text-xs">Deskripsi (opsional)</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Deskripsi singkat" /></div>
-              <label className="flex items-center gap-2 text-sm cursor-pointer">
-                <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                Aktif
-              </label>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+            </DialogContent>
+          </Dialog>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada kategori.</p> : (
