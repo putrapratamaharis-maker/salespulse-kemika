@@ -41,6 +41,15 @@ interface SalesActivity {
   created_at: string;
 }
 
+// Helper to get a signed URL for evidence files (bucket is now private)
+async function getSignedEvidenceUrl(path: string | null): Promise<string | null> {
+  if (!path) return null;
+  if (path.startsWith('http')) return path;
+  const { data, error } = await supabase.storage.from('activity-evidence').createSignedUrl(path, 3600);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
+}
+
 interface Account {
   id: string;
   name: string;
@@ -243,8 +252,8 @@ const MyActivities = () => {
         setSubmitting(false);
         return;
       }
-      const { data: urlData } = supabase.storage.from('activity-evidence').getPublicUrl(filePath);
-      evidenceUrl = urlData.publicUrl;
+      // Store just the file path, not the full URL (bucket is now private)
+      evidenceUrl = filePath;
     }
 
     const payload = {
@@ -521,7 +530,11 @@ const MyActivities = () => {
                 {editingActivity?.evidence_url && !formEvidenceFile && (
                   <p className="text-xs text-muted-foreground">
                     File tersimpan:{' '}
-                    <a href={editingActivity.evidence_url} target="_blank" rel="noopener noreferrer" className="underline text-primary">
+                    <a href="#" onClick={async (e) => {
+                      e.preventDefault();
+                      const url = await getSignedEvidenceUrl(editingActivity.evidence_url);
+                      if (url) window.open(url, '_blank');
+                    }} className="underline text-primary">
                       Lihat file
                     </a>
                   </p>
@@ -756,12 +769,18 @@ const MyActivities = () => {
                         <TableCell className="text-sm">
                           {act.evidence_url ? (
                             <div className="flex items-center gap-1">
-                              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-primary gap-1" onClick={() => setPreviewUrl(act.evidence_url)}>
+                              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-primary gap-1" onClick={async () => {
+                                const url = await getSignedEvidenceUrl(act.evidence_url);
+                                if (url) setPreviewUrl(url);
+                              }}>
                                 <Eye className="h-3 w-3" /> Preview
                               </Button>
-                              <a href={act.evidence_url} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary">
+                              <Button variant="ghost" size="sm" className="h-6 px-1.5 text-xs text-muted-foreground" onClick={async () => {
+                                const url = await getSignedEvidenceUrl(act.evidence_url);
+                                if (url) window.open(url, '_blank');
+                              }}>
                                 <ExternalLink className="h-3 w-3" />
-                              </a>
+                              </Button>
                             </div>
                           ) : '-'}
                         </TableCell>
