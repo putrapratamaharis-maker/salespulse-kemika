@@ -128,6 +128,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
   };
 
   const finalStages: DealStage[] = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
+  const formStages: DealStage[] = ['po_secured', 'invoice_issued'];
 
   const handleDrop = (e: DragEvent, targetStage: string) => {
     e.preventDefault();
@@ -136,7 +137,9 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
     if (dealId && onStageChange) {
       const deal = deals.find(d => d.id === dealId);
       if (deal && deal.stage !== targetStage) {
-        if (finalStages.includes(targetStage as DealStage)) {
+        if (formStages.includes(targetStage as DealStage)) {
+          setStageConfirm({ deal, targetStage: targetStage as DealStage });
+        } else if (finalStages.includes(targetStage as DealStage)) {
           setStageConfirm({ deal, targetStage: targetStage as DealStage });
         } else {
           onStageChange(dealId, targetStage as DealStage);
