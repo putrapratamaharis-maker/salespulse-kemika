@@ -577,6 +577,7 @@ export default function AccountManagement() {
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_contact || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs">{acc.region || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.city || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
