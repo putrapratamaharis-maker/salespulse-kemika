@@ -291,12 +291,21 @@ export default function AccountManagement() {
     XLSX.writeFile(wb, 'template_import_akun.xlsx');
   };
 
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const onFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
     e.target.value = '';
+    setPendingImportFile(file);
+    setImportConfirmOpen(true);
+  };
+
+  const handleImport = async () => {
+    if (!pendingImportFile || !user) return;
+    setImportConfirmOpen(false);
     setImporting(true);
     try {
+      const file = pendingImportFile;
+      setPendingImportFile(null);
       const data = await file.arrayBuffer();
       const wb = XLSX.read(data);
       const ws = wb.Sheets[wb.SheetNames[0]];
