@@ -23,16 +23,16 @@ interface InvoiceRow {
 const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
-      setInvoices((data || []) as InvoiceRow[]);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+  const fetchInvoices = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
+    setInvoices((data || []) as InvoiceRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchInvoices(); }, [refreshKey]);
 
   const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
   const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
