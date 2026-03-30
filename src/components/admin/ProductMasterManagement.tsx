@@ -179,10 +179,10 @@ function ProductTab() {
 
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
-      ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Harga', 'Aktif (Ya/Tidak)'],
-      ['Contoh Produk', 'SKU-001', categories[0]?.name || 'Hardware', units[0]?.name || 'pcs', 100000, 'Ya'],
+      ['Nama Produk*', 'SKU', 'Kategori', 'Satuan Unit', 'Purchase Price', 'Selling Price', 'Aktif (Ya/Tidak)'],
+      ['Contoh Produk', 'SKU-001', categories[0]?.name || 'Hardware', units[0]?.name || 'pcs', 100000, 150000, 'Ya'],
     ]);
-    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
+    ws['!cols'] = [{ wch: 25 }, { wch: 15 }, { wch: 18 }, { wch: 15 }, { wch: 15 }, { wch: 15 }, { wch: 18 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
     XLSX.writeFile(wb, 'template_import_produk.xlsx');
@@ -216,7 +216,8 @@ function ProductTab() {
         const catName = row[2]?.toString().trim() || '';
         const unitName = row[3]?.toString().trim() || 'pcs';
         const prodPrice = Number(row[4]) || 0;
-        const activeStr = (row[5]?.toString().trim() || 'Ya').toLowerCase();
+        const sellingPr = Number(row[5]) || 0;
+        const activeStr = (row[6]?.toString().trim() || 'Ya').toLowerCase();
         const active = !['tidak', 'no', 'false', '0', 'non-aktif'].includes(activeStr);
 
         return {
@@ -225,6 +226,8 @@ function ProductTab() {
           category_id: catMap.get(catName.toLowerCase()) || null,
           unit: unitNames.has(unitName.toLowerCase()) ? unitName : 'pcs',
           price: prodPrice,
+          purchase_price: prodPrice,
+          selling_price: sellingPr,
           is_active: active,
         };
       }).filter(p => p.name);
@@ -269,11 +272,12 @@ function ProductTab() {
       'Nama Produk': i.name,
       'Kategori': i.product_categories?.name || '',
       'Satuan Unit': i.unit || '',
-      'Harga': Number(i.price) || 0,
+      'Purchase Price': Number(i.purchase_price || i.price) || 0,
+      'Selling Price': Number(i.selling_price) || 0,
       'Status': i.is_active ? 'Aktif' : 'Non-aktif',
     }));
     const ws = XLSX.utils.json_to_sheet(rows);
-    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 30 }, { wch: 20 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Products');
     XLSX.writeFile(wb, `data_produk_${new Date().toISOString().slice(0, 10)}.xlsx`);
@@ -289,14 +293,15 @@ function ProductTab() {
 
     autoTable(doc, {
       startY: 26,
-      head: [['No', 'Code/SKU', 'Nama Produk', 'Kategori', 'Unit', 'Harga (Rp)', 'Status']],
+      head: [['No', 'Code/SKU', 'Nama Produk', 'Kategori', 'Unit', 'Purchase Price (Rp)', 'Selling Price (Rp)', 'Status']],
       body: filteredItems.map((i: any, idx: number) => [
         idx + 1,
         i.sku || '—',
         i.name,
         i.product_categories?.name || '—',
         i.unit || '—',
-        Number(i.price).toLocaleString('id-ID'),
+        Number(i.purchase_price || i.price || 0).toLocaleString('id-ID'),
+        Number(i.selling_price || 0).toLocaleString('id-ID'),
         i.is_active ? 'Aktif' : 'Non-aktif',
       ]),
       styles: { fontSize: 8 },
