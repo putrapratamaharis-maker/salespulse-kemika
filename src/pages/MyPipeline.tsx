@@ -129,14 +129,23 @@ const MyPipeline = () => {
 
   const maxStageValue = Math.max(...stageSummary.map(s => s.value), 1);
 
-  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>(() =>
-    mockAccounts.map(a => ({ id: a.id, name: a.name, picContact: a.picContact, picEmail: a.picEmail }))
-  );
-  const accountOptions = localAccounts;
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
 
-  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
-    setLocalAccounts(prev => [...prev, account]);
-  };
+  useEffect(() => {
+    const fetchAccounts = async () => {
+      const { data } = await supabase
+        .from('accounts')
+        .select('id, name, pic_contact, pic_email')
+        .eq('status', 'Active')
+        .order('name');
+      setLocalAccounts(
+        (data || []).map(a => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email }))
+      );
+    };
+    fetchAccounts();
+  }, []);
+
+  const accountOptions = localAccounts;
 
   return (
     <div className="space-y-6">
