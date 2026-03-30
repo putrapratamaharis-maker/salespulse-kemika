@@ -57,6 +57,33 @@ const Revenue = () => {
     .sort((a, b) => a[0].localeCompare(b[0]))
     .map(([month, total]) => ({ month, total: total / 1_000_000 }));
 
+  const handleDelete = async (id: string) => {
+    if (!confirm('Yakin ingin menghapus invoice ini?')) return;
+    const { error } = await supabase.from('invoices').delete().eq('id', id);
+    if (error) { toast.error('Gagal menghapus: ' + error.message); return; }
+    toast.success('Invoice dihapus');
+    setRefreshKey(k => k + 1);
+  };
+
+  const exportData = (type: 'xlsx' | 'csv') => {
+    const rows = invoices.map(inv => ({
+      'Invoice #': inv.invoice_number,
+      'Net Sales': inv.net_sales,
+      'Gross Profit': inv.gross_profit,
+      'Margin %': inv.net_sales > 0 ? +((inv.gross_profit / inv.net_sales) * 100).toFixed(2) : 0,
+      'Segment': inv.segment,
+      'Issue Date': inv.issue_date,
+      'Due Date': inv.due_date,
+      'Paid Date': inv.paid_date || '',
+      'Status': inv.paid_date ? 'Paid' : 'Outstanding',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Invoices');
+    XLSX.writeFile(wb, `invoices.${type}`);
+    toast.success(`Exported as ${type.toUpperCase()}`);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
