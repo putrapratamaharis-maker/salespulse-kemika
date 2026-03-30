@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { toast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, FileText, Loader2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Building2, ChevronLeft, ChevronRight, ArrowUpDown, ArrowUp, ArrowDown, Upload, Download, FileText, Loader2, Eye } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import * as XLSX from 'xlsx';
@@ -23,6 +23,7 @@ interface Account {
   name: string;
   segment: string;
   region: string;
+  city: string;
   type: string;
   sales_id: string;
   created_at: string;
@@ -62,6 +63,7 @@ export default function AccountManagement() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [editingAccount, setEditingAccount] = useState<Account | null>(null);
   const [deletingAccount, setDeletingAccount] = useState<Account | null>(null);
+  const [viewingAccount, setViewingAccount] = useState<Account | null>(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -73,6 +75,7 @@ export default function AccountManagement() {
   const [formPicContact, setFormPicContact] = useState('');
   const [formPicEmail, setFormPicEmail] = useState('');
   const [formRegion, setFormRegion] = useState('');
+  const [formCity, setFormCity] = useState('');
   const [formType, setFormType] = useState('Corporate');
   const [formStatus, setFormStatus] = useState('Active');
 
@@ -115,6 +118,7 @@ export default function AccountManagement() {
     setFormPicContact('');
     setFormPicEmail('');
     setFormRegion('');
+    setFormCity('');
     setFormType('Corporate');
     setFormStatus('Active');
     setDialogOpen(true);
@@ -128,6 +132,7 @@ export default function AccountManagement() {
     setFormPicContact(acc.pic_contact || '');
     setFormPicEmail(acc.pic_email || '');
     setFormRegion(acc.region);
+    setFormCity(acc.city || '');
     setFormType(acc.type);
     setFormStatus(acc.status || 'Active');
     setDialogOpen(true);
@@ -153,6 +158,7 @@ export default function AccountManagement() {
       pic_contact: formPicContact.trim(),
       pic_email: formPicEmail.trim(),
       region: formRegion,
+      city: formCity.trim(),
       type: formType,
       status: formStatus,
     };
@@ -531,24 +537,27 @@ export default function AccountManagement() {
                     />
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
-                    <span className="inline-flex items-center">Customer ID <SortIcon col="customer_id" /></span>
+                    <span className="inline-flex items-center">Code <SortIcon col="customer_id" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
-                    <span className="inline-flex items-center">Nama Akun <SortIcon col="name" /></span>
+                    <span className="inline-flex items-center">Name <SortIcon col="name" /></span>
+                  </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('type')}>
+                    <span className="inline-flex items-center">Type <SortIcon col="type" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_name')}>
                     <span className="inline-flex items-center">PIC <SortIcon col="pic_name" /></span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('region')}>
-                    <span className="inline-flex items-center">Region <SortIcon col="region" /></span>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_contact')}>
+                    <span className="inline-flex items-center">Phone <SortIcon col="pic_contact" /></span>
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('type')}>
-                    <span className="inline-flex items-center">Tipe <SortIcon col="type" /></span>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('city')}>
+                    <span className="inline-flex items-center">City <SortIcon col="city" /></span>
                   </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status <SortIcon col="status" /></span>
                   </TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -560,19 +569,23 @@ export default function AccountManagement() {
                         onCheckedChange={() => toggleSelect(acc.id)}
                       />
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-xs">{acc.customer_id || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground text-xs font-mono">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
-                    <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
-                    <TableCell className="text-muted-foreground">{acc.region || '-'}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.pic_contact || '-'}</TableCell>
+                    <TableCell className="text-muted-foreground">{acc.city || '-'}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(acc)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewingAccount(acc)} title="View Detail">
+                        <Eye className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(acc)} title="Edit">
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openDelete(acc)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => openDelete(acc)} title="Delete">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </TableCell>
@@ -679,14 +692,20 @@ export default function AccountManagement() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Region (Provinsi)</Label>
-              <Select value={formRegion} onValueChange={setFormRegion}>
-                <SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger>
-                <SelectContent>
-                  {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Region (Provinsi)</Label>
+                <Select value={formRegion} onValueChange={setFormRegion}>
+                  <SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>City (Kota)</Label>
+                <Input value={formCity} onChange={e => setFormCity(e.target.value)} placeholder="Nama kota" />
+              </div>
             </div>
           </div>
           <DialogFooter>
@@ -724,6 +743,45 @@ export default function AccountManagement() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setBulkDeleteDialogOpen(false)}>Batal</Button>
             <Button variant="destructive" onClick={handleBulkDelete} disabled={saving}>{saving ? 'Menghapus...' : `Hapus ${selectedIds.size} Akun`}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Detail Dialog */}
+      <Dialog open={!!viewingAccount} onOpenChange={open => { if (!open) setViewingAccount(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Detail Akun</DialogTitle>
+          </DialogHeader>
+          {viewingAccount && (
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                <div><span className="text-muted-foreground">Code:</span></div>
+                <div className="font-mono">{viewingAccount.customer_id || '-'}</div>
+                <div><span className="text-muted-foreground">Name:</span></div>
+                <div className="font-medium">{viewingAccount.name}</div>
+                <div><span className="text-muted-foreground">Type:</span></div>
+                <div>{viewingAccount.type}</div>
+                <div><span className="text-muted-foreground">PIC:</span></div>
+                <div>{viewingAccount.pic_name || '-'}</div>
+                <div><span className="text-muted-foreground">Phone:</span></div>
+                <div>{viewingAccount.pic_contact || '-'}</div>
+                <div><span className="text-muted-foreground">Email:</span></div>
+                <div>{viewingAccount.pic_email || '-'}</div>
+                <div><span className="text-muted-foreground">Region:</span></div>
+                <div>{viewingAccount.region || '-'}</div>
+                <div><span className="text-muted-foreground">City:</span></div>
+                <div>{viewingAccount.city || '-'}</div>
+                <div><span className="text-muted-foreground">Status:</span></div>
+                <div><Badge variant="outline" className={statusColor(viewingAccount.status || 'Active')}>{viewingAccount.status || 'Active'}</Badge></div>
+                <div><span className="text-muted-foreground">Created:</span></div>
+                <div>{new Date(viewingAccount.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setViewingAccount(null)}>Tutup</Button>
+            <Button onClick={() => { if (viewingAccount) { openEdit(viewingAccount); setViewingAccount(null); } }}>Edit</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
