@@ -75,6 +75,7 @@ export default function AccountManagement() {
   const [formPicContact, setFormPicContact] = useState('');
   const [formPicEmail, setFormPicEmail] = useState('');
   const [formRegion, setFormRegion] = useState('');
+  const [formCity, setFormCity] = useState('');
   const [formType, setFormType] = useState('Corporate');
   const [formStatus, setFormStatus] = useState('Active');
 
