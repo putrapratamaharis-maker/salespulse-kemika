@@ -372,9 +372,10 @@ export default function AccountManagement() {
     return 0;
   });
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedAccounts = sorted.slice((safePage - 1) * pageSize, safePage * pageSize);
+  const effectivePageSize = pageSize === 0 ? sorted.length : pageSize;
+  const totalPages = Math.max(1, Math.ceil(sorted.length / (effectivePageSize || 1)));
+  const safePage = pageSize === 0 ? 1 : Math.min(currentPage, totalPages);
+  const paginatedAccounts = pageSize === 0 ? sorted : sorted.slice((safePage - 1) * effectivePageSize, safePage * effectivePageSize);
 
   const toggleSort = (col: keyof Account) => {
     if (sortCol === col) {
