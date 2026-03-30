@@ -18,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { StageTransitionDialog } from '@/components/pipeline/StageTransitionDialog';
 
 const stageOrder: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
@@ -55,7 +56,7 @@ interface KanbanBoardProps {
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
-  onStageChange?: (dealId: string, newStage: DealStage) => void;
+  onStageChange?: (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => void;
   readOnly?: boolean;
 }
 
@@ -127,6 +128,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
   };
 
   const finalStages: DealStage[] = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
+  const formStages: DealStage[] = ['po_secured', 'invoice_issued'];
 
   const handleDrop = (e: DragEvent, targetStage: string) => {
     e.preventDefault();
@@ -135,7 +137,9 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
     if (dealId && onStageChange) {
       const deal = deals.find(d => d.id === dealId);
       if (deal && deal.stage !== targetStage) {
-        if (finalStages.includes(targetStage as DealStage)) {
+        if (formStages.includes(targetStage as DealStage)) {
+          setStageConfirm({ deal, targetStage: targetStage as DealStage });
+        } else if (finalStages.includes(targetStage as DealStage)) {
           setStageConfirm({ deal, targetStage: targetStage as DealStage });
         } else {
           onStageChange(dealId, targetStage as DealStage);
@@ -263,19 +267,30 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
         </CardContent>
       </Card>
 
-      {/* Stage Change Confirmation */}
-      <AlertDialog open={!!stageConfirm} onOpenChange={(open) => !open && setStageConfirm(null)}>
+      {/* Stage Transition Form for PO Secured / Invoice Issued */}
+      {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
+        <StageTransitionDialog
+          open={true}
+          onOpenChange={(open) => !open && setStageConfirm(null)}
+          dealName={stageConfirm.deal.name}
+          targetStage={stageConfirm.targetStage}
+          onConfirm={(data) => {
+            if (onStageChange) {
+              onStageChange(stageConfirm.deal.id, stageConfirm.targetStage, data);
+            }
+            setStageConfirm(null);
+          }}
+        />
+      )}
+
+      {/* Simple Confirmation for Canceled / Lost */}
+      <AlertDialog open={!!stageConfirm && (stageConfirm?.targetStage === 'canceled' || stageConfirm?.targetStage === 'lost')} onOpenChange={(open) => !open && setStageConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Perpindahan Stage</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin memindahkan deal "{stageConfirm?.deal.name}" ke tahap <span className="font-semibold">{stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}</span>?
-              {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
-                <span className="block mt-1 text-xs">Probability akan otomatis diatur ke 100%.</span>
-              )}
-              {stageConfirm && (stageConfirm.targetStage === 'canceled' || stageConfirm.targetStage === 'lost') && (
-                <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageLabels[stageConfirm.targetStage]}.</span>
-              )}
+              <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

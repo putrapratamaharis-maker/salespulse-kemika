@@ -73,6 +73,7 @@ export type Database = {
           expected_close_date: string
           id: string
           name: string
+          po_number: string | null
           probability: number
           sales_id: string
           segment: string
@@ -87,6 +88,7 @@ export type Database = {
           expected_close_date: string
           id?: string
           name: string
+          po_number?: string | null
           probability?: number
           sales_id: string
           segment?: string
@@ -101,6 +103,7 @@ export type Database = {
           expected_close_date?: string
           id?: string
           name?: string
+          po_number?: string | null
           probability?: number
           sales_id?: string
           segment?: string
