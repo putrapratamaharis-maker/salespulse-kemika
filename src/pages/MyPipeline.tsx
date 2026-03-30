@@ -52,7 +52,7 @@ const MyPipeline = () => {
   const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
 
   useEffect(() => {
-    if (currentUser.orgRole !== 'sales_person') {
+    if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
       navigate('/my-performance/kpis', { replace: true });
     }
   }, [currentUser.orgRole, navigate]);
