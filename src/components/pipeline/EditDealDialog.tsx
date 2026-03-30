@@ -48,20 +48,20 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions }: EditDealDialogProps) {
+export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated }: EditDealDialogProps) {
   const { toast } = useToast();
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
-  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number }[]>([]);
+  const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number; selling_price: number | null }[]>([]);
   const [dbUnits, setDbUnits] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const fetchMasters = async () => {
       const [{ data: cats }, { data: prods }, { data: units }] = await Promise.all([
-        supabase.from('product_categories').select('id, name').order('name'),
-        supabase.from('products').select('id, name, category_id, unit, price').eq('is_active', true).order('name'),
-        supabase.from('units').select('id, name').order('name'),
+        supabase.from('product_categories').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('products').select('id, name, category_id, unit, price, selling_price').eq('is_active', true).order('name'),
+        supabase.from('units').select('id, name').eq('is_active', true).order('name'),
       ]);
       setDbCategories(cats || []);
       setDbProducts(prods || []);
