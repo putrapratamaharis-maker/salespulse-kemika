@@ -460,10 +460,27 @@ function ProductTab() {
           </Select>
         </div>
 
+        {/* Bulk action bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 rounded-md border border-border bg-muted/50 px-3 py-2">
+            <span className="text-xs font-medium">{selectedIds.size} produk dipilih</span>
+            <Button variant="destructive" size="sm" className="h-7 text-xs gap-1" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />} Hapus Terpilih
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setSelectedIds(new Set())}>Batal</Button>
+          </div>
+        )}
+
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : filteredItems.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">{items.length === 0 ? 'Belum ada produk.' : 'Tidak ada produk yang cocok.'}</p> : (
           <>
             <Table>
               <TableHeader><TableRow>
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
+                    onCheckedChange={toggleSelectAll}
+                  />
+                </TableHead>
                 <TableHead className="text-xs">SKU</TableHead>
                 <TableHead className="text-xs">Product Name</TableHead>
                 <TableHead className="text-xs">Category</TableHead>
@@ -475,13 +492,12 @@ function ProductTab() {
               </TableRow></TableHeader>
               <TableBody>
                 {paginatedItems.map((i: any) => (
-                  <TableRow key={i.id}>
-                    <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
+                  <TableRow key={i.id} className={selectedIds.has(i.id) ? 'bg-muted/40' : ''}>
                     <TableCell>
-                      <div>
-                        <div className="text-sm font-medium">{i.name}</div>
-                        {i.sku && <div className="text-xs text-muted-foreground">{i.sku}</div>}
-                      </div>
+                      <Checkbox
+                        checked={selectedIds.has(i.id)}
+                        onCheckedChange={() => toggleSelect(i.id)}
+                      />
                     </TableCell>
                     <TableCell className="text-sm">{i.product_categories?.name || '—'}</TableCell>
                     <TableCell className="text-sm">{i.unit || '—'}</TableCell>
