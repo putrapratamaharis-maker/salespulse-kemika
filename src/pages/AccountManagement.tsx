@@ -118,6 +118,7 @@ export default function AccountManagement() {
     setFormPicContact('');
     setFormPicEmail('');
     setFormRegion('');
+    setFormCity('');
     setFormType('Corporate');
     setFormStatus('Active');
     setDialogOpen(true);
