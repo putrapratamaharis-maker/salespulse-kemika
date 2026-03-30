@@ -143,6 +143,7 @@ export default function AccountManagement() {
     setSaving(true);
 
     const payload = {
+      customer_id: formCustomerId.trim(),
       name: formName.trim(),
       pic_name: formPicName.trim(),
       pic_contact: formPicContact.trim(),
