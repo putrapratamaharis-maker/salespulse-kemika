@@ -551,6 +551,9 @@ export default function AccountManagement() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('pic_contact')}>
                     <span className="inline-flex items-center">Phone <SortIcon col="pic_contact" /></span>
                   </TableHead>
+                  <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('region')}>
+                    <span className="inline-flex items-center">Region <SortIcon col="region" /></span>
+                  </TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('city')}>
                     <span className="inline-flex items-center">City <SortIcon col="city" /></span>
                   </TableHead>
