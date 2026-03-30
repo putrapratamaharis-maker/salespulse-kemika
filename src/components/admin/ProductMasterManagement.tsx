@@ -158,7 +158,7 @@ function ProductTab() {
   const handleSave = async () => {
     if (!name.trim()) { toast({ title: 'Nama produk wajib diisi', variant: 'destructive' }); return; }
     setSaving(true);
-    const payload = { name: name.trim(), sku: sku.trim() || null, category_id: categoryId || null, unit: unit || 'pcs', price: Number(price) || 0, is_active: isActive };
+    const payload = { name: name.trim(), sku: sku.trim() || null, category_id: categoryId || null, unit: unit || 'pcs', price: Number(price) || 0, purchase_price: Number(price) || 0, selling_price: Number(sellingPrice) || 0, is_active: isActive };
     if (editItem) {
       const { error } = await supabase.from('products').update(payload).eq('id', editItem.id);
       if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Produk diperbarui' }); }
