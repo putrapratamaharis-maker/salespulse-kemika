@@ -927,6 +927,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_supervisor_of: {
+        Args: { _supervisor_user_id: string; _target_user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       deal_stage:
