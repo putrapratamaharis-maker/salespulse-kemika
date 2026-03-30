@@ -559,9 +559,15 @@ export default function AccountManagement() {
             <DialogTitle>{editingAccount ? 'Edit Akun' : 'Tambah Akun Baru'}</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-1.5">
-              <Label>Nama Akun Pelanggan/Customer *</Label>
-              <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Customer ID</Label>
+                <Input value={formCustomerId} onChange={e => setFormCustomerId(e.target.value)} placeholder="CUST2026-XXXX" />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Nama Akun Pelanggan/Customer *</Label>
+                <Input value={formName} onChange={e => setFormName(e.target.value)} placeholder="Nama perusahaan / instansi" />
+              </div>
             </div>
             <div className="space-y-1.5">
               <Label>Nama PIC</Label>
