@@ -61,6 +61,8 @@ function ProtectedRoutes() {
           <Route path="/ar-cashflow" element={<ARCashflow />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/accounts" element={<AccountManagement />} />
+          <Route path="/users" element={<UserManagement />} />
+          <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

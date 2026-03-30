@@ -35,10 +35,10 @@ const navItems = [
 
 const masterDataSubItems = [
   { title: 'Akun / Customer', url: '/accounts', icon: Building2 },
-  { title: 'Produk', url: '/admin?tab=products', icon: Package },
-  { title: 'Kategori', url: '/admin?tab=categories', icon: Layers },
-  { title: 'Unit', url: '/admin?tab=units', icon: Ruler },
-  { title: 'User', url: '/admin?tab=users', icon: UserCog },
+  { title: 'Produk', url: '/product-master', icon: Package },
+  { title: 'Kategori', url: '/product-master', icon: Layers },
+  { title: 'Unit', url: '/product-master', icon: Ruler },
+  { title: 'User', url: '/users', icon: UserCog },
 ];
 
 const adminItems = [
