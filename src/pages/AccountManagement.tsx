@@ -692,14 +692,20 @@ export default function AccountManagement() {
                 </Select>
               </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Region (Provinsi)</Label>
-              <Select value={formRegion} onValueChange={setFormRegion}>
-                <SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger>
-                <SelectContent>
-                  {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>Region (Provinsi)</Label>
+                <Select value={formRegion} onValueChange={setFormRegion}>
+                  <SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger>
+                  <SelectContent>
+                    {PROVINCES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label>City (Kota)</Label>
+                <Input value={formCity} onChange={e => setFormCity(e.target.value)} placeholder="Nama kota" />
+              </div>
             </div>
           </div>
           <DialogFooter>
