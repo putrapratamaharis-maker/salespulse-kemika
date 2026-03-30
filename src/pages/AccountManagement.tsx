@@ -322,11 +322,12 @@ export default function AccountManagement() {
         const picEmail = row[4]?.toString().trim() || '';
         const typeRaw = row[5]?.toString().trim() || 'Corporate';
         const regionRaw = row[6]?.toString().trim() || '';
-        const statusRaw = row[7]?.toString().trim() || 'Active';
+        const cityRaw = row[7]?.toString().trim() || '';
+        const statusRaw = row[8]?.toString().trim() || 'Active';
         const type = TYPES.find(t => t.toLowerCase() === typeRaw.toLowerCase()) || 'Corporate';
         const region = PROVINCES.find(p => p.toLowerCase() === regionRaw.toLowerCase()) || regionRaw;
         const status = statusRaw.toLowerCase() === 'non-active' || statusRaw.toLowerCase() === 'non-aktif' || statusRaw.toLowerCase() === 'inactive' ? 'Non-Active' : 'Active';
-        return { customer_id: customerId, name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, status, sales_id: user.id };
+        return { customer_id: customerId, name, pic_name: picName, pic_contact: picContact, pic_email: picEmail, type, region, city: cityRaw, status, sales_id: user.id };
       }).filter(p => p.name);
 
       const { error, data: inserted } = await supabase.from('accounts').insert(payloads).select();
