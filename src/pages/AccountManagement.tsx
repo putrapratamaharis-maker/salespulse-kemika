@@ -319,7 +319,7 @@ export default function AccountManagement() {
       'Status': a.status || 'Active',
     }));
     const ws = XLSX.utils.json_to_sheet(exportData);
-    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 12 }];
+    ws['!cols'] = [{ wch: 16 }, { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 24 }, { wch: 14 }, { wch: 22 }, { wch: 18 }, { wch: 12 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Accounts');
     XLSX.writeFile(wb, `data_akun_${new Date().toISOString().slice(0, 10)}.xlsx`);
