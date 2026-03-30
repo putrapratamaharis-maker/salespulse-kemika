@@ -127,8 +127,19 @@ const Revenue = () => {
       </Card>
 
       <Card>
-        <CardHeader className="pb-3">
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-semibold">Invoice Details</CardTitle>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1.5">
+                <Download className="h-4 w-4" /> Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => exportData('xlsx')}>Export Excel (.xlsx)</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => exportData('csv')}>Export CSV (.csv)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </CardHeader>
         <CardContent>
           <Table>
@@ -140,6 +151,7 @@ const Revenue = () => {
                 <TableHead className="text-xs">Margin %</TableHead>
                 <TableHead className="text-xs">Segment</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
+                <TableHead className="text-xs w-10"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -153,6 +165,23 @@ const Revenue = () => {
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => { setEditInvoice(inv); setEditOpen(true); }}>
+                            <Pencil className="h-4 w-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(inv.id)}>
+                            <Trash2 className="h-4 w-4 mr-2" /> Hapus
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
                   </TableRow>
                 );
               })}
@@ -160,6 +189,13 @@ const Revenue = () => {
           </Table>
         </CardContent>
       </Card>
+
+      <EditInvoiceDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        invoice={editInvoice}
+        onUpdated={() => setRefreshKey(k => k + 1)}
+      />
     </div>
   );
 };
