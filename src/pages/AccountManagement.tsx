@@ -192,9 +192,44 @@ export default function AccountManagement() {
     } else {
       toast({ title: 'Akun berhasil dihapus' });
       setDeleteDialogOpen(false);
+      selectedIds.delete(deletingAccount.id);
+      setSelectedIds(new Set(selectedIds));
       fetchAccounts();
     }
     setSaving(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setSaving(true);
+    const { error } = await supabase.from('accounts').delete().in('id', Array.from(selectedIds));
+    if (error) {
+      toast({ title: 'Gagal menghapus', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: `${selectedIds.size} akun berhasil dihapus` });
+      setBulkDeleteDialogOpen(false);
+      setSelectedIds(new Set());
+      fetchAccounts();
+    }
+    setSaving(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+
+  const toggleSelectAll = () => {
+    if (paginatedAccounts.every(a => selectedIds.has(a.id))) {
+      const next = new Set(selectedIds);
+      paginatedAccounts.forEach(a => next.delete(a.id));
+      setSelectedIds(next);
+    } else {
+      const next = new Set(selectedIds);
+      paginatedAccounts.forEach(a => next.add(a.id));
+      setSelectedIds(next);
+    }
   };
 
   // --- Import / Export ---
