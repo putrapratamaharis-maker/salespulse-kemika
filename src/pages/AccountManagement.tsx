@@ -23,6 +23,7 @@ interface Account {
   name: string;
   segment: string;
   region: string;
+  city: string;
   type: string;
   sales_id: string;
   created_at: string;
