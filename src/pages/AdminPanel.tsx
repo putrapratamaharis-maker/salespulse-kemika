@@ -194,7 +194,7 @@ const AdminPanel = () => {
                       <TableHead className="text-xs">Email</TableHead>
                       <TableHead className="text-xs">Org Role</TableHead>
                       <TableHead className="text-xs">System Role</TableHead>
-                      <TableHead className="text-xs">Segment</TableHead>
+                      <TableHead className="text-xs">Divisi</TableHead>
                       <TableHead className="text-xs">Region</TableHead>
                     </TableRow>
                   </TableHeader>
