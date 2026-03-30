@@ -4,6 +4,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Percent, TrendingUp, CreditCard, Loader2 } from 'lucide-react';
+import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -22,16 +23,16 @@ interface InvoiceRow {
 const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
-  useEffect(() => {
-    const fetch = async () => {
-      setLoading(true);
-      const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
-      setInvoices((data || []) as InvoiceRow[]);
-      setLoading(false);
-    };
-    fetch();
-  }, []);
+  const fetchInvoices = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment').order('issue_date', { ascending: false });
+    setInvoices((data || []) as InvoiceRow[]);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchInvoices(); }, [refreshKey]);
 
   const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
   const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
@@ -59,9 +60,12 @@ const Revenue = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Revenue & Margin</h2>
-        <p className="text-sm text-muted-foreground">Financial performance and margin compliance</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Revenue & Margin</h2>
+          <p className="text-sm text-muted-foreground">Financial performance and margin compliance</p>
+        </div>
+        <NewInvoiceDialog onCreated={() => setRefreshKey(k => k + 1)} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
