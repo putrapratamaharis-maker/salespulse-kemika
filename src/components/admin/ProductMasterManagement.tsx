@@ -136,6 +136,9 @@ function ProductTab() {
   // View detail
   const [viewItem, setViewItem] = useState<any | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
