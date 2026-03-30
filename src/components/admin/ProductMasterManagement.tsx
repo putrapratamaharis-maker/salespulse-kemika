@@ -70,6 +70,40 @@ function CategoryTab() {
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); } else { toast({ title: 'Kategori dihapus' }); fetch(); }
   };
 
+  const toggleCatSelect = (id: string) => setSelectedIds(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleCatSelectAll = () => setSelectedIds(prev => prev.size === items.length ? new Set() : new Set(items.map(i => i.id)));
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Hapus ${selectedIds.size} kategori yang dipilih?`)) return;
+    setBulkDeleting(true);
+    const { error } = await supabase.from('product_categories').delete().in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} kategori dihapus` }); setSelectedIds(new Set()); fetch(); }
+    setBulkDeleting(false);
+  };
+
+  const handleBulkSetStatus = async (active: boolean) => {
+    if (selectedIds.size === 0) return;
+    const label = active ? 'aktifkan' : 'nonaktifkan';
+    if (!confirm(`${label.charAt(0).toUpperCase() + label.slice(1)} ${selectedIds.size} kategori?`)) return;
+    const { error } = await supabase.from('product_categories').update({ is_active: active } as any).in('id', Array.from(selectedIds));
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); }
+    else { toast({ title: `${selectedIds.size} kategori di-${label}` }); setSelectedIds(new Set()); fetch(); }
+  };
+
+  const exportSelectedExcel = () => {
+    const selected = items.filter(i => selectedIds.has(i.id));
+    if (selected.length === 0) return;
+    const rows = selected.map((i, idx) => ({ 'No': idx + 1, 'Kode': i.code || '', 'Nama Kategori': i.name, 'Deskripsi': i.description || '', 'Status': i.is_active ? 'Aktif' : 'Non-aktif' }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 15 }, { wch: 25 }, { wch: 30 }, { wch: 12 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Selected Categories');
+    XLSX.writeFile(wb, `kategori_terpilih_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast({ title: `${selected.length} kategori diekspor` });
+  };
+
   const downloadTemplate = () => {
     const ws = XLSX.utils.aoa_to_sheet([
       ['Kode Kategori', 'Nama Kategori*', 'Deskripsi', 'Aktif (Ya/Tidak)'],
