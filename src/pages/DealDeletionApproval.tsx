@@ -114,11 +114,12 @@ export default function DealDeletionApproval() {
       }
 
       // Update the request status
+      const currentUserId = (await supabase.auth.getUser()).data.user?.id;
       const { error } = await supabase
         .from('deal_deletion_requests')
         .update({
           status: action === 'approve' ? 'approved' : 'rejected',
-          reviewed_by: (await supabase.auth.getUser()).data.user?.id,
+          reviewed_by: currentUserId,
           reviewed_at: new Date().toISOString(),
           review_notes: reviewNotes.trim() || null,
           updated_at: new Date().toISOString(),
@@ -128,6 +129,19 @@ export default function DealDeletionApproval() {
       if (error) {
         toast({ title: 'Gagal memproses permintaan', description: error.message, variant: 'destructive' });
       } else {
+        // Send notification to the requester
+        const dealName = request.deal_name || (request.deal_snapshot as any)?.name || 'Deal';
+        await supabase.from('notifications').insert({
+          user_id: request.requested_by,
+          title: action === 'approve' ? 'Permintaan Hapus Deal Disetujui' : 'Permintaan Hapus Deal Ditolak',
+          message: action === 'approve'
+            ? `Permintaan hapus deal "${dealName}" telah disetujui dan deal telah dihapus.${reviewNotes.trim() ? ` Catatan: ${reviewNotes.trim()}` : ''}`
+            : `Permintaan hapus deal "${dealName}" telah ditolak.${reviewNotes.trim() ? ` Catatan: ${reviewNotes.trim()}` : ''}`,
+          type: action === 'approve' ? 'deletion_approved' : 'deletion_rejected',
+          reference_id: request.id,
+          reference_type: 'deal_deletion_request',
+        });
+
         toast({ title: action === 'approve' ? 'Deal berhasil dihapus' : 'Permintaan ditolak' });
         fetchRequests();
       }

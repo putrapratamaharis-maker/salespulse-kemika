@@ -4,18 +4,20 @@ import { supabase } from '@/integrations/supabase/client';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Bell, AlertTriangle, Clock, TrendingDown, Activity } from 'lucide-react';
+import { Bell, AlertTriangle, Clock, TrendingDown, Activity, CheckCircle2, XCircle } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { id } from 'date-fns/locale';
 
 interface Notification {
   id: string;
-  type: 'stagnant_deal' | 'overdue_invoice' | 'low_margin' | 'low_activity';
+  type: 'stagnant_deal' | 'overdue_invoice' | 'low_margin' | 'low_activity' | 'deletion_approved' | 'deletion_rejected';
   title: string;
   message: string;
   timestamp: Date;
   icon: typeof AlertTriangle;
   color: string;
+  isDbNotif?: boolean;
+  isRead?: boolean;
 }
 
 export function NotificationDropdown() {
@@ -133,9 +135,40 @@ export function NotificationDropdown() {
       });
     }
 
+    // 5. DB notifications (deal deletion approval/rejection)
+    const { data: dbNotifs } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (dbNotifs) {
+      dbNotifs.forEach((n: any) => {
+        notifs.push({
+          id: `db-${n.id}`,
+          type: n.type as any,
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.created_at),
+          icon: n.type === 'deletion_approved' ? CheckCircle2 : XCircle,
+          color: n.type === 'deletion_approved' ? 'text-green-500' : 'text-destructive',
+          isDbNotif: true,
+          isRead: n.is_read,
+        });
+      });
+    }
+
     setNotifications(notifs);
     setLoading(false);
   }
+
+  const markAsRead = async (notifId: string) => {
+    const dbId = notifId.replace('db-', '');
+    await supabase.from('notifications').update({ is_read: true }).eq('id', dbId);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+  };
 
   const count = notifications.length;
 
@@ -191,6 +224,15 @@ export function NotificationDropdown() {
                         {formatDistanceToNow(notif.timestamp, { addSuffix: true, locale: id })}
                       </p>
                     </div>
+                    {notif.isDbNotif && (
+                      <button
+                        onClick={() => markAsRead(notif.id)}
+                        className="text-[10px] text-muted-foreground hover:text-foreground mt-0.5 shrink-0"
+                        title="Tandai dibaca"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 );
               })}
