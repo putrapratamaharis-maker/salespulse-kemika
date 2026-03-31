@@ -585,80 +585,82 @@ function ProductTab() {
           <Package className="h-4 w-4 text-accent" /> Products
           <Badge variant="secondary" className="text-[10px] ml-1">{filteredItems.length}/{items.length}</Badge>
         </CardTitle>
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
-            <Download className="h-3 w-3" /> Template
-          </Button>
-          <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
-            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
-              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+        {!readOnly && (
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
+              <Download className="h-3 w-3" /> Template
             </Button>
-          </label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs">
-                <FileDown className="h-3 w-3" /> Ekspor
+            <label>
+              <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+                <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={exportExcel} className="text-xs gap-2">
-                <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportPdf} className="text-xs gap-2">
-                <FileText className="h-3.5 w-3.5" /> Export PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader><DialogTitle>{editItem ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle></DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Nama Produk</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Nama produk" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">SKU (opsional)</Label><Input value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Kategori</Label>
-                    <Select value={categoryId} onValueChange={setCategoryId}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                      <SelectContent>
-                        {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+            </label>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1 h-7 text-xs">
+                  <FileDown className="h-3 w-3" /> Ekspor
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={exportExcel} className="text-xs gap-2">
+                  <FileSpreadsheet className="h-3.5 w-3.5" /> Export Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={exportPdf} className="text-xs gap-2">
+                  <FileText className="h-3.5 w-3.5" /> Export PDF
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader><DialogTitle>{editItem ? 'Edit Produk' : 'Tambah Produk'}</DialogTitle></DialogHeader>
+                <div className="space-y-3 mt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5"><Label className="text-xs">Nama Produk</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="Nama produk" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">SKU (opsional)</Label><Input value={sku} onChange={e => setSku(e.target.value)} placeholder="SKU" /></div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Satuan Unit</Label>
-                    <Select value={unit} onValueChange={setUnit}>
-                      <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih satuan" /></SelectTrigger>
-                      <SelectContent>
-                        {units.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Kategori</Label>
+                      <Select value={categoryId} onValueChange={setCategoryId}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
+                        <SelectContent>
+                          {categories.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Satuan Unit</Label>
+                      <Select value={unit} onValueChange={setUnit}>
+                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih satuan" /></SelectTrigger>
+                        <SelectContent>
+                          {units.map(u => <SelectItem key={u.id} value={u.name}>{u.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5"><Label className="text-xs">Purchase Price (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Selling Price (Rp)</Label><Input type="number" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} placeholder="0" /></div>
+                  </div>
+                  <div className="space-y-1.5 flex items-end">
+                    <label className="flex items-center gap-2 text-sm cursor-pointer">
+                      <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                      Aktif
+                    </label>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                    <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Purchase Price (Rp)</Label><Input type="number" value={price} onChange={e => setPrice(e.target.value)} placeholder="0" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Selling Price (Rp)</Label><Input type="number" value={sellingPrice} onChange={e => setSellingPrice(e.target.value)} placeholder="0" /></div>
-                </div>
-                <div className="space-y-1.5 flex items-end">
-                  <label className="flex items-center gap-2 text-sm cursor-pointer">
-                    <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                    Aktif
-                  </label>
-                </div>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Search & Filters */}
