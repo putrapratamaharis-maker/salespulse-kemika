@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, DealProduct, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
