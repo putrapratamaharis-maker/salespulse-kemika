@@ -129,7 +129,7 @@ const Products = () => {
 
       {/* KPI Cards — soft colored backgrounds */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="animate-fade-in border-0 bg-kpi-blue">
+        <Card className="animate-fade-in border-0 border-l-4 border-l-kpi-blue-border bg-kpi-blue">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-blue-fg/10">
               <TrendingUp className="h-5 w-5 text-kpi-blue-fg" />
