@@ -630,7 +630,7 @@ export default function AccountManagement() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status <SortIcon col="status" /></span>
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {canEdit && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
