@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
@@ -6,6 +7,8 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
 
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
@@ -68,6 +71,27 @@ export function AppSidebar() {
   const isSuperAdmin = systemRole === 'super_admin';
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
   const isMasterDataActive = ['/accounts', '/users', '/product-master'].includes(location.pathname);
+
+  const [pendingDeletions, setPendingDeletions] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('deal_deletion_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      setPendingDeletions(count || 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel('deletion-requests-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deal_deletion_requests' }, () => fetchCount())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin]);
 
   const masterDataSubItems = allMasterDataSubItems.filter(item => {
     if (item.minRole === 'super_admin') return isSuperAdmin;
@@ -232,7 +256,16 @@ export function AppSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="mr-2 h-4 w-4 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
+                        {!collapsed && (
+                          <span className="flex-1 flex items-center justify-between">
+                            <span>{item.title}</span>
+                            {item.url === '/deal-deletion-approval' && pendingDeletions > 0 && (
+                              <Badge variant="destructive" className="ml-auto text-[10px] h-5 min-w-5 px-1.5">
+                                {pendingDeletions}
+                              </Badge>
+                            )}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
