@@ -40,8 +40,8 @@ const allMasterDataSubItems = [
 ];
 
 const adminItems = [
-  { title: 'Admin Panel', url: '/admin', icon: Settings },
-  { title: 'Audit Log', url: '/audit-log', icon: ClipboardList },
+  { title: 'Admin Panel', url: '/admin', icon: Settings, superOnly: false },
+  { title: 'Audit Log', url: '/audit-log', icon: ClipboardList, superOnly: true },
 ];
 
 const orgRoleLabels: Record<string, string> = {
