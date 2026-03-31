@@ -54,6 +54,7 @@ const stageBgColors: Record<string, string> = {
 interface KanbanBoardProps {
   deals: Deal[];
   getAccountName: (accountId: string) => string;
+  getAccountContact?: (accountId: string) => string | undefined;
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
