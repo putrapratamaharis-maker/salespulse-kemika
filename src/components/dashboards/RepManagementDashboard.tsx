@@ -83,10 +83,10 @@ export function RepManagementDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText />
-        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText />
-        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingDown} autoFitText />
-        <KPICard label="Active Regions" value={String(regions.length)} icon={MapPin} autoFitText />
+        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingDown} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Active Regions" value={String(regions.length)} icon={MapPin} autoFitText className="bg-kpi-purple border-kpi-purple" />
       </div>
 
       <Card>

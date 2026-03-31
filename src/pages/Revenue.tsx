@@ -198,10 +198,10 @@ const Revenue = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText />
-        <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
-        <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} autoFitText />
+        <KPICard label="Total Revenue" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} autoFitText className="bg-kpi-purple border-kpi-purple" />
       </div>
 
       <Card>
