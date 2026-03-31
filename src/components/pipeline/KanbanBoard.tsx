@@ -198,11 +198,11 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
-            <div className="flex gap-3 px-6 pb-2" style={{ minWidth: `${kanbanData.length * 220 + 48}px` }}>
+            <div className="flex gap-3 px-6 pb-2">
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col min-w-[210px] flex-1 shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`flex flex-col w-[220px] shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
