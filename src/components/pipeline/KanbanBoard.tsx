@@ -370,7 +370,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
           onOpenChange={(open) => !open && setDeleteTarget(null)}
           dealName={deleteTarget.name}
           onSubmit={async (reason) => {
-            onDelete(deleteTarget);
+            onDelete(deleteTarget, reason);
           }}
         />
       )}
