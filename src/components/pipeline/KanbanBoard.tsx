@@ -311,6 +311,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                       ))
                     )}
                   </div>
+                  </ScrollArea>
                 </div>
               ))}
             </div>
