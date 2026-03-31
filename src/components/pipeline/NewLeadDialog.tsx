@@ -354,7 +354,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-prob">Probability (%)</Label>
-                <Input id="lead-prob" type="number" min={0} max={100} value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
+                <Input id="lead-prob" type="number" min={0} max={100} step="0.01" value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-close">{stage === 'invoice_issued' ? 'Invoice Issued Date' : stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Deal/Close'}</Label>

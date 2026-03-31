@@ -65,14 +65,61 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_products: {
+        Row: {
+          category: string
+          created_at: string
+          deal_id: string
+          id: string
+          other_cost: number
+          price_per_unit: number
+          product_name: string
+          qty: number
+          unit: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          deal_id: string
+          id?: string
+          other_cost?: number
+          price_per_unit?: number
+          product_name?: string
+          qty?: number
+          unit?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          deal_id?: string
+          id?: string
+          other_cost?: number
+          price_per_unit?: number
+          product_name?: string
+          qty?: number
+          unit?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_products_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deals: {
         Row: {
           account_id: string
           created_at: string
           days_in_stage: number
           expected_close_date: string
+          expected_margin: number | null
           id: string
+          location: string | null
           name: string
+          notes: string | null
           po_number: string | null
           probability: number
           sales_id: string
@@ -86,8 +133,11 @@ export type Database = {
           created_at?: string
           days_in_stage?: number
           expected_close_date: string
+          expected_margin?: number | null
           id?: string
+          location?: string | null
           name: string
+          notes?: string | null
           po_number?: string | null
           probability?: number
           sales_id: string
@@ -101,8 +151,11 @@ export type Database = {
           created_at?: string
           days_in_stage?: number
           expected_close_date?: string
+          expected_margin?: number | null
           id?: string
+          location?: string | null
           name?: string
+          notes?: string | null
           po_number?: string | null
           probability?: number
           sales_id?: string

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, DealProduct, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,10 +56,25 @@ const MyPipeline = () => {
 
   const fetchDeals = async () => {
     setLoading(true);
-    const [{ data: dealsData }, { data: accountsData }] = await Promise.all([
+    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }] = await Promise.all([
       supabase.from('deals').select('*').eq('sales_id', currentUser.id),
       supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+      supabase.from('deal_products').select('*'),
     ]);
+
+    const productsMap: Record<string, DealProduct[]> = {};
+    (dealProductsData || []).forEach((dp: any) => {
+      if (!productsMap[dp.deal_id]) productsMap[dp.deal_id] = [];
+      productsMap[dp.deal_id].push({
+        id: dp.id,
+        category: dp.category,
+        productName: dp.product_name,
+        unit: dp.unit,
+        qty: dp.qty,
+        pricePerUnit: Number(dp.price_per_unit),
+        otherCost: Number(dp.other_cost),
+      });
+    });
 
     const mapped: Deal[] = (dealsData || []).map((d: any) => ({
       id: d.id,
@@ -75,6 +90,10 @@ const MyPipeline = () => {
       accountId: d.account_id,
       salesId: d.sales_id,
       poNumber: d.po_number || '',
+      expectedMargin: Number(d.expected_margin) || 0,
+      location: d.location || '',
+      notes: d.notes || '',
+      products: productsMap[d.id] || [],
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
@@ -89,7 +108,7 @@ const MyPipeline = () => {
     localAccounts.find(a => a.id === accountId)?.name || accountId;
 
   const handleAddDeal = async (deal: Deal) => {
-    const { error } = await supabase.from('deals').insert({
+    const { data, error } = await supabase.from('deals').insert({
       name: deal.name,
       account_id: deal.accountId,
       sales_id: deal.salesId,
@@ -100,10 +119,27 @@ const MyPipeline = () => {
       expected_close_date: deal.expectedCloseDate,
       days_in_stage: 0,
       po_number: deal.poNumber || '',
-    });
+      expected_margin: deal.expectedMargin || 0,
+      location: deal.location || '',
+      notes: deal.notes || '',
+    }).select('id').single();
     if (error) {
       toast({ title: 'Gagal menyimpan lead', description: error.message, variant: 'destructive' });
       return;
+    }
+    // Save deal products
+    if (deal.products && deal.products.length > 0 && data?.id) {
+      await supabase.from('deal_products').insert(
+        deal.products.map(p => ({
+          deal_id: data.id,
+          category: p.category,
+          product_name: p.productName,
+          unit: p.unit,
+          qty: p.qty,
+          price_per_unit: p.pricePerUnit,
+          other_cost: p.otherCost,
+        }))
+      );
     }
     toast({ title: 'Lead berhasil ditambahkan & tersimpan' });
     fetchDeals();
@@ -121,10 +157,30 @@ const MyPipeline = () => {
       probability: updatedDeal.probability,
       expected_close_date: updatedDeal.expectedCloseDate,
       po_number: updatedDeal.poNumber || '',
+      expected_margin: updatedDeal.expectedMargin || 0,
+      location: updatedDeal.location || '',
+      notes: updatedDeal.notes || '',
     }).eq('id', updatedDeal.id);
     if (error) {
       toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' });
       return;
+    }
+    // Update deal products: delete old, insert new
+    if (updatedDeal.products) {
+      await supabase.from('deal_products').delete().eq('deal_id', updatedDeal.id);
+      if (updatedDeal.products.length > 0) {
+        await supabase.from('deal_products').insert(
+          updatedDeal.products.map(p => ({
+            deal_id: updatedDeal.id,
+            category: p.category,
+            product_name: p.productName,
+            unit: p.unit,
+            qty: p.qty,
+            price_per_unit: p.pricePerUnit,
+            other_cost: p.otherCost,
+          }))
+        );
+      }
     }
     toast({ title: 'Deal berhasil diperbarui' });
     fetchDeals();
