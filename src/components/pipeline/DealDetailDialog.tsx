@@ -116,7 +116,7 @@ function InfoRow({ icon: Icon, label, value, highlight }: { icon: any; label: st
       <Icon className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
       <div className="min-w-0">
         <p className="text-[10px] text-muted-foreground leading-tight">{label}</p>
-        <p className={`text-xs leading-tight truncate ${highlight ? 'font-bold text-foreground' : 'text-foreground'}`}>{value}</p>
+        <p className={`text-xs leading-tight break-words ${highlight ? 'font-bold text-foreground' : 'text-foreground'}`}>{value}</p>
       </div>
     </div>
   );
