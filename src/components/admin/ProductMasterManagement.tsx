@@ -215,8 +215,7 @@ function CategoryTab() {
         )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {/* Bulk action bar */}
-        {selectedIds.size > 0 && (
+        {!readOnly && selectedIds.size > 0 && (
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
             <span className="text-xs font-medium">{selectedIds.size} kategori dipilih</span>
             <div className="h-4 w-px bg-border" />
