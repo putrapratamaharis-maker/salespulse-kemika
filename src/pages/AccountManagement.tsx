@@ -636,12 +636,14 @@ export default function AccountManagement() {
               <TableBody>
                 {paginatedAccounts.map(acc => (
                   <TableRow key={acc.id} data-state={selectedIds.has(acc.id) ? 'selected' : undefined}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedIds.has(acc.id)}
-                        onCheckedChange={() => toggleSelect(acc.id)}
-                      />
-                    </TableCell>
+                    {canEdit && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(acc.id)}
+                          onCheckedChange={() => toggleSelect(acc.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-xs font-mono">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
