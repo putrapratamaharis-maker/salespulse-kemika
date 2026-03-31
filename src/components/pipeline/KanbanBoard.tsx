@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { StageTransitionDialog } from '@/components/pipeline/StageTransitionDialog';
+import { DeleteDealRequestDialog } from '@/components/pipeline/DeleteDealRequestDialog';
 
 const stageOrder: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
