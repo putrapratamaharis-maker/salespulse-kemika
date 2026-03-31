@@ -598,12 +598,14 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
+                  {canEdit && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
                     <span className="inline-flex items-center">Code <SortIcon col="customer_id" /></span>
                   </TableHead>
