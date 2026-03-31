@@ -51,27 +51,37 @@
     --chart-4: 280 55% 55%;
     --chart-5: 0 72% 55%;
 
-    /* KPI soft backgrounds */
-    --kpi-blue: 210 70% 95%;
-    --kpi-blue-fg: 210 60% 30%;
-    --kpi-teal: 174 50% 93%;
-    --kpi-teal-fg: 174 60% 28%;
-    --kpi-amber: 40 70% 93%;
-    --kpi-amber-fg: 35 80% 30%;
-    --kpi-purple: 270 50% 94%;
-    --kpi-purple-fg: 270 50% 35%;
-    --kpi-rose: 350 60% 94%;
-    --kpi-rose-fg: 350 60% 35%;
-    --kpi-emerald: 152 50% 93%;
-    --kpi-emerald-fg: 152 55% 28%;
-    --kpi-indigo: 230 55% 94%;
-    --kpi-indigo-fg: 230 55% 32%;
-    --kpi-orange: 25 70% 93%;
-    --kpi-orange-fg: 25 70% 32%;
-    --kpi-cyan: 190 55% 93%;
-    --kpi-cyan-fg: 190 60% 28%;
-    --kpi-slate: 215 25% 93%;
-    --kpi-slate-fg: 215 25% 32%;
+    /* KPI backgrounds - vivid & bold */
+    --kpi-blue: 210 65% 88%;
+    --kpi-blue-fg: 210 70% 25%;
+    --kpi-blue-border: 210 70% 45%;
+    --kpi-teal: 174 50% 85%;
+    --kpi-teal-fg: 174 65% 22%;
+    --kpi-teal-border: 174 60% 35%;
+    --kpi-amber: 40 75% 85%;
+    --kpi-amber-fg: 35 85% 24%;
+    --kpi-amber-border: 38 80% 42%;
+    --kpi-purple: 270 50% 88%;
+    --kpi-purple-fg: 270 55% 28%;
+    --kpi-purple-border: 270 50% 45%;
+    --kpi-rose: 350 60% 88%;
+    --kpi-rose-fg: 350 65% 28%;
+    --kpi-rose-border: 350 60% 45%;
+    --kpi-emerald: 152 50% 85%;
+    --kpi-emerald-fg: 152 60% 22%;
+    --kpi-emerald-border: 152 55% 35%;
+    --kpi-indigo: 230 55% 88%;
+    --kpi-indigo-fg: 230 60% 26%;
+    --kpi-indigo-border: 230 55% 42%;
+    --kpi-orange: 25 75% 85%;
+    --kpi-orange-fg: 25 75% 25%;
+    --kpi-orange-border: 25 70% 42%;
+    --kpi-cyan: 190 55% 85%;
+    --kpi-cyan-fg: 190 65% 22%;
+    --kpi-cyan-border: 190 58% 35%;
+    --kpi-slate: 215 25% 85%;
+    --kpi-slate-fg: 215 30% 25%;
+    --kpi-slate-border: 215 25% 42%;
 
     /* Sidebar */
     --sidebar-background: 210 60% 12%;
