@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, GripVertical, Search, Filter, X } from 'lucide-react';
+import { Pencil, Trash2, GripVertical, Search, Filter, X, Copy } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
