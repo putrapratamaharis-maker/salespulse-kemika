@@ -163,6 +163,8 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0">
+        {deal ? (
+        <>
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Edit Deal</DialogTitle>
         </DialogHeader>
