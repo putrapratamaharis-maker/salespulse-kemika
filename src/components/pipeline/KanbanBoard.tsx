@@ -267,9 +267,9 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
 
                         {/* Products list - max 3 items */}
                         {d.products && d.products.length > 0 && (
-                          <div className="space-y-0.5 pt-0.5">
+                          <div className="space-y-0.5 pt-0.5 overflow-hidden">
                             {d.products.slice(0, 3).map((p, i) => (
-                              <p key={i} className="text-[10px] text-muted-foreground truncate">
+                              <p key={i} className="text-[10px] text-muted-foreground truncate" title={`${p.productName} (${p.qty} ${p.unit})`}>
                                 • {p.productName} ({p.qty} {p.unit})
                               </p>
                             ))}
