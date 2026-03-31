@@ -334,6 +334,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
       onOpenChange={(open) => !open && setDetailDeal(null)}
       getAccountName={getAccountName}
       getSalesName={getSalesName}
+      getAccountContact={getAccountContact}
     />
     </>
   );
