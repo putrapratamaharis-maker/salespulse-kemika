@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { Deal, DealStage, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, DealProduct, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, BarChart3, AlertTriangle, Users, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,11 +22,27 @@ const Pipeline = () => {
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [{ data: deals }, { data: accounts }, { data: profiles }] = await Promise.all([
+      const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.from('deals').select('*'),
         supabase.from('accounts').select('id, name'),
         supabase.from('profiles').select('user_id, full_name').eq('is_active', true),
+        supabase.from('deal_products').select('*'),
       ]);
+
+      // Map deal products
+      const productsMap: Record<string, DealProduct[]> = {};
+      (dealProductsData || []).forEach((dp: any) => {
+        if (!productsMap[dp.deal_id]) productsMap[dp.deal_id] = [];
+        productsMap[dp.deal_id].push({
+          id: dp.id,
+          category: dp.category,
+          productName: dp.product_name,
+          unit: dp.unit,
+          qty: dp.qty,
+          pricePerUnit: Number(dp.price_per_unit),
+          otherCost: Number(dp.other_cost),
+        });
+      });
 
       // Map accounts
       const accMap = new Map((accounts || []).map(a => [a.id, a.name]));
@@ -49,6 +65,10 @@ const Pipeline = () => {
         createdAt: d.created_at,
         updatedAt: d.updated_at,
         daysInStage: d.days_in_stage,
+        expectedMargin: Number(d.expected_margin) || 0,
+        location: d.location || '',
+        notes: d.notes || '',
+        products: productsMap[d.id] || [],
       }));
       setDbDeals(mappedDeals);
 
