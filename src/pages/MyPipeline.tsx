@@ -100,6 +100,7 @@ const MyPipeline = () => {
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
+    setDeletionRequests(delReqData || []);
     setLoading(false);
   };
 
