@@ -58,10 +58,11 @@ const MyPipeline = () => {
 
   const fetchDeals = async () => {
     setLoading(true);
-    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }] = await Promise.all([
+    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }, { data: delReqData }] = await Promise.all([
       supabase.from('deals').select('*').eq('sales_id', currentUser.id),
-      supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+      supabase.from('accounts').select('id, name, pic_contact, pic_email, pic_name').eq('status', 'Active').order('name'),
       supabase.from('deal_products').select('*'),
+      supabase.from('deal_deletion_requests').select('*').eq('requested_by', currentUser.id).order('created_at', { ascending: false }),
     ]);
 
     const productsMap: Record<string, DealProduct[]> = {};
