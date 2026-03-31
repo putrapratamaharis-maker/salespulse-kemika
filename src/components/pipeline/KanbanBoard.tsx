@@ -229,40 +229,72 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                           className={`bg-card rounded-md border shadow-sm p-2.5 space-y-1 ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
-                          <div className="flex items-start justify-between gap-1">
-                            <div className="flex items-center gap-1 flex-1 min-w-0">
-                              <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                              <p className="text-xs font-semibold text-foreground leading-tight truncate">{d.name}</p>
-                            </div>
-                            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {onDuplicate && (
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
-                                  <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </Button>
-                              )}
-                              {onEdit && (
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
-                                  <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </Button>
-                              )}
-                              {onDelete && (
-                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
-                                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
-                                </Button>
-                              )}
-                            </div>
+                        {/* Account name - bold on top */}
+                        <div className="flex items-start justify-between gap-1">
+                          <p className="text-xs font-bold text-foreground leading-tight truncate flex-1 min-w-0">
+                            <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity inline mr-0.5 align-text-bottom" />
+                            {getAccountName(d.accountId)}
+                          </p>
+                          <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {onDuplicate && (
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
+                                <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              </Button>
+                            )}
+                            {onEdit && (
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
+                                <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              </Button>
+                            )}
+                            {onDelete && (
+                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
+                                <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                              </Button>
+                            )}
                           </div>
-                          <p className="text-[10px] text-muted-foreground truncate">{getAccountName(d.accountId)}</p>
-                          {getSalesName && (
-                            <p className="text-[10px] text-muted-foreground truncate">Sales: {getSalesName(d.salesId)}</p>
-                          )}
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-bold text-foreground">{formatIDR(d.value)}</span>
-                            <div className="flex items-center gap-1">
-                              <span className="text-[10px] px-1 py-0.5 rounded bg-muted text-muted-foreground">{d.segment}</span>
-                              <span className="text-[10px] text-muted-foreground">{d.probability}%</span>
-                            </div>
+                        </div>
+
+                        {/* Deal name */}
+                        <p className="text-[11px] font-medium text-foreground/80 truncate">{d.name}</p>
+
+                        {/* Sales name (for global pipeline) */}
+                        {getSalesName && (
+                          <p className="text-[10px] text-muted-foreground truncate">Sales: {getSalesName(d.salesId)}</p>
+                        )}
+
+                        {/* Products list - max 3 items */}
+                        {d.products && d.products.length > 0 && (
+                          <div className="space-y-0.5 pt-0.5">
+                            {d.products.slice(0, 3).map((p, i) => (
+                              <p key={i} className="text-[10px] text-muted-foreground truncate">
+                                • {p.productName} ({p.qty} {p.unit})
+                              </p>
+                            ))}
+                            {d.products.length > 3 && (
+                              <p className="text-[10px] text-muted-foreground italic">+{d.products.length - 3} item lainnya</p>
+                            )}
                           </div>
+                        )}
+
+                        {/* Value row */}
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-xs font-bold text-foreground">{formatIDR(d.value)}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground font-medium">{d.segment}</span>
+                        </div>
+
+                        {/* Meta row: expected close, margin, probability */}
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50">
+                          <span className="flex items-center gap-0.5" title="Expected Close">
+                            <CalendarClock className="h-3 w-3" />
+                            {formatDate(d.expectedCloseDate)}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            {d.expectedMargin != null && d.expectedMargin > 0 && (
+                              <span title="Expected Margin">M: {d.expectedMargin}%</span>
+                            )}
+                            <span title="Probability">{d.probability}%</span>
+                          </div>
+                        </div>
                         </div>
                       ))
                     )}

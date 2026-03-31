@@ -65,6 +65,10 @@ const Pipeline = () => {
         createdAt: d.created_at,
         updatedAt: d.updated_at,
         daysInStage: d.days_in_stage,
+        expectedMargin: Number(d.expected_margin) || 0,
+        location: d.location || '',
+        notes: d.notes || '',
+        products: productsMap[d.id] || [],
       }));
       setDbDeals(mappedDeals);
 
