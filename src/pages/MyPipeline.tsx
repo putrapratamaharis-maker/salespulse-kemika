@@ -467,6 +467,58 @@ const MyPipeline = () => {
         );
       })()}
 
+      {deletionRequests.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+              Permintaan Hapus Deal
+              {deletionRequests.filter(r => r.status === 'pending').length > 0 && (
+                <Badge variant="outline" className="text-yellow-700 border-yellow-300 bg-yellow-50 text-[10px]">
+                  {deletionRequests.filter(r => r.status === 'pending').length} pending
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Tanggal</TableHead>
+                  <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Alasan</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Catatan Review</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {deletionRequests.map(r => {
+                  const snapshot = r.deal_snapshot as any;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">{snapshot?.name || 'N/A'}</div>
+                        {snapshot?.account_name && <div className="text-xs text-muted-foreground">{snapshot.account_name}</div>}
+                      </TableCell>
+                      <TableCell className="text-xs max-w-[200px] truncate" title={r.reason}>{r.reason}</TableCell>
+                      <TableCell>
+                        {r.status === 'pending' && <Badge variant="outline" className="text-yellow-700 border-yellow-300 bg-yellow-50">Pending</Badge>}
+                        {r.status === 'approved' && <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">Disetujui</Badge>}
+                        {r.status === 'rejected' && <Badge variant="outline" className="text-red-700 border-red-300 bg-red-50">Ditolak</Badge>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={r.review_notes || ''}>
+                        {r.review_notes || '-'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
       {editDialogOpen && editingDeal && (
         <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       )}
