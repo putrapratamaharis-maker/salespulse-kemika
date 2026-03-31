@@ -82,7 +82,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [poNumber, setPoNumber] = useState('');
 
   useEffect(() => {
-    if (deal) {
+    if (deal && open) {
       setAccountId(deal.accountId);
       setLocation(deal.location || '');
       setSegment(deal.segment);
@@ -94,7 +94,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
     }
-  }, [deal]);
+  }, [deal, open]);
 
   const selectedAccount = accountOptions.find(a => a.id === accountId);
   const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
