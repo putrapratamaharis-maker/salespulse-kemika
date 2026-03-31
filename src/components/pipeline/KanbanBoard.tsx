@@ -80,6 +80,23 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
+const stageFilterOptions = [
+  { value: 'all', label: 'All Stages' },
+  ...stageOrder.map(s => ({ value: s, label: stageLabels[s] })),
+];
+
+function getMonthOptions(): { value: string; label: string }[] {
+  const months = [];
+  const now = new Date();
+  for (let i = -6; i <= 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short' });
+    months.push({ value: val, label });
+  }
+  return months;
+}
+
 export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
@@ -87,29 +104,39 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
   const [searchQuery, setSearchQuery] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [valueFilter, setValueFilter] = useState('all');
+  const [stageFilter, setStageFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
   const [stageConfirm, setStageConfirm] = useState<{ deal: Deal; targetStage: DealStage } | null>(null);
   const dragDealId = useRef<string | null>(null);
 
+  const monthOptions = useMemo(() => getMonthOptions(), []);
+
   const filteredDeals = useMemo(() => {
     return deals.filter(d => {
-      // Search by deal name or account name
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchName = d.name.toLowerCase().includes(q);
         const matchAccount = getAccountName(d.accountId).toLowerCase().includes(q);
         if (!matchName && !matchAccount) return false;
       }
-      // Segment filter
       if (segmentFilter !== 'all' && d.segment !== segmentFilter) return false;
-      // Value range filter
       if (valueFilter === 'under50' && d.value >= 50_000_000) return false;
       if (valueFilter === '50to200' && (d.value < 50_000_000 || d.value > 200_000_000)) return false;
       if (valueFilter === 'above200' && d.value <= 200_000_000) return false;
+      if (stageFilter !== 'all' && d.stage !== stageFilter) return false;
+      if (monthFilter !== 'all') {
+        const dealDate = d.expectedCloseDate || d.createdAt;
+        if (dealDate) {
+          const dt = new Date(dealDate);
+          const dealMonth = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+          if (dealMonth !== monthFilter) return false;
+        }
+      }
       return true;
     });
-  }, [deals, searchQuery, segmentFilter, valueFilter, getAccountName]);
+  }, [deals, searchQuery, segmentFilter, valueFilter, stageFilter, monthFilter, getAccountName]);
 
-  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all';
+  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all' || stageFilter !== 'all' || monthFilter !== 'all';
 
   const kanbanData = stageOrder.map(stage => {
     const stageDeals = filteredDeals.filter(d => d.stage === stage);
@@ -192,8 +219,29 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   ))}
                 </SelectContent>
               </Select>
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {stageFilterOptions.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Months</SelectItem>
+                  {monthOptions.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); }}>
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); setStageFilter('all'); setMonthFilter('all'); }}>
                   <X className="h-3 w-3 mr-1" /> Clear
                 </Button>
               )}
