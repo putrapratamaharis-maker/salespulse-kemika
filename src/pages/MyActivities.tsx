@@ -560,7 +560,7 @@ const MyActivities = () => {
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Activities" value={String(activities.length)} icon={Activity} autoFitText />
+        <KPICard label="Total Activities" value={String(activities.length)} icon={Activity} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" />
         <KPICard
           label="This Week"
           value={String(thisWeek.length)}
@@ -568,9 +568,11 @@ const MyActivities = () => {
           changeLabel={thisWeek.length >= minWeeklyTarget ? 'On track' : `Min ${minWeeklyTarget}/week`}
           icon={Clock}
           autoFitText
+          className="bg-kpi-teal"
+          borderAccent="border-l-kpi-teal-border"
         />
-        <KPICard label="Online Meetings" value={String(typeCounts['online_meeting'] || 0)} icon={Users} autoFitText />
-        <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText />
+        <KPICard label="Online Meetings" value={String(typeCounts['online_meeting'] || 0)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" />
+        <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" />
       </div>
 
       {/* Activity Type Breakdown */}
