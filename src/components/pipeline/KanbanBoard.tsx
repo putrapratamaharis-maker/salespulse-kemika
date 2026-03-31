@@ -80,6 +80,23 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
+const stageFilterOptions = [
+  { value: 'all', label: 'All Stages' },
+  ...stageOrder.map(s => ({ value: s, label: stageLabels[s] })),
+];
+
+function getMonthOptions(): { value: string; label: string }[] {
+  const months = [];
+  const now = new Date();
+  for (let i = -6; i <= 6; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+    const val = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    const label = d.toLocaleDateString('id-ID', { year: 'numeric', month: 'short' });
+    months.push({ value: val, label });
+  }
+  return months;
+}
+
 export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
