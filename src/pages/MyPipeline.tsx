@@ -186,14 +186,26 @@ const MyPipeline = () => {
     fetchDeals();
   };
 
-  const handleDeleteDeal = async (dealId: string) => {
-    const { error } = await supabase.from('deals').delete().eq('id', dealId);
+  const handleDeleteDeal = async (deal: Deal, reason: string) => {
+    // Submit deletion request instead of direct delete
+    const { error } = await supabase.from('deal_deletion_requests').insert({
+      deal_id: deal.id,
+      requested_by: currentUser.id,
+      reason,
+      deal_snapshot: {
+        name: deal.name,
+        value: deal.value,
+        stage: deal.stage,
+        probability: deal.probability,
+        segment: deal.segment,
+        account_name: getAccountName(deal.accountId),
+      },
+    });
     if (error) {
-      toast({ title: 'Gagal menghapus deal', description: error.message, variant: 'destructive' });
+      toast({ title: 'Gagal mengajukan penghapusan', description: error.message, variant: 'destructive' });
       return;
     }
-    toast({ title: 'Deal berhasil dihapus' });
-    fetchDeals();
+    toast({ title: 'Permintaan hapus deal telah diajukan', description: 'Menunggu persetujuan Admin' });
   };
 
   const handleStageChange = async (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => {

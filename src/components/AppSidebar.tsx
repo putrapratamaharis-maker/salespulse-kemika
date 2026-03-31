@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
-  Database, UserCog, ClipboardList
+  Database, UserCog, ClipboardList, Trash2
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
@@ -41,6 +41,7 @@ const allMasterDataSubItems = [
 
 const adminItems = [
   { title: 'Admin Panel', url: '/admin', icon: Settings, superOnly: false },
+  { title: 'Hapus Deal', url: '/deal-deletion-approval', icon: Trash2, superOnly: false },
   { title: 'Audit Log', url: '/audit-log', icon: ClipboardList, superOnly: true },
 ];
 

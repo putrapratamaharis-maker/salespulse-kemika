@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { StageTransitionDialog } from '@/components/pipeline/StageTransitionDialog';
+import { DeleteDealRequestDialog } from '@/components/pipeline/DeleteDealRequestDialog';
 
 const stageOrder: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
@@ -59,7 +60,7 @@ interface KanbanBoardProps {
   getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
-  onDelete?: (dealId: string) => void;
+  onDelete?: (deal: Deal, reason: string) => void;
   onDuplicate?: (deal: Deal) => void;
   onStageChange?: (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => void;
   readOnly?: boolean;
@@ -362,31 +363,17 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Deal</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus deal "{deleteTarget?.name}"? Tindakan ini tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteTarget && onDelete) {
-                  onDelete(deleteTarget.id);
-                }
-                setDeleteTarget(null);
-              }}
-            >
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Request Dialog */}
+      {deleteTarget && onDelete && (
+        <DeleteDealRequestDialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          dealName={deleteTarget.name}
+          onSubmit={async (reason) => {
+            onDelete(deleteTarget, reason);
+          }}
+        />
+      )}
 
       <DealDetailDialog
         deal={detailDeal}
