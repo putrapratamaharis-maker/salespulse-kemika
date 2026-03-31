@@ -96,7 +96,7 @@ const Products = () => {
     }
     if (revenueFilter !== 'all') {
       const [min, max] = revenueFilter.split('-').map(Number);
-      result = result.filter(p => p.totalRevenue >= min && (max ? p.totalRevenue <= max : true));
+      result = result.filter(p => p.totalRevenue >= min && (max > 0 ? p.totalRevenue <= max : true));
     }
     return result;
   }, [products, categoryFilter, revenueFilter]);
