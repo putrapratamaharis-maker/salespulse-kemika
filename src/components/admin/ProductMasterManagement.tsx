@@ -850,6 +850,7 @@ function ProductTab() {
 
 // --- Unit Management ---
 function UnitTab() {
+  const readOnly = useProductReadOnly();
   const { toast } = useToast();
   const [items, setItems] = useState<{ id: string; name: string; code: string; is_active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
