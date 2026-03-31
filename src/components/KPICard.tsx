@@ -10,11 +10,12 @@ interface KPICardProps {
   icon?: LucideIcon;
   className?: string;
   autoFitText?: boolean;
+  borderAccent?: string;
 }
 
-export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText }: KPICardProps) {
+export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText, borderAccent }: KPICardProps) {
   return (
-    <div className={cn('kpi-card animate-fade-in', className)}>
+    <div className={cn('kpi-card animate-fade-in border-l-4', borderAccent, className)}>
       <div className="flex items-start justify-between mb-3">
         <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
         {Icon && (

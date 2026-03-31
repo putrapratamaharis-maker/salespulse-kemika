@@ -65,10 +65,10 @@ const ARCashflow = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText className="bg-kpi-blue border-kpi-blue" />
-        <KPICard label="Total Overdue" value={formatIDRFull(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose border-kpi-rose" />
-        <KPICard label="Collected MTD" value={formatIDRFull(totalPaid)} icon={CheckCircle} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
-        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Total Overdue" value={formatIDRFull(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" />
+        <KPICard label="Collected MTD" value={formatIDRFull(totalPaid)} icon={CheckCircle} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" />
+        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
