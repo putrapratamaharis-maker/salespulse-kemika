@@ -20,12 +20,12 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
   if (segment === 'B2G') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText />
-        <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={DollarSign} autoFitText />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText />
-        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={TrendingUp} autoFitText />
-        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} autoFitText />
-        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} autoFitText />
+        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={DollarSign} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={TrendingUp} autoFitText className="bg-kpi-purple border-kpi-purple" />
+        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} autoFitText className="bg-kpi-rose border-kpi-rose" />
+        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
       </div>
     );
   }
