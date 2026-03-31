@@ -94,8 +94,8 @@ export default function AccountManagement() {
     return `CUST${year}-${String(nextNum).padStart(4, '0')}`;
   };
 
-  const allowedRoles = ['super_admin', 'admin', 'staff'];
-  const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
+  const hasAccess = true; // All authenticated users can view
+  const canEdit = userRole && ['super_admin', 'admin'].includes(userRole.system_role);
 
   const fetchAccounts = async () => {
     if (!user) return;
