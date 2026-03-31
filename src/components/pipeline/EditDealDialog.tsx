@@ -403,6 +403,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               <Button type="submit">Simpan Perubahan</Button>
             </div>
           </form>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>
