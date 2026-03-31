@@ -135,9 +135,40 @@ export function NotificationDropdown() {
       });
     }
 
+    // 5. DB notifications (deal deletion approval/rejection)
+    const { data: dbNotifs } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_read', false)
+      .order('created_at', { ascending: false })
+      .limit(10);
+
+    if (dbNotifs) {
+      dbNotifs.forEach((n: any) => {
+        notifs.push({
+          id: `db-${n.id}`,
+          type: n.type as any,
+          title: n.title,
+          message: n.message,
+          timestamp: new Date(n.created_at),
+          icon: n.type === 'deletion_approved' ? CheckCircle2 : XCircle,
+          color: n.type === 'deletion_approved' ? 'text-green-500' : 'text-destructive',
+          isDbNotif: true,
+          isRead: n.is_read,
+        });
+      });
+    }
+
     setNotifications(notifs);
     setLoading(false);
   }
+
+  const markAsRead = async (notifId: string) => {
+    const dbId = notifId.replace('db-', '');
+    await supabase.from('notifications').update({ is_read: true }).eq('id', dbId);
+    setNotifications(prev => prev.filter(n => n.id !== notifId));
+  };
 
   const count = notifications.length;
 
