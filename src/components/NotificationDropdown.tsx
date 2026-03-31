@@ -224,6 +224,15 @@ export function NotificationDropdown() {
                         {formatDistanceToNow(notif.timestamp, { addSuffix: true, locale: id })}
                       </p>
                     </div>
+                    {notif.isDbNotif && (
+                      <button
+                        onClick={() => markAsRead(notif.id)}
+                        className="text-[10px] text-muted-foreground hover:text-foreground mt-0.5 shrink-0"
+                        title="Tandai dibaca"
+                      >
+                        ✕
+                      </button>
+                    )}
                   </div>
                 );
               })}
