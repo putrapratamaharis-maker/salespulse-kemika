@@ -45,12 +45,12 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText />
-      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} autoFitText />
-      <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} autoFitText />
-      <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} autoFitText />
-      <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} autoFitText />
-      <KPICard label="Marketplaces" value="2 Active" icon={Users} autoFitText />
+      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
+      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} autoFitText className="bg-kpi-teal border-kpi-teal" />
+      <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
+      <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} autoFitText className="bg-kpi-purple border-kpi-purple" />
+      <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-rose border-kpi-rose" />
+      <KPICard label="Marketplaces" value="2 Active" icon={Users} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
     </div>
   );
 }
