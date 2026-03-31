@@ -202,7 +202,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col w-56 xl:w-0 xl:min-w-0 xl:flex-1 shrink-0 xl:shrink rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`flex flex-col min-w-[210px] flex-1 shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
