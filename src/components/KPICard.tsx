@@ -17,23 +17,15 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
   return (
     <div className={cn('kpi-card animate-fade-in border-l-[5px]', borderAccent, className)}>
       <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</span>
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
         {Icon && (
-          <div className={cn(
-            'p-1.5 rounded-md',
-            status === 'green' && 'bg-status-green-bg',
-            status === 'yellow' && 'bg-status-yellow-bg',
-            status === 'red' && 'bg-status-red-bg',
-            !status && 'bg-secondary',
-          )}>
-            <Icon className={cn(
-              'h-4 w-4',
-              status === 'green' && 'text-status-green',
-              status === 'yellow' && 'text-status-yellow',
-              status === 'red' && 'text-status-red',
-              !status && 'text-muted-foreground',
-            )} />
-          </div>
+          <Icon className={cn(
+            'h-4 w-4',
+            status === 'green' && 'text-status-green',
+            status === 'yellow' && 'text-status-yellow',
+            status === 'red' && 'text-status-red',
+            !status && 'text-muted-foreground',
+          )} />
         )}
       </div>
       <div className={cn(
