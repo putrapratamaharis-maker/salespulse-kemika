@@ -11,9 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { LogOut, User, Settings, ChevronDown, Moon, Sun } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
 
 const orgRoleLabels: Record<string, string> = {
   sales_manager: 'Sales Manager',
@@ -33,6 +35,7 @@ export function TopBar() {
   const { currentUser } = useAppContext();
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const displayName = profile?.full_name || currentUser?.name || 'User';
   const displayEmail = profile?.email || currentUser?.email || '';
@@ -57,6 +60,17 @@ export function TopBar() {
           {systemRoleLabels[currentUser?.systemRole] || 'Viewer'}
         </Badge>
       </div>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-8 w-8"
+        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+        aria-label="Toggle dark mode"
+      >
+        <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
+        <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+      </Button>
 
       <NotificationDropdown />
 
