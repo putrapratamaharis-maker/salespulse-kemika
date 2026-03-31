@@ -68,6 +68,28 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
             )}
           </div>
 
+          {/* WhatsApp Button */}
+          {getAccountContact && getAccountContact(deal.accountId) && (() => {
+            const raw = getAccountContact(deal.accountId) || '';
+            const phone = raw.replace(/[^0-9]/g, '').replace(/^0/, '62');
+            return (
+              <>
+                <Separator />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-green-700 border-green-300 hover:bg-green-50 hover:text-green-800"
+                  asChild
+                >
+                  <a href={`https://wa.me/${phone}`} target="_blank" rel="noopener noreferrer">
+                    <Phone className="h-4 w-4" />
+                    WhatsApp PIC ({raw})
+                  </a>
+                </Button>
+              </>
+            );
+          })()}
+
           {/* Notes */}
           {deal.notes && (
             <>
