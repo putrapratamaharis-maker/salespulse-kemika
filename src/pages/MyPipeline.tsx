@@ -56,10 +56,25 @@ const MyPipeline = () => {
 
   const fetchDeals = async () => {
     setLoading(true);
-    const [{ data: dealsData }, { data: accountsData }] = await Promise.all([
+    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }] = await Promise.all([
       supabase.from('deals').select('*').eq('sales_id', currentUser.id),
       supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+      supabase.from('deal_products').select('*'),
     ]);
+
+    const productsMap: Record<string, DealProduct[]> = {};
+    (dealProductsData || []).forEach((dp: any) => {
+      if (!productsMap[dp.deal_id]) productsMap[dp.deal_id] = [];
+      productsMap[dp.deal_id].push({
+        id: dp.id,
+        category: dp.category,
+        productName: dp.product_name,
+        unit: dp.unit,
+        qty: dp.qty,
+        pricePerUnit: Number(dp.price_per_unit),
+        otherCost: Number(dp.other_cost),
+      });
+    });
 
     const mapped: Deal[] = (dealsData || []).map((d: any) => ({
       id: d.id,
@@ -75,6 +90,10 @@ const MyPipeline = () => {
       accountId: d.account_id,
       salesId: d.sales_id,
       poNumber: d.po_number || '',
+      expectedMargin: Number(d.expected_margin) || 0,
+      location: d.location || '',
+      notes: d.notes || '',
+      products: productsMap[d.id] || [],
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
