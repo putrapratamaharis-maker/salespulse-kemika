@@ -33,12 +33,12 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
   if (segment === 'B2B') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText />
-        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText />
-        <KPICard label="Avg Order Value" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText />
-        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} autoFitText />
-        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} autoFitText />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Avg Order Value" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-kpi-purple border-kpi-purple" />
+        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
+        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-indigo border-kpi-indigo" />
       </div>
     );
   }
