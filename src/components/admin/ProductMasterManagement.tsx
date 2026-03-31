@@ -23,6 +23,7 @@ const useProductReadOnly = () => useContext(ProductReadOnlyContext);
 
 // --- Category Management ---
 function CategoryTab() {
+  const readOnly = useProductReadOnly();
   const { toast } = useToast();
   const [items, setItems] = useState<{ id: string; name: string; description: string | null; code: string; is_active: boolean }[]>([]);
   const [loading, setLoading] = useState(true);
