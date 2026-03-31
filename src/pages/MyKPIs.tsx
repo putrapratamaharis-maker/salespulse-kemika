@@ -238,9 +238,18 @@ const MyKPIs = () => {
       </Card>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {computedKPIs.slice(0, 4).map(kpi => (
-          <KPICard key={kpi.definition.id} label={kpi.definition.name} value={kpi.formatted} status={kpi.status} icon={Target} autoFitText />
-        ))}
+        {computedKPIs.slice(0, 4).map((kpi, idx) => {
+          const kpiColors = [
+            { bg: 'bg-kpi-blue', border: 'border-l-kpi-blue-border' },
+            { bg: 'bg-kpi-teal', border: 'border-l-kpi-teal-border' },
+            { bg: 'bg-kpi-amber', border: 'border-l-kpi-amber-border' },
+            { bg: 'bg-kpi-purple', border: 'border-l-kpi-purple-border' },
+          ];
+          const color = kpiColors[idx % kpiColors.length];
+          return (
+            <KPICard key={kpi.definition.id} label={kpi.definition.name} value={kpi.formatted} status={kpi.status} icon={Target} autoFitText className={color.bg} borderAccent={color.border} />
+          );
+        })}
       </div>
 
       <Card>
