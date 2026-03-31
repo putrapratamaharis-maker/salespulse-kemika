@@ -50,7 +50,7 @@ const sortColumns = [
 
 const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
 
-export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPersons = [] }: AllOpenDealsTableProps) {
+export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountContact, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [segmentFilter, setSegmentFilter] = useState('all');
