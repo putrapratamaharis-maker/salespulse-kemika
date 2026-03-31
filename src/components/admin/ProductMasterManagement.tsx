@@ -235,9 +235,9 @@ function CategoryTab() {
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada kategori.</p> : (
           <Table>
             <TableHeader><TableRow>
-              <TableHead className="w-10">
+              {!readOnly && <TableHead className="w-10">
                 <Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleCatSelectAll} />
-              </TableHead>
+              </TableHead>}
               <TableHead className="text-xs">Code</TableHead>
               <TableHead className="text-xs">Name</TableHead>
               <TableHead className="text-xs">Description</TableHead>
@@ -247,7 +247,7 @@ function CategoryTab() {
             <TableBody>
               {items.map(i => (
                 <TableRow key={i.id} className={`${!i.is_active ? 'opacity-60' : ''} ${selectedIds.has(i.id) ? 'bg-muted/40' : ''}`}>
-                  <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleCatSelect(i.id)} /></TableCell>
+                  {!readOnly && <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleCatSelect(i.id)} /></TableCell>}
                   <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">{i.description || '—'}</TableCell>
@@ -257,24 +257,20 @@ function CategoryTab() {
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openView(i)}>
-                          <Eye className="h-4 w-4 mr-2" /> View Detail
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEdit(i)}>
-                          <Pencil className="h-4 w-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
-                          <Trash2 className="h-4 w-4 mr-2" /> Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {readOnly ? (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openView(i)}><Eye className="h-4 w-4" /></Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openView(i)}><Eye className="h-4 w-4 mr-2" /> View Detail</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEdit(i)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
