@@ -1060,17 +1060,19 @@ function UnitTab() {
 }
 
 // --- Main Export ---
-export function ProductMasterManagement() {
+export function ProductMasterManagement({ readOnly = false }: { readOnly?: boolean }) {
   return (
-    <Tabs defaultValue="categories" className="space-y-4">
-      <TabsList>
-        <TabsTrigger value="categories"><FolderTree className="h-3.5 w-3.5 mr-1" /> Kategori</TabsTrigger>
-        <TabsTrigger value="products"><Package className="h-3.5 w-3.5 mr-1" /> Produk</TabsTrigger>
-        <TabsTrigger value="units"><Ruler className="h-3.5 w-3.5 mr-1" /> Satuan Unit</TabsTrigger>
-      </TabsList>
-      <TabsContent value="categories"><CategoryTab /></TabsContent>
-      <TabsContent value="products"><ProductTab /></TabsContent>
-      <TabsContent value="units"><UnitTab /></TabsContent>
-    </Tabs>
+    <ProductReadOnlyContext.Provider value={readOnly}>
+      <Tabs defaultValue="categories" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="categories"><FolderTree className="h-3.5 w-3.5 mr-1" /> Kategori</TabsTrigger>
+          <TabsTrigger value="products"><Package className="h-3.5 w-3.5 mr-1" /> Produk</TabsTrigger>
+          <TabsTrigger value="units"><Ruler className="h-3.5 w-3.5 mr-1" /> Satuan Unit</TabsTrigger>
+        </TabsList>
+        <TabsContent value="categories"><CategoryTab /></TabsContent>
+        <TabsContent value="products"><ProductTab /></TabsContent>
+        <TabsContent value="units"><UnitTab /></TabsContent>
+      </Tabs>
+    </ProductReadOnlyContext.Provider>
   );
 }
