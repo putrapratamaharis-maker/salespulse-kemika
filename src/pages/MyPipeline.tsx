@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { Deal, DealStage, DealProduct, formatIDR, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2 } from 'lucide-react';
+import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
@@ -13,6 +13,7 @@ import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
@@ -47,6 +48,7 @@ const MyPipeline = () => {
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
   const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picName?: string; picContact?: string; picEmail?: string }[]>([]);
+  const [deletionRequests, setDeletionRequests] = useState<any[]>([]);
 
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
@@ -56,10 +58,11 @@ const MyPipeline = () => {
 
   const fetchDeals = async () => {
     setLoading(true);
-    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }] = await Promise.all([
+    const [{ data: dealsData }, { data: accountsData }, { data: dealProductsData }, { data: delReqData }] = await Promise.all([
       supabase.from('deals').select('*').eq('sales_id', currentUser.id),
-      supabase.from('accounts').select('id, name, pic_contact, pic_email').eq('status', 'Active').order('name'),
+      supabase.from('accounts').select('id, name, pic_contact, pic_email, pic_name').eq('status', 'Active').order('name'),
       supabase.from('deal_products').select('*'),
+      supabase.from('deal_deletion_requests').select('*').eq('requested_by', currentUser.id).order('created_at', { ascending: false }),
     ]);
 
     const productsMap: Record<string, DealProduct[]> = {};
@@ -97,6 +100,7 @@ const MyPipeline = () => {
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
+    setDeletionRequests(delReqData || []);
     setLoading(false);
   };
 
@@ -321,6 +325,58 @@ const MyPipeline = () => {
         <KPICard label="Active Deals" value={String(activeDeals.length)} icon={GitBranch} autoFitText />
         <KPICard label="Avg Probability" value={formatPercent(avgProbability)} status={avgProbability >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
       </div>
+
+      {deletionRequests.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-muted-foreground" />
+              Permintaan Hapus Deal
+              {deletionRequests.filter(r => r.status === 'pending').length > 0 && (
+                <Badge variant="outline" className="text-yellow-700 border-yellow-300 bg-yellow-50 text-[10px]">
+                  {deletionRequests.filter(r => r.status === 'pending').length} pending
+                </Badge>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="text-xs">Tanggal</TableHead>
+                  <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Alasan</TableHead>
+                  <TableHead className="text-xs">Status</TableHead>
+                  <TableHead className="text-xs">Catatan Review</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {deletionRequests.map(r => {
+                  const snapshot = r.deal_snapshot as any;
+                  return (
+                    <TableRow key={r.id}>
+                      <TableCell className="text-xs whitespace-nowrap">{formatDate(r.created_at)}</TableCell>
+                      <TableCell>
+                        <div className="text-sm font-medium">{snapshot?.name || 'N/A'}</div>
+                        {snapshot?.account_name && <div className="text-xs text-muted-foreground">{snapshot.account_name}</div>}
+                      </TableCell>
+                      <TableCell className="text-xs max-w-[200px] truncate" title={r.reason}>{r.reason}</TableCell>
+                      <TableCell>
+                        {r.status === 'pending' && <Badge variant="outline" className="text-yellow-700 border-yellow-300 bg-yellow-50">Pending</Badge>}
+                        {r.status === 'approved' && <Badge variant="outline" className="text-green-700 border-green-300 bg-green-50">Disetujui</Badge>}
+                        {r.status === 'rejected' && <Badge variant="outline" className="text-red-700 border-red-300 bg-red-50">Ditolak</Badge>}
+                      </TableCell>
+                      <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={r.review_notes || ''}>
+                        {r.review_notes || '-'}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText />
