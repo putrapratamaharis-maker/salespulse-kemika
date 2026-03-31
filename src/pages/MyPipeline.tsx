@@ -213,7 +213,7 @@ const MyPipeline = () => {
     fetchDeals();
   };
 
-  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
+  const handleAccountCreated = (account: { id: string; name: string; picName?: string; picContact?: string; picEmail?: string }) => {
     setLocalAccounts(prev => [...prev, account]);
   };
 
