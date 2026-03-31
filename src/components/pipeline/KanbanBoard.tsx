@@ -187,7 +187,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
       <Card>
         <CardHeader className="pb-3">
           <div className="flex flex-col gap-3">
-            <CardTitle className="text-sm font-semibold">Pipeline Kanban</CardTitle>
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold">Pipeline Kanban</CardTitle>
+              {hasActiveFilters && (
+                <span className="text-xs text-muted-foreground font-normal">
+                  {filteredDeals.length} / {deals.length} deals
+                </span>
+              )}
+            </div>
             <div className="flex flex-wrap items-center gap-2">
               <div className="relative flex-1 min-w-[180px] max-w-xs">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
