@@ -217,6 +217,45 @@ const MyPipeline = () => {
     setLocalAccounts(prev => [...prev, account]);
   };
 
+  const handleDuplicateDeal = async (deal: Deal) => {
+    const now = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase.from('deals').insert({
+      name: `${deal.name} (Copy)`,
+      account_id: deal.accountId,
+      sales_id: currentUser.id,
+      segment: deal.segment,
+      stage: 'prospect' as const,
+      value: deal.value,
+      probability: 0,
+      expected_close_date: deal.expectedCloseDate,
+      days_in_stage: 0,
+      po_number: '',
+      expected_margin: deal.expectedMargin || 0,
+      location: deal.location || '',
+      notes: deal.notes || '',
+    }).select('id').single();
+    if (error) {
+      toast({ title: 'Gagal menduplikasi deal', description: error.message, variant: 'destructive' });
+      return;
+    }
+    // Duplicate products
+    if (deal.products && deal.products.length > 0 && data?.id) {
+      await supabase.from('deal_products').insert(
+        deal.products.map(p => ({
+          deal_id: data.id,
+          category: p.category,
+          product_name: p.productName,
+          unit: p.unit,
+          qty: p.qty,
+          price_per_unit: p.pricePerUnit,
+          other_cost: p.otherCost,
+        }))
+      );
+    }
+    toast({ title: 'Deal berhasil diduplikasi sebagai lead baru' });
+    fetchDeals();
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center py-12">
@@ -276,7 +315,7 @@ const MyPipeline = () => {
         <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
       </div>
 
-      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onStageChange={handleStageChange} />
+      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
 
       <Card>
         <CardHeader className="pb-3">
