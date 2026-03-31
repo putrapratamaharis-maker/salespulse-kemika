@@ -234,6 +234,11 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                               <p className="text-xs font-semibold text-foreground leading-tight truncate">{d.name}</p>
                             </div>
                             <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {onDuplicate && (
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
+                                  <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                </Button>
+                              )}
                               {onEdit && (
                                 <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
                                   <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
