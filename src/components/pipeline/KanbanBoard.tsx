@@ -56,6 +56,7 @@ interface KanbanBoardProps {
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
+  onDuplicate?: (deal: Deal) => void;
   onStageChange?: (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => void;
   readOnly?: boolean;
 }
