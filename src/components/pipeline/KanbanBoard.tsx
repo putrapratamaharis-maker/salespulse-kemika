@@ -104,29 +104,39 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
   const [searchQuery, setSearchQuery] = useState('');
   const [segmentFilter, setSegmentFilter] = useState('all');
   const [valueFilter, setValueFilter] = useState('all');
+  const [stageFilter, setStageFilter] = useState('all');
+  const [monthFilter, setMonthFilter] = useState('all');
   const [stageConfirm, setStageConfirm] = useState<{ deal: Deal; targetStage: DealStage } | null>(null);
   const dragDealId = useRef<string | null>(null);
 
+  const monthOptions = useMemo(() => getMonthOptions(), []);
+
   const filteredDeals = useMemo(() => {
     return deals.filter(d => {
-      // Search by deal name or account name
       if (searchQuery) {
         const q = searchQuery.toLowerCase();
         const matchName = d.name.toLowerCase().includes(q);
         const matchAccount = getAccountName(d.accountId).toLowerCase().includes(q);
         if (!matchName && !matchAccount) return false;
       }
-      // Segment filter
       if (segmentFilter !== 'all' && d.segment !== segmentFilter) return false;
-      // Value range filter
       if (valueFilter === 'under50' && d.value >= 50_000_000) return false;
       if (valueFilter === '50to200' && (d.value < 50_000_000 || d.value > 200_000_000)) return false;
       if (valueFilter === 'above200' && d.value <= 200_000_000) return false;
+      if (stageFilter !== 'all' && d.stage !== stageFilter) return false;
+      if (monthFilter !== 'all') {
+        const dealDate = d.expectedCloseDate || d.createdAt;
+        if (dealDate) {
+          const dt = new Date(dealDate);
+          const dealMonth = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
+          if (dealMonth !== monthFilter) return false;
+        }
+      }
       return true;
     });
-  }, [deals, searchQuery, segmentFilter, valueFilter, getAccountName]);
+  }, [deals, searchQuery, segmentFilter, valueFilter, stageFilter, monthFilter, getAccountName]);
 
-  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all';
+  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all' || stageFilter !== 'all' || monthFilter !== 'all';
 
   const kanbanData = stageOrder.map(stage => {
     const stageDeals = filteredDeals.filter(d => d.stage === stage);
