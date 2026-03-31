@@ -79,7 +79,7 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
-export function KanbanBoard({ deals, getAccountName, getAccountContact, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
