@@ -394,7 +394,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         onOpenChange={(open) => !open && setDetailDeal(null)}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
-        getAccountContact={getAccountContact}
+        getAccountPIC={getAccountPIC}
       />
     </>
   );
