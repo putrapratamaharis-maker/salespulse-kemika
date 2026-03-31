@@ -182,6 +182,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
           <DialogTitle>Edit Deal</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
+          {!mastersLoaded ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Memuat data master...</p>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
             {/* Account */}
             <AccountSelectWithCreate
