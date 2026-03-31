@@ -197,12 +197,12 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
           </div>
         </CardHeader>
         <CardContent className="p-0 pb-4">
-          <div className="w-full overflow-x-auto">
-            <div className="flex gap-3 px-6 pb-2 min-w-max xl:min-w-0">
+          <ScrollArea className="w-full">
+            <div className="flex gap-3 px-6 pb-2" style={{ minWidth: `${kanbanData.length * 220 + 48}px` }}>
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col w-56 xl:w-0 xl:min-w-0 xl:flex-1 shrink-0 xl:shrink rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`flex flex-col min-w-[210px] flex-1 shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
@@ -217,7 +217,8 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                   </div>
 
                   {/* Deal Cards */}
-                  <div className="p-2 space-y-2 min-h-[80px] max-h-[300px] overflow-y-auto">
+                  <ScrollArea className="min-h-[80px] max-h-[420px]">
+                  <div className="p-2 space-y-2">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
                     ) : (
@@ -310,10 +311,11 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                       ))
                     )}
                   </div>
+                  </ScrollArea>
                 </div>
               ))}
             </div>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
 
