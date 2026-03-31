@@ -217,7 +217,6 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                   </div>
 
                   {/* Deal Cards */}
-                  <ScrollArea className="min-h-[80px] max-h-[420px]">
                   <div className="p-2 space-y-2">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
@@ -232,7 +231,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                         >
                         {/* Account name - bold on top */}
                         <div className="flex items-start justify-between gap-1">
-                          <p className="text-xs font-bold text-foreground leading-tight truncate flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground leading-tight break-words flex-1 min-w-0">
                             <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity inline mr-0.5 align-text-bottom" />
                             {getAccountName(d.accountId)}
                           </p>
@@ -257,19 +256,19 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
 
                         {/* Deal name - only show if no products */}
                         {(!d.products || d.products.length === 0) && (
-                          <p className="text-[11px] font-medium text-foreground/80 truncate">{d.name}</p>
+                          <p className="text-[11px] font-medium text-foreground/80 break-words">{d.name}</p>
                         )}
 
                         {/* Sales name (for global pipeline) */}
                         {getSalesName && (
-                          <p className="text-[10px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
+                          <p className="text-[10px] text-muted-foreground break-words">{getSalesName(d.salesId)}</p>
                         )}
 
                         {/* Products list - max 3 items */}
                         {d.products && d.products.length > 0 && (
                           <div className="space-y-0.5 pt-0.5 overflow-hidden">
                             {d.products.slice(0, 3).map((p, i) => (
-                              <p key={i} className="text-[10px] text-muted-foreground truncate" title={`${p.productName} (${p.qty} ${p.unit})`}>
+                              <p key={i} className="text-[10px] text-muted-foreground break-words" title={`${p.productName} (${p.qty} ${p.unit})`}>
                                 • {p.productName} ({p.qty} {p.unit})
                               </p>
                             ))}
@@ -311,7 +310,6 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                       ))
                     )}
                   </div>
-                  </ScrollArea>
                 </div>
               ))}
             </div>
