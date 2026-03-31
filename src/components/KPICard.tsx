@@ -27,7 +27,6 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
             !status && 'text-muted-foreground',
           )} />
         )}
-        )}
       </div>
       <div className={cn(
         "font-bold text-foreground tracking-tight",
