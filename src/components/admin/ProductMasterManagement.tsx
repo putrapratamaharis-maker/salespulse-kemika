@@ -691,17 +691,12 @@ function ProductTab() {
           </Select>
         </div>
 
-        {/* Bulk action bar */}
-        {selectedIds.size > 0 && (
+        {!readOnly && selectedIds.size > 0 && (
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
             <span className="text-xs font-medium">{selectedIds.size} produk dipilih</span>
             <div className="h-4 w-px bg-border" />
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>
-              Aktifkan
-            </Button>
-            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>
-              Nonaktifkan
-            </Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(true)}>Aktifkan</Button>
+            <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={() => handleBulkSetStatus(false)}>Nonaktifkan</Button>
             <Button variant="outline" size="sm" className="h-7 text-xs gap-1" onClick={exportSelectedExcel}>
               <FileSpreadsheet className="h-3 w-3" /> Export Terpilih
             </Button>
