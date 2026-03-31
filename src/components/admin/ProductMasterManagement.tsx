@@ -712,12 +712,9 @@ function ProductTab() {
           <>
             <Table>
               <TableHeader><TableRow>
-                <TableHead className="w-10">
-                  <Checkbox
-                    checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length}
-                    onCheckedChange={toggleSelectAll}
-                  />
-                </TableHead>
+                {!readOnly && <TableHead className="w-10">
+                  <Checkbox checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length} onCheckedChange={toggleSelectAll} />
+                </TableHead>}
                 <TableHead className="text-xs">SKU</TableHead>
                 <TableHead className="text-xs">Product Name</TableHead>
                 <TableHead className="text-xs">Category</TableHead>
@@ -730,12 +727,7 @@ function ProductTab() {
               <TableBody>
                 {paginatedItems.map((i: any) => (
                   <TableRow key={i.id} className={selectedIds.has(i.id) ? 'bg-muted/40' : ''}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedIds.has(i.id)}
-                        onCheckedChange={() => toggleSelect(i.id)}
-                      />
-                    </TableCell>
+                    {!readOnly && <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleSelect(i.id)} /></TableCell>}
                     <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
                     <TableCell>
                       <div>
@@ -748,32 +740,23 @@ function ProductTab() {
                     <TableCell className="text-sm text-right">Rp {Number(i.purchase_price || i.price || 0).toLocaleString('id-ID')}</TableCell>
                     <TableCell className="text-sm text-right">{Number(i.selling_price) ? `Rp ${Number(i.selling_price).toLocaleString('id-ID')}` : '-'}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}
-                      >
+                      <Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>
                         {i.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openView(i)}>
-                            <Eye className="h-4 w-4 mr-2" /> View Detail
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEdit(i)}>
-                            <Pencil className="h-4 w-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {readOnly ? (
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openView(i)}><Eye className="h-4 w-4" /></Button>
+                      ) : (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openView(i)}><Eye className="h-4 w-4 mr-2" /> View Detail</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(i)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
