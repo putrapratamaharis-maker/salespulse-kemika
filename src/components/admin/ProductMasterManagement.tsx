@@ -303,6 +303,7 @@ function CategoryTab() {
 
 // --- Product Management ---
 function ProductTab() {
+  const readOnly = useProductReadOnly();
   const { toast } = useToast();
   const [items, setItems] = useState<any[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
