@@ -231,7 +231,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                         >
                         {/* Account name - bold on top */}
                         <div className="flex items-start justify-between gap-1">
-                          <p className="text-xs font-bold text-foreground leading-tight truncate flex-1 min-w-0">
+                          <p className="text-xs font-bold text-foreground leading-tight break-words flex-1 min-w-0">
                             <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity inline mr-0.5 align-text-bottom" />
                             {getAccountName(d.accountId)}
                           </p>
