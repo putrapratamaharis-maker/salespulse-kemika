@@ -25,7 +25,7 @@ const Pipeline = () => {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.from('deals').select('*'),
-        supabase.from('accounts').select('id, name, pic_contact'),
+        supabase.from('accounts').select('id, name, pic_name, pic_contact, pic_email'),
         supabase.from('profiles').select('user_id, full_name').eq('is_active', true),
         supabase.from('deal_products').select('*'),
       ]);
