@@ -51,10 +51,12 @@ const stageBgColors: Record<string, string> = {
   lost: 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
 };
 
+import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
+
 interface KanbanBoardProps {
   deals: Deal[];
   getAccountName: (accountId: string) => string;
-  getAccountContact?: (accountId: string) => string | undefined;
+  getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
