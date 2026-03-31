@@ -165,7 +165,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 bg-kpi-amber">
+        <Card className="animate-fade-in border-0 border-l-4 border-l-kpi-amber-border bg-kpi-amber">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-amber-fg/10">
               <Layers className="h-5 w-5 text-kpi-amber-fg" />
