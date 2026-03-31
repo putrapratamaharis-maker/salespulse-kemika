@@ -108,7 +108,7 @@ const MyPipeline = () => {
     localAccounts.find(a => a.id === accountId)?.name || accountId;
 
   const handleAddDeal = async (deal: Deal) => {
-    const { error } = await supabase.from('deals').insert({
+    const { data, error } = await supabase.from('deals').insert({
       name: deal.name,
       account_id: deal.accountId,
       sales_id: deal.salesId,
@@ -119,10 +119,27 @@ const MyPipeline = () => {
       expected_close_date: deal.expectedCloseDate,
       days_in_stage: 0,
       po_number: deal.poNumber || '',
-    });
+      expected_margin: deal.expectedMargin || 0,
+      location: deal.location || '',
+      notes: deal.notes || '',
+    }).select('id').single();
     if (error) {
       toast({ title: 'Gagal menyimpan lead', description: error.message, variant: 'destructive' });
       return;
+    }
+    // Save deal products
+    if (deal.products && deal.products.length > 0 && data?.id) {
+      await supabase.from('deal_products').insert(
+        deal.products.map(p => ({
+          deal_id: data.id,
+          category: p.category,
+          product_name: p.productName,
+          unit: p.unit,
+          qty: p.qty,
+          price_per_unit: p.pricePerUnit,
+          other_cost: p.otherCost,
+        }))
+      );
     }
     toast({ title: 'Lead berhasil ditambahkan & tersimpan' });
     fetchDeals();
