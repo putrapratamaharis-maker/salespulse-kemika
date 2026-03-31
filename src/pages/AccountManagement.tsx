@@ -490,33 +490,38 @@ export default function AccountManagement() {
           <p className="text-sm text-muted-foreground">Kelola daftar pelanggan & prospek Anda</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadTemplate}>
-            <Download className="h-4 w-4 mr-1" /> Template
-          </Button>
-          <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
-            <Button variant="outline" size="sm" asChild disabled={importing}>
-              <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
-            </Button>
-          </label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-1" /> Ekspor
+          {!canEdit && <Badge variant="outline" className="text-[10px]">Read Only</Badge>}
+          {canEdit && (
+            <>
+              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                <Download className="h-4 w-4 mr-1" /> Template
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => confirmExport('excel')}>
-                <Download className="h-4 w-4 mr-2" /> Export Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => confirmExport('pdf')}>
-                <FileText className="h-4 w-4 mr-2" /> Export PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Tambah Akun
-          </Button>
+              <label>
+                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
+                <Button variant="outline" size="sm" asChild disabled={importing}>
+                  <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
+                </Button>
+              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-1" /> Ekspor
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => confirmExport('excel')}>
+                    <Download className="h-4 w-4 mr-2" /> Export Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => confirmExport('pdf')}>
+                    <FileText className="h-4 w-4 mr-2" /> Export PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button onClick={openCreate} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Tambah Akun
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
