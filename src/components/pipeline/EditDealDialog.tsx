@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
+import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
@@ -136,6 +137,23 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
     e.preventDefault();
     if (!deal || !accountId || !expectedCloseDate) {
       toast({ title: 'Lengkapi semua field yang diperlukan', variant: 'destructive' });
+      return;
+    }
+
+    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
+    const validationErrors = validateDealInputs({
+      products,
+      expectedMargin,
+      probability,
+      skipProbability: skipProb,
+    });
+
+    if (validationErrors.length > 0) {
+      toast({
+        title: 'Kesalahan input karakter',
+        description: validationErrors.map(e => e.message).join('\n'),
+        variant: 'destructive',
+      });
       return;
     }
 
