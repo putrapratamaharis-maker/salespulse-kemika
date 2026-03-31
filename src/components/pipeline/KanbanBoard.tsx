@@ -286,7 +286,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                         </div>
 
                         {/* Meta row: expected close, margin, probability */}
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50 gap-1">
                           <span className="flex items-center gap-0.5" title="Expected Close">
                             <CalendarClock className="h-3 w-3" />
                             {formatDate(d.expectedCloseDate)}
