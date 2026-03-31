@@ -360,7 +360,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input type="number" min={0} max={100} value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label>Probability (%)</Label>
