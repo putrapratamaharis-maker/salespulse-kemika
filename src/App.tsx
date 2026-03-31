@@ -22,6 +22,7 @@ import AdminPanel from "./pages/AdminPanel";
 import AccountManagement from "./pages/AccountManagement";
 import UserManagement from "./pages/UserManagement";
 import ProductMaster from "./pages/ProductMaster";
+import AuditLog from "./pages/AuditLog";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
@@ -63,6 +64,7 @@ function ProtectedRoutes() {
           <Route path="/accounts" element={<AccountManagement />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/product-master" element={<ProductMaster />} />
+          <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>

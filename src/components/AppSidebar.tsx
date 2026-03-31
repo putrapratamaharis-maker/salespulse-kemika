@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
-  Database, UserCog
+  Database, UserCog, ClipboardList
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
@@ -40,7 +40,8 @@ const allMasterDataSubItems = [
 ];
 
 const adminItems = [
-  { title: 'Admin Panel', url: '/admin', icon: Settings },
+  { title: 'Admin Panel', url: '/admin', icon: Settings, superOnly: false },
+  { title: 'Audit Log', url: '/audit-log', icon: ClipboardList, superOnly: true },
 ];
 
 const orgRoleLabels: Record<string, string> = {
@@ -218,8 +219,10 @@ export function AppSidebar() {
                   </Collapsible>
                 </SidebarMenuItem>
 
-                {/* Admin Panel — only for admin roles */}
-                {isAdmin && adminItems.map((item) => (
+                {/* Admin items — filtered by role */}
+                {isAdmin && adminItems
+                  .filter(item => !item.superOnly || isSuperAdmin)
+                  .map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
