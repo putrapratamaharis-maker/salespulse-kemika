@@ -261,7 +261,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
 
                         {/* Sales name (for global pipeline) */}
                         {getSalesName && (
-                          <p className="text-[10px] text-muted-foreground truncate">Sales: {getSalesName(d.salesId)}</p>
+                          <p className="text-[10px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
                         )}
 
                         {/* Products list - max 3 items */}
