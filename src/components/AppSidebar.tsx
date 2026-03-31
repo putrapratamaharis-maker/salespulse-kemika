@@ -219,8 +219,10 @@ export function AppSidebar() {
                   </Collapsible>
                 </SidebarMenuItem>
 
-                {/* Admin Panel — only for admin roles */}
-                {isAdmin && adminItems.map((item) => (
+                {/* Admin items — filtered by role */}
+                {isAdmin && adminItems
+                  .filter(item => !item.superOnly || isSuperAdmin)
+                  .map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink
