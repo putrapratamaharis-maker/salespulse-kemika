@@ -256,7 +256,16 @@ export function AppSidebar() {
                         activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                       >
                         <item.icon className="mr-2 h-4 w-4 shrink-0" />
-                        {!collapsed && <span>{item.title}</span>}
+                        {!collapsed && (
+                          <span className="flex-1 flex items-center justify-between">
+                            <span>{item.title}</span>
+                            {item.url === '/deal-deletion-approval' && pendingDeletions > 0 && (
+                              <Badge variant="destructive" className="ml-auto text-[10px] h-5 min-w-5 px-1.5">
+                                {pendingDeletions}
+                              </Badge>
+                            )}
+                          </span>
+                        )}
                       </NavLink>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
