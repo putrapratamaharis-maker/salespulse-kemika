@@ -220,6 +220,7 @@ const Pipeline = () => {
       <KanbanBoard
         deals={allDeals}
         getAccountName={getAccountName}
+        getAccountContact={getAccountContact}
         getSalesName={getSalesName}
         readOnly
       />
