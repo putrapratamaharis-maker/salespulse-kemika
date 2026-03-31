@@ -11,9 +11,11 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, User, Settings, ChevronDown } from 'lucide-react';
+import { LogOut, User, Settings, ChevronDown, Moon, Sun } from 'lucide-react';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
+import { Button } from '@/components/ui/button';
 
 const orgRoleLabels: Record<string, string> = {
   sales_manager: 'Sales Manager',
