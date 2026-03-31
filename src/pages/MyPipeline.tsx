@@ -315,7 +315,7 @@ const MyPipeline = () => {
         <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
       </div>
 
-      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onStageChange={handleStageChange} />
+      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
 
       <Card>
         <CardHeader className="pb-3">
