@@ -393,10 +393,6 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             </div>
           </form>
         </ScrollArea>
-        </>
-        ) : (
-          <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
-        )}
       </DialogContent>
     </Dialog>
   );
