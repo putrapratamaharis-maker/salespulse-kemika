@@ -96,7 +96,7 @@ const MyPipeline = () => {
       products: productsMap[d.id] || [],
     }));
     setDeals(mapped);
-    setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
+    setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
     setLoading(false);
   };
 
