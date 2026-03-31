@@ -254,8 +254,10 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                           </div>
                         </div>
 
-                        {/* Deal name */}
-                        <p className="text-[11px] font-medium text-foreground/80 truncate">{d.name}</p>
+                        {/* Deal name - only show if no products */}
+                        {(!d.products || d.products.length === 0) && (
+                          <p className="text-[11px] font-medium text-foreground/80 truncate">{d.name}</p>
+                        )}
 
                         {/* Sales name (for global pipeline) */}
                         {getSalesName && (
