@@ -114,6 +114,28 @@
     --sidebar-border: 210 40% 12%;
     --sidebar-ring: 174 60% 50%;
     --sidebar-muted: 210 30% 30%;
+
+    /* KPI soft backgrounds (dark) */
+    --kpi-blue: 210 50% 15%;
+    --kpi-blue-fg: 210 60% 75%;
+    --kpi-teal: 174 40% 14%;
+    --kpi-teal-fg: 174 55% 70%;
+    --kpi-amber: 40 50% 14%;
+    --kpi-amber-fg: 35 70% 72%;
+    --kpi-purple: 270 40% 16%;
+    --kpi-purple-fg: 270 45% 75%;
+    --kpi-rose: 350 45% 15%;
+    --kpi-rose-fg: 350 55% 72%;
+    --kpi-emerald: 152 40% 14%;
+    --kpi-emerald-fg: 152 50% 70%;
+    --kpi-indigo: 230 45% 16%;
+    --kpi-indigo-fg: 230 50% 75%;
+    --kpi-orange: 25 50% 15%;
+    --kpi-orange-fg: 25 65% 72%;
+    --kpi-cyan: 190 45% 14%;
+    --kpi-cyan-fg: 190 55% 72%;
+    --kpi-slate: 215 25% 16%;
+    --kpi-slate-fg: 215 25% 72%;
   }
 }
 
