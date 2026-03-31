@@ -247,6 +247,7 @@ const Pipeline = () => {
         deals={allDeals}
         getSalesName={getSalesName}
         getAccountName={getAccountName}
+        getAccountContact={getAccountContact}
         salesPersons={salesUsers}
       />
     </div>
