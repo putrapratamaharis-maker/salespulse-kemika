@@ -35,6 +35,7 @@ export function TopBar() {
   const { currentUser } = useAppContext();
   const { signOut, profile } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
 
   const displayName = profile?.full_name || currentUser?.name || 'User';
   const displayEmail = profile?.email || currentUser?.email || '';
