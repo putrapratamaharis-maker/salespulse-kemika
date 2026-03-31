@@ -13,6 +13,7 @@ import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
 const stageOrder = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
