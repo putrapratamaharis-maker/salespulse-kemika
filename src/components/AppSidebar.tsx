@@ -33,10 +33,10 @@ const navItems = [
   { title: 'AR & Cashflow', url: '/ar-cashflow', icon: CreditCard },
 ];
 
-const masterDataSubItems = [
-  { title: 'Akun / Customer', url: '/accounts', icon: Building2 },
-  { title: 'Produk', url: '/product-master', icon: Package },
-  { title: 'User', url: '/users', icon: UserCog },
+const allMasterDataSubItems = [
+  { title: 'Akun / Customer', url: '/accounts', icon: Building2, minRole: 'staff' as const },
+  { title: 'Produk', url: '/product-master', icon: Package, minRole: 'staff' as const },
+  { title: 'User', url: '/users', icon: UserCog, minRole: 'super_admin' as const },
 ];
 
 const adminItems = [
