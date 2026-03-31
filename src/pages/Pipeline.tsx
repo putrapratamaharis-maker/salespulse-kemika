@@ -17,6 +17,7 @@ const Pipeline = () => {
   // DB state
   const [dbDeals, setDbDeals] = useState<Deal[]>([]);
   const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+  const [accountContactMap, setAccountContactMap] = useState<Map<string, string>>(new Map());
   const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
