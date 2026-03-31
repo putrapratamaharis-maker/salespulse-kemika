@@ -363,31 +363,17 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete Confirmation */}
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Deal</AlertDialogTitle>
-            <AlertDialogDescription>
-              Apakah Anda yakin ingin menghapus deal "{deleteTarget?.name}"? Tindakan ini tidak dapat dibatalkan.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                if (deleteTarget && onDelete) {
-                  onDelete(deleteTarget.id);
-                }
-                setDeleteTarget(null);
-              }}
-            >
-              Hapus
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Delete Request Dialog */}
+      {deleteTarget && onDelete && (
+        <DeleteDealRequestDialog
+          open={!!deleteTarget}
+          onOpenChange={(open) => !open && setDeleteTarget(null)}
+          dealName={deleteTarget.name}
+          onSubmit={async (reason) => {
+            onDelete(deleteTarget);
+          }}
+        />
+      )}
 
       <DealDetailDialog
         deal={detailDeal}
