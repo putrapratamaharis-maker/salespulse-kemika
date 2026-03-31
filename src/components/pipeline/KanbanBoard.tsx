@@ -240,6 +240,8 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   ))}
                 </SelectContent>
               </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); setStageFilter('all'); setMonthFilter('all'); }}>
                   <X className="h-3 w-3 mr-1" /> Clear
                 </Button>
               )}
