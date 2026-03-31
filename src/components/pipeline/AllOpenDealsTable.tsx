@@ -13,11 +13,13 @@ import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown, Chevr
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
+
 interface AllOpenDealsTableProps {
   deals: Deal[];
   getSalesName: (salesId: string) => string;
   getAccountName: (accountId: string) => string;
-  getAccountContact?: (accountId: string) => string | undefined;
+  getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   salesPersons?: { id: string; name: string }[];
 }
 
