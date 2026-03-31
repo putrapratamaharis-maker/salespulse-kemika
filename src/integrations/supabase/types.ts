@@ -101,6 +101,56 @@ export type Database = {
         }
         Relationships: []
       }
+      deal_deletion_requests: {
+        Row: {
+          created_at: string
+          deal_id: string
+          deal_snapshot: Json
+          id: string
+          reason: string
+          requested_by: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          deal_id: string
+          deal_snapshot?: Json
+          id?: string
+          reason: string
+          requested_by: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          deal_id?: string
+          deal_snapshot?: Json
+          id?: string
+          reason?: string
+          requested_by?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deal_deletion_requests_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       deal_products: {
         Row: {
           category: string
