@@ -292,7 +292,16 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                             {d.expectedMargin != null && d.expectedMargin > 0 && (
                               <span title="Expected Margin">M: {d.expectedMargin}%</span>
                             )}
-                            <span title="Probability">{d.probability}%</span>
+                            <span
+                              title="Probability"
+                              className={`font-semibold ${
+                                d.probability === 100 ? 'text-emerald-600 dark:text-emerald-400'
+                                : d.probability >= 80 ? 'text-blue-600 dark:text-blue-400'
+                                : d.probability >= 50 ? 'text-yellow-600 dark:text-yellow-400'
+                                : d.probability > 0 ? 'text-purple-600 dark:text-purple-400'
+                                : 'text-red-600 dark:text-red-400'
+                              }`}
+                            >{d.probability}%</span>
                           </div>
                         </div>
                         </div>
