@@ -56,8 +56,11 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [dbProducts, setDbProducts] = useState<{ id: string; name: string; category_id: string | null; unit: string | null; price: number; selling_price: number | null }[]>([]);
   const [dbUnits, setDbUnits] = useState<{ id: string; name: string }[]>([]);
 
+  const [mastersLoaded, setMastersLoaded] = useState(false);
+
   useEffect(() => {
     const fetchMasters = async () => {
+      setMastersLoaded(false);
       const [{ data: cats }, { data: prods }, { data: units }] = await Promise.all([
         supabase.from('product_categories').select('id, name').eq('is_active', true).order('name'),
         supabase.from('products').select('id, name, category_id, unit, price, selling_price').eq('is_active', true).order('name'),
@@ -66,8 +69,10 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setDbCategories(cats || []);
       setDbProducts(prods || []);
       setDbUnits(units || []);
+      setMastersLoaded(true);
     };
     if (open) fetchMasters();
+    else setMastersLoaded(false);
   }, [open]);
 
   const [accountId, setAccountId] = useState('');
@@ -82,19 +87,19 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [poNumber, setPoNumber] = useState('');
 
   useEffect(() => {
-    if (deal && open) {
+    if (deal && open && mastersLoaded) {
       setAccountId(deal.accountId);
       setLocation(deal.location || '');
       setSegment(deal.segment);
       setStage(deal.stage);
       setProducts(deal.products && deal.products.length > 0 ? deal.products : [emptyProduct()]);
-      setExpectedMargin(deal.expectedMargin ? String(deal.expectedMargin) : '');
+      setExpectedMargin(deal.expectedMargin != null && deal.expectedMargin !== 0 ? String(deal.expectedMargin) : '');
       setProbability(String(deal.probability));
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
     }
-  }, [deal, open]);
+  }, [deal, open, mastersLoaded]);
 
   const selectedAccount = accountOptions.find(a => a.id === accountId);
   const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
