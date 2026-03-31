@@ -95,7 +95,7 @@ export default function AccountManagement() {
   };
 
   const hasAccess = true; // All authenticated users can view
-  const canEdit = userRole && ['super_admin', 'admin'].includes(userRole.system_role);
+  const canEdit = userRole && ['super_admin', 'admin', 'staff'].includes(userRole.system_role);
 
   const fetchAccounts = async () => {
     if (!user) return;
