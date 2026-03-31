@@ -943,38 +943,40 @@ function UnitTab() {
           <Ruler className="h-4 w-4 text-accent" /> Satuan Unit
           <Badge variant="secondary" className="text-[10px] ml-1">{items.length}</Badge>
         </CardTitle>
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}><Download className="h-3 w-3" /> Template</Button>
-          <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
-            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
-              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
-            </Button>
-          </label>
-          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}><FileDown className="h-3 w-3" /> Ekspor</Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>{editItem ? 'Edit Unit' : 'Tambah Unit'}</DialogTitle></DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Kode Unit</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. PCS" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+        {!readOnly && (
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}><Download className="h-3 w-3" /> Template</Button>
+            <label>
+              <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+                <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+              </Button>
+            </label>
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}><FileDown className="h-3 w-3" /> Ekspor</Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader><DialogTitle>{editItem ? 'Edit Unit' : 'Tambah Unit'}</DialogTitle></DialogHeader>
+                <div className="space-y-3 mt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5"><Label className="text-xs">Kode Unit</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. PCS" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Nama Unit</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. pcs, kg, meter" /></div>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" /> Aktif</label>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                    <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
+                  </div>
                 </div>
-                <label className="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" /> Aktif</label>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
-        {selectedIds.size > 0 && (
+        {!readOnly && selectedIds.size > 0 && (
           <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2 flex-wrap">
             <span className="text-xs font-medium">{selectedIds.size} unit dipilih</span>
             <div className="h-4 w-px bg-border" />
@@ -989,7 +991,7 @@ function UnitTab() {
         {loading ? <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div> : items.length === 0 ? <p className="text-sm text-muted-foreground text-center py-6">Belum ada unit.</p> : (
           <Table>
             <TableHeader><TableRow>
-              <TableHead className="w-10"><Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleUnitSelectAll} /></TableHead>
+              {!readOnly && <TableHead className="w-10"><Checkbox checked={items.length > 0 && selectedIds.size === items.length} onCheckedChange={toggleUnitSelectAll} /></TableHead>}
               <TableHead className="text-xs">Code</TableHead>
               <TableHead className="text-xs">Name</TableHead>
               <TableHead className="text-xs">Status</TableHead>
@@ -998,19 +1000,23 @@ function UnitTab() {
             <TableBody>
               {items.map(i => (
                 <TableRow key={i.id} className={`${!i.is_active ? 'opacity-60' : ''} ${selectedIds.has(i.id) ? 'bg-muted/40' : ''}`}>
-                  <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleUnitSelect(i.id)} /></TableCell>
+                  {!readOnly && <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleUnitSelect(i.id)} /></TableCell>}
                   <TableCell className="text-sm font-mono font-semibold">{i.code || '—'}</TableCell>
                   <TableCell className="text-sm font-medium">{i.name}</TableCell>
                   <TableCell><Badge variant="outline" className={`text-[10px] ${i.is_active ? 'border-green-500 text-green-600 bg-green-50' : 'border-muted-foreground/30 text-muted-foreground'}`}>{i.is_active ? 'Active' : 'Inactive'}</Badge></TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openView(i)}><Eye className="h-4 w-4 mr-2" /> View Detail</DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openEdit(i)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    {readOnly ? (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openView(i)}><Eye className="h-4 w-4" /></Button>
+                    ) : (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openView(i)}><Eye className="h-4 w-4 mr-2" /> View Detail</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openEdit(i)}><Pencil className="h-4 w-4 mr-2" /> Edit</DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(i.id)}><Trash2 className="h-4 w-4 mr-2" /> Delete</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}
