@@ -226,7 +226,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           className={`bg-card rounded-md border shadow-sm p-2.5 space-y-1 ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group`}
-                          onClick={() => setDetailDeal(d)}
+                          onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                           <div className="flex items-start justify-between gap-1">
                             <div className="flex items-center gap-1 flex-1 min-w-0">

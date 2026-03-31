@@ -160,8 +160,18 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
     onOpenChange(false);
   };
 
+  if (!deal) {
+    return (
+      <Dialog open={false} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader><DialogTitle>Edit Deal</DialogTitle></DialogHeader>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
-    <Dialog open={open && !!deal} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Edit Deal</DialogTitle>
