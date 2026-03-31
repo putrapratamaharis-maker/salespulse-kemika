@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
@@ -6,6 +7,8 @@ import {
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
 import { useLocation } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
 
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
