@@ -46,7 +46,7 @@ const MyPipeline = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
-  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picName?: string; picContact?: string; picEmail?: string }[]>([]);
 
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
