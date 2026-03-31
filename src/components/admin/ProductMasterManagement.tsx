@@ -174,43 +174,45 @@ function CategoryTab() {
           <FolderTree className="h-4 w-4 text-accent" /> Product Categories
           <Badge variant="secondary" className="text-[10px] ml-1">{items.length}</Badge>
         </CardTitle>
-        <div className="flex items-center gap-1.5">
-          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
-            <Download className="h-3 w-3" /> Template
-          </Button>
-          <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
-            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
-              <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+        {!readOnly && (
+          <div className="flex items-center gap-1.5">
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={downloadTemplate}>
+              <Download className="h-3 w-3" /> Template
             </Button>
-          </label>
-          <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}>
-            <FileDown className="h-3 w-3" /> Ekspor
-          </Button>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader><DialogTitle>{editItem ? 'Edit Kategori' : 'Tambah Kategori'}</DialogTitle></DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5"><Label className="text-xs">Kode Kategori</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CAT-001" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs">Nama Kategori</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pestisida" /></div>
+            <label>
+              <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleImport} disabled={importing} />
+              <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" asChild disabled={importing}>
+                <span>{importing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" />} Import</span>
+              </Button>
+            </label>
+            <Button variant="outline" size="sm" className="gap-1 h-7 text-xs" onClick={exportExcel}>
+              <FileDown className="h-3 w-3" /> Ekspor
+            </Button>
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1 h-7 text-xs" onClick={openAdd}><Plus className="h-3 w-3" /> Tambah</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader><DialogTitle>{editItem ? 'Edit Kategori' : 'Tambah Kategori'}</DialogTitle></DialogHeader>
+                <div className="space-y-3 mt-2">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5"><Label className="text-xs">Kode Kategori</Label><Input value={code} onChange={e => setCode(e.target.value)} placeholder="e.g. CAT-001" /></div>
+                    <div className="space-y-1.5"><Label className="text-xs">Nama Kategori</Label><Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Pestisida" /></div>
+                  </div>
+                  <div className="space-y-1.5"><Label className="text-xs">Deskripsi (opsional)</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Deskripsi singkat" /></div>
+                  <label className="flex items-center gap-2 text-sm cursor-pointer">
+                    <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
+                    Aktif
+                  </label>
+                  <div className="flex justify-end gap-2 pt-2">
+                    <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
+                    <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
+                  </div>
                 </div>
-                <div className="space-y-1.5"><Label className="text-xs">Deskripsi (opsional)</Label><Input value={description} onChange={e => setDescription(e.target.value)} placeholder="Deskripsi singkat" /></div>
-                <label className="flex items-center gap-2 text-sm cursor-pointer">
-                  <input type="checkbox" checked={isActive} onChange={e => setIsActive(e.target.checked)} className="rounded" />
-                  Aktif
-                </label>
-                <div className="flex justify-end gap-2 pt-2">
-                  <Button variant="outline" size="sm" onClick={() => setDialogOpen(false)}>Batal</Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving}>{saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}Simpan</Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
-        </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-3">
         {/* Bulk action bar */}
