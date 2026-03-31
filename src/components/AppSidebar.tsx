@@ -72,6 +72,27 @@ export function AppSidebar() {
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
   const isMasterDataActive = ['/accounts', '/users', '/product-master'].includes(location.pathname);
 
+  const [pendingDeletions, setPendingDeletions] = useState(0);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from('deal_deletion_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+      setPendingDeletions(count || 0);
+    };
+    fetchCount();
+
+    const channel = supabase
+      .channel('deletion-requests-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'deal_deletion_requests' }, () => fetchCount())
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [isAdmin]);
+
   const masterDataSubItems = allMasterDataSubItems.filter(item => {
     if (item.minRole === 'super_admin') return isSuperAdmin;
     return true;
