@@ -217,7 +217,8 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                   </div>
 
                   {/* Deal Cards */}
-                  <div className="p-2 space-y-2 min-h-[80px] max-h-[300px] overflow-y-auto">
+                  <ScrollArea className="min-h-[80px] max-h-[420px]">
+                  <div className="p-2 space-y-2">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
                     ) : (
