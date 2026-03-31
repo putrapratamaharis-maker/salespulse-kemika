@@ -104,8 +104,8 @@ const Pipeline = () => {
   const getAccountName = (accountId: string) =>
     accountMap.get(accountId) || accountId;
 
-  const getAccountContact = (accountId: string) =>
-    accountContactMap.get(accountId);
+  const getAccountPIC = (accountId: string) =>
+    accountPICMap.get(accountId);
 
   const allDeals = salesFilter === 'all'
     ? localDeals
