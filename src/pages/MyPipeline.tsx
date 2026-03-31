@@ -454,7 +454,7 @@ const MyPipeline = () => {
       {editDialogOpen && editingDeal && (
         <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       )}
-      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} />
+      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountContact={(accountId: string) => localAccounts.find(a => a.id === accountId)?.picContact} />
     </div>
   );
 };
