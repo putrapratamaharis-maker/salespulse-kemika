@@ -138,6 +138,23 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       return;
     }
 
+    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
+    const validationErrors = validateDealInputs({
+      products,
+      expectedMargin,
+      probability,
+      skipProbability: skipProb,
+    });
+
+    if (validationErrors.length > 0) {
+      toast({
+        title: 'Kesalahan input karakter',
+        description: validationErrors.map(e => e.message).join('\n'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const now = new Date().toISOString().split('T')[0];
     const dealName = products.length === 1
       ? products[0].productName

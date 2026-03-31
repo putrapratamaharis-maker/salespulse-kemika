@@ -140,6 +140,23 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       return;
     }
 
+    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
+    const validationErrors = validateDealInputs({
+      products,
+      expectedMargin,
+      probability,
+      skipProbability: skipProb,
+    });
+
+    if (validationErrors.length > 0) {
+      toast({
+        title: 'Kesalahan input karakter',
+        description: validationErrors.map(e => e.message).join('\n'),
+        variant: 'destructive',
+      });
+      return;
+    }
+
     const dealName = products.length === 1
       ? (products[0].productName || deal.name)
       : `${products[0].productName || deal.name} (+${products.length - 1} item)`;
