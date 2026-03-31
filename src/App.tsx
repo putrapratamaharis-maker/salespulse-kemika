@@ -23,6 +23,7 @@ import AccountManagement from "./pages/AccountManagement";
 import UserManagement from "./pages/UserManagement";
 import ProductMaster from "./pages/ProductMaster";
 import AuditLog from "./pages/AuditLog";
+import DealDeletionApproval from "./pages/DealDeletionApproval";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
