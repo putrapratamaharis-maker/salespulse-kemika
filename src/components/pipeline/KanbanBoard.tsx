@@ -392,6 +392,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountContact, getSales
         onOpenChange={(open) => !open && setDetailDeal(null)}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
+        getAccountContact={getAccountContact}
       />
     </>
   );

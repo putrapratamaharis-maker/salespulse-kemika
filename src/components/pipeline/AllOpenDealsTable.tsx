@@ -17,6 +17,7 @@ interface AllOpenDealsTableProps {
   deals: Deal[];
   getSalesName: (salesId: string) => string;
   getAccountName: (accountId: string) => string;
+  getAccountContact?: (accountId: string) => string | undefined;
   salesPersons?: { id: string; name: string }[];
 }
 
