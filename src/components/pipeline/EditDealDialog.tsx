@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -182,6 +182,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
           <DialogTitle>Edit Deal</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
+          {!mastersLoaded ? (
+            <div className="flex flex-col items-center justify-center py-16 gap-3">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Memuat data master...</p>
+            </div>
+          ) : (
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
             {/* Account */}
             <AccountSelectWithCreate
@@ -397,6 +403,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               <Button type="submit">Simpan Perubahan</Button>
             </div>
           </form>
+          )}
         </ScrollArea>
       </DialogContent>
     </Dialog>
