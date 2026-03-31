@@ -320,15 +320,15 @@ const MyPipeline = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Pipeline Value" value={formatIDRFull(pipelineValue)} icon={DollarSign} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
-        <KPICard label="Active Deals" value={String(activeDeals.length)} icon={GitBranch} autoFitText />
-        <KPICard label="Avg Probability" value={formatPercent(avgProbability)} status={avgProbability >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText />
+        <KPICard label="Pipeline Value" value={formatIDRFull(pipelineValue)} icon={DollarSign} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" />
+        <KPICard label="Active Deals" value={String(activeDeals.length)} icon={GitBranch} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" />
+        <KPICard label="Avg Probability" value={formatPercent(avgProbability)} status={avgProbability >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText />
-        <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
+        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" />
+        <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" />
       </div>
 
       <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
