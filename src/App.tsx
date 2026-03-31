@@ -64,6 +64,7 @@ function ProtectedRoutes() {
           <Route path="/accounts" element={<AccountManagement />} />
           <Route path="/users" element={<UserManagement />} />
           <Route path="/product-master" element={<ProductMaster />} />
+          <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
