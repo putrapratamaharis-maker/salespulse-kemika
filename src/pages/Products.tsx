@@ -153,7 +153,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 bg-kpi-purple">
+        <Card className="animate-fade-in border-0 border-l-4 border-l-kpi-purple-border bg-kpi-purple">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-purple-fg/10">
               <BarChart3 className="h-5 w-5 text-kpi-purple-fg" />
