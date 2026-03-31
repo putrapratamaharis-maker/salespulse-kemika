@@ -41,6 +41,7 @@ const allMasterDataSubItems = [
 
 const adminItems = [
   { title: 'Admin Panel', url: '/admin', icon: Settings, superOnly: false },
+  { title: 'Hapus Deal', url: '/deal-deletion-approval', icon: Trash2, superOnly: false },
   { title: 'Audit Log', url: '/audit-log', icon: ClipboardList, superOnly: true },
 ];
 

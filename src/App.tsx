@@ -66,6 +66,7 @@ function ProtectedRoutes() {
           <Route path="/users" element={<UserManagement />} />
           <Route path="/product-master" element={<ProductMaster />} />
           <Route path="/audit-log" element={<AuditLog />} />
+          <Route path="/deal-deletion-approval" element={<DealDeletionApproval />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
