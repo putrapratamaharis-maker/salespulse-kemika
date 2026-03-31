@@ -36,8 +36,9 @@ const stageLabels: Record<string, string> = {
   lost: 'Lost',
 };
 
-export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName, getAccountContact }: DealDetailDialogProps) {
+export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName, getAccountPIC }: DealDetailDialogProps) {
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
+  const pic = deal && getAccountPIC ? getAccountPIC(deal.accountId) : undefined;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
