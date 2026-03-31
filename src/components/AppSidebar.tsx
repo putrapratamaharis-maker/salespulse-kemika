@@ -33,10 +33,10 @@ const navItems = [
   { title: 'AR & Cashflow', url: '/ar-cashflow', icon: CreditCard },
 ];
 
-const masterDataSubItems = [
-  { title: 'Akun / Customer', url: '/accounts', icon: Building2 },
-  { title: 'Produk', url: '/product-master', icon: Package },
-  { title: 'User', url: '/users', icon: UserCog },
+const allMasterDataSubItems = [
+  { title: 'Akun / Customer', url: '/accounts', icon: Building2, minRole: 'staff' as const },
+  { title: 'Produk', url: '/product-master', icon: Package, minRole: 'staff' as const },
+  { title: 'User', url: '/users', icon: UserCog, minRole: 'super_admin' as const },
 ];
 
 const adminItems = [
@@ -63,8 +63,14 @@ export function AppSidebar() {
   const hasTeam = ['sales_manager', 'supervisor'].includes(orgRole);
   const isAdmin = ['super_admin', 'admin'].includes(systemRole);
   const isStaffOrAbove = ['super_admin', 'admin', 'staff'].includes(systemRole);
+  const isSuperAdmin = systemRole === 'super_admin';
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
   const isMasterDataActive = ['/accounts', '/users', '/product-master'].includes(location.pathname);
+
+  const masterDataSubItems = allMasterDataSubItems.filter(item => {
+    if (item.minRole === 'super_admin') return isSuperAdmin;
+    return true;
+  });
 
   const visibleNav = navItems.filter(item => {
     if (item.url === '/team-performance' && !hasTeam) return false;

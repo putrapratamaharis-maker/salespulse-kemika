@@ -94,8 +94,8 @@ export default function AccountManagement() {
     return `CUST${year}-${String(nextNum).padStart(4, '0')}`;
   };
 
-  const allowedRoles = ['super_admin', 'admin', 'staff'];
-  const hasAccess = userRole && allowedRoles.includes(userRole.system_role);
+  const hasAccess = true; // All authenticated users can view
+  const canEdit = userRole && ['super_admin', 'admin'].includes(userRole.system_role);
 
   const fetchAccounts = async () => {
     if (!user) return;
@@ -490,33 +490,38 @@ export default function AccountManagement() {
           <p className="text-sm text-muted-foreground">Kelola daftar pelanggan & prospek Anda</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={downloadTemplate}>
-            <Download className="h-4 w-4 mr-1" /> Template
-          </Button>
-          <label>
-            <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
-            <Button variant="outline" size="sm" asChild disabled={importing}>
-              <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
-            </Button>
-          </label>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <FileText className="h-4 w-4 mr-1" /> Ekspor
+          {!canEdit && <Badge variant="outline" className="text-[10px]">Read Only</Badge>}
+          {canEdit && (
+            <>
+              <Button variant="outline" size="sm" onClick={downloadTemplate}>
+                <Download className="h-4 w-4 mr-1" /> Template
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => confirmExport('excel')}>
-                <Download className="h-4 w-4 mr-2" /> Export Excel
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => confirmExport('pdf')}>
-                <FileText className="h-4 w-4 mr-2" /> Export PDF
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <Button onClick={openCreate} size="sm">
-            <Plus className="h-4 w-4 mr-1" /> Tambah Akun
-          </Button>
+              <label>
+                <input type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={onFileSelected} disabled={importing} />
+                <Button variant="outline" size="sm" asChild disabled={importing}>
+                  <span>{importing ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Upload className="h-4 w-4 mr-1" />} Import</span>
+                </Button>
+              </label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <FileText className="h-4 w-4 mr-1" /> Ekspor
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => confirmExport('excel')}>
+                    <Download className="h-4 w-4 mr-2" /> Export Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => confirmExport('pdf')}>
+                    <FileText className="h-4 w-4 mr-2" /> Export PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+              <Button onClick={openCreate} size="sm">
+                <Plus className="h-4 w-4 mr-1" /> Tambah Akun
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -593,12 +598,14 @@ export default function AccountManagement() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-10">
-                    <Checkbox
-                      checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
-                      onCheckedChange={toggleSelectAll}
-                    />
-                  </TableHead>
+                  {canEdit && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={paginatedAccounts.length > 0 && paginatedAccounts.every(a => selectedIds.has(a.id))}
+                        onCheckedChange={toggleSelectAll}
+                      />
+                    </TableHead>
+                  )}
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
                     <span className="inline-flex items-center">Code <SortIcon col="customer_id" /></span>
                   </TableHead>
@@ -623,18 +630,20 @@ export default function AccountManagement() {
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('status')}>
                     <span className="inline-flex items-center">Status <SortIcon col="status" /></span>
                   </TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  {canEdit && <TableHead className="text-right">Actions</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {paginatedAccounts.map(acc => (
                   <TableRow key={acc.id} data-state={selectedIds.has(acc.id) ? 'selected' : undefined}>
-                    <TableCell>
-                      <Checkbox
-                        checked={selectedIds.has(acc.id)}
-                        onCheckedChange={() => toggleSelect(acc.id)}
-                      />
-                    </TableCell>
+                    {canEdit && (
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(acc.id)}
+                          onCheckedChange={() => toggleSelect(acc.id)}
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-xs font-mono">{acc.customer_id || '-'}</TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
@@ -645,26 +654,34 @@ export default function AccountManagement() {
                     <TableCell>
                       <Badge variant="outline" className={statusColor(acc.status || 'Active')}>{acc.status || 'Active'}</Badge>
                     </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setViewingAccount(acc)}>
-                            <Eye className="h-4 w-4 mr-2" /> View Detail
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openEdit(acc)}>
-                            <Pencil className="h-4 w-4 mr-2" /> Edit
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => openDelete(acc)}>
-                            <Trash2 className="h-4 w-4 mr-2" /> Delete
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+                    {canEdit ? (
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => setViewingAccount(acc)}>
+                              <Eye className="h-4 w-4 mr-2" /> View Detail
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => openEdit(acc)}>
+                              <Pencil className="h-4 w-4 mr-2" /> Edit
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => openDelete(acc)}>
+                              <Trash2 className="h-4 w-4 mr-2" /> Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    ) : (
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setViewingAccount(acc)}>
+                          <Eye className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
