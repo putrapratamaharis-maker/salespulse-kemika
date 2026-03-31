@@ -141,7 +141,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 bg-kpi-teal">
+        <Card className="animate-fade-in border-0 border-l-4 border-l-kpi-teal-border bg-kpi-teal">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-teal-fg/10">
               <Package className="h-5 w-5 text-kpi-teal-fg" />
