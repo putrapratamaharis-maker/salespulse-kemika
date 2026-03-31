@@ -315,7 +315,7 @@ const MyPipeline = () => {
         <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
       </div>
 
-      <KanbanBoard deals={deals} getAccountName={getAccountName} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
+      <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountContact={(accountId: string) => localAccounts.find(a => a.id === accountId)?.picContact} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
 
       <Card>
         <CardHeader className="pb-3">
@@ -454,7 +454,7 @@ const MyPipeline = () => {
       {editDialogOpen && editingDeal && (
         <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       )}
-      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} />
+      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountContact={(accountId: string) => localAccounts.find(a => a.id === accountId)?.picContact} />
     </div>
   );
 };

@@ -8,7 +8,8 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface DealDetailDialogProps {
   deal: Deal | null;
@@ -16,6 +17,7 @@ interface DealDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   getAccountName: (accountId: string) => string;
   getSalesName?: (salesId: string) => string;
+  getAccountContact?: (accountId: string) => string | undefined;
 }
 
 const stageLabels: Record<string, string> = {
@@ -28,7 +30,7 @@ const stageLabels: Record<string, string> = {
   lost: 'Lost',
 };
 
-export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName }: DealDetailDialogProps) {
+export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName, getAccountContact }: DealDetailDialogProps) {
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
 
   return (
@@ -65,6 +67,28 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
               <InfoRow icon={Hash} label={deal.stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'} value={deal.poNumber} highlight />
             )}
           </div>
+
+          {/* WhatsApp Button */}
+          {getAccountContact && getAccountContact(deal.accountId) && (() => {
+            const raw = getAccountContact(deal.accountId) || '';
+            const phone = raw.replace(/[^0-9]/g, '').replace(/^0/, '62');
+            return (
+              <>
+                <Separator />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-green-700 border-green-300 hover:bg-green-50 hover:text-green-800"
+                  asChild
+                >
+                  <a href={`https://wa.me/${phone}`} target="_blank" rel="noopener noreferrer">
+                    <Phone className="h-4 w-4" />
+                    WhatsApp PIC ({raw})
+                  </a>
+                </Button>
+              </>
+            );
+          })()}
 
           {/* Notes */}
           {deal.notes && (

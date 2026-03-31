@@ -54,6 +54,7 @@ const stageBgColors: Record<string, string> = {
 interface KanbanBoardProps {
   deals: Deal[];
   getAccountName: (accountId: string) => string;
+  getAccountContact?: (accountId: string) => string | undefined;
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
@@ -76,7 +77,7 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
-export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getAccountContact, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
@@ -391,6 +392,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
         onOpenChange={(open) => !open && setDetailDeal(null)}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
+        getAccountContact={getAccountContact}
       />
     </>
   );

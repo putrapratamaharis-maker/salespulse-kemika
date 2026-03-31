@@ -17,6 +17,7 @@ const Pipeline = () => {
   // DB state
   const [dbDeals, setDbDeals] = useState<Deal[]>([]);
   const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+  const [accountContactMap, setAccountContactMap] = useState<Map<string, string>>(new Map());
   const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -24,7 +25,7 @@ const Pipeline = () => {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.from('deals').select('*'),
-        supabase.from('accounts').select('id, name'),
+        supabase.from('accounts').select('id, name, pic_contact'),
         supabase.from('profiles').select('user_id, full_name').eq('is_active', true),
         supabase.from('deal_products').select('*'),
       ]);
@@ -47,6 +48,8 @@ const Pipeline = () => {
       // Map accounts
       const accMap = new Map((accounts || []).map(a => [a.id, a.name]));
       setAccountMap(accMap);
+      const accContactMap = new Map((accounts || []).filter(a => a.pic_contact).map(a => [a.id, a.pic_contact as string]));
+      setAccountContactMap(accContactMap);
 
       // Map profiles for sales names
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p.full_name]));
@@ -100,6 +103,9 @@ const Pipeline = () => {
 
   const getAccountName = (accountId: string) =>
     accountMap.get(accountId) || accountId;
+
+  const getAccountContact = (accountId: string) =>
+    accountContactMap.get(accountId);
 
   const allDeals = salesFilter === 'all'
     ? localDeals
@@ -214,6 +220,7 @@ const Pipeline = () => {
       <KanbanBoard
         deals={allDeals}
         getAccountName={getAccountName}
+        getAccountContact={getAccountContact}
         getSalesName={getSalesName}
         readOnly
       />
@@ -240,6 +247,7 @@ const Pipeline = () => {
         deals={allDeals}
         getSalesName={getSalesName}
         getAccountName={getAccountName}
+        getAccountContact={getAccountContact}
         salesPersons={salesUsers}
       />
     </div>

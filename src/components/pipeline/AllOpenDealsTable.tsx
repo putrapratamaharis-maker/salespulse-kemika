@@ -17,6 +17,7 @@ interface AllOpenDealsTableProps {
   deals: Deal[];
   getSalesName: (salesId: string) => string;
   getAccountName: (accountId: string) => string;
+  getAccountContact?: (accountId: string) => string | undefined;
   salesPersons?: { id: string; name: string }[];
 }
 
@@ -49,7 +50,7 @@ const sortColumns = [
 
 const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
 
-export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPersons = [] }: AllOpenDealsTableProps) {
+export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountContact, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [segmentFilter, setSegmentFilter] = useState('all');
@@ -333,6 +334,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, salesPe
       onOpenChange={(open) => !open && setDetailDeal(null)}
       getAccountName={getAccountName}
       getSalesName={getSalesName}
+      getAccountContact={getAccountContact}
     />
     </>
   );
