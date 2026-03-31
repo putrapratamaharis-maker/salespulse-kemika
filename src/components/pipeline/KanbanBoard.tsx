@@ -227,7 +227,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                           key={d.id}
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          className={`bg-card rounded-md border shadow-sm p-2.5 space-y-1 ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group`}
+                          className={`bg-card rounded-md border shadow-sm p-2.5 space-y-1 overflow-hidden ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Account name - bold on top */}
@@ -267,9 +267,9 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
 
                         {/* Products list - max 3 items */}
                         {d.products && d.products.length > 0 && (
-                          <div className="space-y-0.5 pt-0.5">
+                          <div className="space-y-0.5 pt-0.5 overflow-hidden">
                             {d.products.slice(0, 3).map((p, i) => (
-                              <p key={i} className="text-[10px] text-muted-foreground truncate">
+                              <p key={i} className="text-[10px] text-muted-foreground truncate" title={`${p.productName} (${p.qty} ${p.unit})`}>
                                 • {p.productName} ({p.qty} {p.unit})
                               </p>
                             ))}
@@ -286,7 +286,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
                         </div>
 
                         {/* Meta row: expected close, margin, probability */}
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50">
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50 gap-1">
                           <span className="flex items-center gap-0.5" title="Expected Close">
                             <CalendarClock className="h-3 w-3" />
                             {formatDate(d.expectedCloseDate)}
