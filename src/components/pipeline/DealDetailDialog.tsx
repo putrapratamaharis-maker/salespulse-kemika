@@ -38,6 +38,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
           <DialogTitle className="text-base font-bold leading-tight">{deal?.name}</DialogTitle>
         </DialogHeader>
 
+        {deal && (
         <div className="space-y-4">
           {/* Stage & Segment */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -103,6 +104,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
             </>
           )}
         </div>
+        )}
       </DialogContent>
     </Dialog>
   );
