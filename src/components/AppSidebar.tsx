@@ -115,7 +115,7 @@ export function AppSidebar() {
             <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight" style={{ color: 'hsl(174, 60%, 50%)' }}>
               KEMIKA SalesPulse
             </h1>
-            <p className="text-[9px] text-sidebar-muted mt-0.5 whitespace-nowrap">Sales Performance Control System Dashboard</p>
+            <p className="text-[9px] text-white mt-0.5 whitespace-nowrap">Sales Performance Control System Dashboard</p>
           </div>
         )}
         {collapsed && (
