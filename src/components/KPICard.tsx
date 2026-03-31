@@ -10,6 +10,7 @@ interface KPICardProps {
   icon?: LucideIcon;
   className?: string;
   autoFitText?: boolean;
+  borderAccent?: string;
 }
 
 export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText }: KPICardProps) {
