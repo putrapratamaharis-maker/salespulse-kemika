@@ -102,7 +102,8 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'IBM Plex Sans', system-ui, sans-serif;
+    font-family: 'Helvetica Light', 'Helvetica Neue Light', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    font-weight: 300;
   }
 }
 
