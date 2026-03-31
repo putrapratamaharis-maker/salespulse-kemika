@@ -35,7 +35,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold leading-tight">{deal?.name}</DialogTitle>
+          <DialogTitle className="text-base font-bold leading-tight">{deal?.name || 'Deal Detail'}</DialogTitle>
         </DialogHeader>
 
         {deal && (
