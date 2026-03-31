@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Trash2, Loader2 } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
+import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
