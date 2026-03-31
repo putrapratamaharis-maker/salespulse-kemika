@@ -29,15 +29,13 @@ const stageLabels: Record<string, string> = {
 };
 
 export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName }: DealDetailDialogProps) {
-  if (!deal) return null;
-
-  const stageStatus = deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green';
+  const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open && !!deal} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-base font-bold leading-tight">{deal.name}</DialogTitle>
+          <DialogTitle className="text-base font-bold leading-tight">{deal?.name}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
