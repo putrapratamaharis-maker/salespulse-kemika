@@ -8,8 +8,14 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+
+export interface AccountPIC {
+  picName?: string;
+  picEmail?: string;
+  picContact?: string;
+}
 
 interface DealDetailDialogProps {
   deal: Deal | null;
@@ -17,7 +23,7 @@ interface DealDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   getAccountName: (accountId: string) => string;
   getSalesName?: (salesId: string) => string;
-  getAccountContact?: (accountId: string) => string | undefined;
+  getAccountPIC?: (accountId: string) => AccountPIC | undefined;
 }
 
 const stageLabels: Record<string, string> = {
