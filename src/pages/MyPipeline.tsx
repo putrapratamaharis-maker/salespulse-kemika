@@ -46,7 +46,7 @@ const MyPipeline = () => {
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const { toast } = useToast();
-  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picContact?: string; picEmail?: string }[]>([]);
+  const [localAccounts, setLocalAccounts] = useState<{ id: string; name: string; picName?: string; picContact?: string; picEmail?: string }[]>([]);
 
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
@@ -96,7 +96,7 @@ const MyPipeline = () => {
       products: productsMap[d.id] || [],
     }));
     setDeals(mapped);
-    setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picContact: a.pic_contact, picEmail: a.pic_email })));
+    setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
     setLoading(false);
   };
 
@@ -213,7 +213,7 @@ const MyPipeline = () => {
     fetchDeals();
   };
 
-  const handleAccountCreated = (account: { id: string; name: string; picContact?: string; picEmail?: string }) => {
+  const handleAccountCreated = (account: { id: string; name: string; picName?: string; picContact?: string; picEmail?: string }) => {
     setLocalAccounts(prev => [...prev, account]);
   };
 
@@ -315,7 +315,7 @@ const MyPipeline = () => {
         <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText />
       </div>
 
-      <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountContact={(accountId: string) => localAccounts.find(a => a.id === accountId)?.picContact} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
+      <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
 
       <Card>
         <CardHeader className="pb-3">
@@ -454,7 +454,7 @@ const MyPipeline = () => {
       {editDialogOpen && editingDeal && (
         <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
       )}
-      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountContact={(accountId: string) => localAccounts.find(a => a.id === accountId)?.picContact} />
+      <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} />
     </div>
   );
 };

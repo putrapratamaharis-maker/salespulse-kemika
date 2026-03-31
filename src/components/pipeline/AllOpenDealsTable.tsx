@@ -13,11 +13,13 @@ import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown, Chevr
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 
+import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
+
 interface AllOpenDealsTableProps {
   deals: Deal[];
   getSalesName: (salesId: string) => string;
   getAccountName: (accountId: string) => string;
-  getAccountContact?: (accountId: string) => string | undefined;
+  getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   salesPersons?: { id: string; name: string }[];
 }
 
@@ -50,7 +52,7 @@ const sortColumns = [
 
 const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
 
-export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountContact, salesPersons = [] }: AllOpenDealsTableProps) {
+export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountPIC, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState('all');
   const [segmentFilter, setSegmentFilter] = useState('all');
@@ -334,7 +336,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
       onOpenChange={(open) => !open && setDetailDeal(null)}
       getAccountName={getAccountName}
       getSalesName={getSalesName}
-      getAccountContact={getAccountContact}
+      getAccountPIC={getAccountPIC}
     />
     </>
   );

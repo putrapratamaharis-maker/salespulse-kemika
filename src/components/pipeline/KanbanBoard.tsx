@@ -51,10 +51,12 @@ const stageBgColors: Record<string, string> = {
   lost: 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
 };
 
+import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
+
 interface KanbanBoardProps {
   deals: Deal[];
   getAccountName: (accountId: string) => string;
-  getAccountContact?: (accountId: string) => string | undefined;
+  getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   getSalesName?: (salesId: string) => string;
   onEdit?: (deal: Deal) => void;
   onDelete?: (dealId: string) => void;
@@ -77,7 +79,7 @@ const valueRanges = [
   { value: 'above200', label: '> Rp 200 Jt' },
 ];
 
-export function KanbanBoard({ deals, getAccountName, getAccountContact, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
@@ -392,7 +394,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountContact, getSales
         onOpenChange={(open) => !open && setDetailDeal(null)}
         getAccountName={getAccountName}
         getSalesName={getSalesName}
-        getAccountContact={getAccountContact}
+        getAccountPIC={getAccountPIC}
       />
     </>
   );
