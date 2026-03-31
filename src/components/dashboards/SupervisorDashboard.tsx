@@ -122,10 +122,10 @@ export function SupervisorDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText />
-        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText />
-        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText />
-        <KPICard label="Stuck Deals" value={String(stuckCount)} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText />
+        <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Stuck Deals" value={String(stuckCount)} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose border-kpi-rose" />
       </div>
 
       <Card>

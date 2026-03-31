@@ -217,19 +217,19 @@ const MyPerformance = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
-        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText />
-        <KPICard label="Total Target" value={formatIDRFull(targetRevenue)} icon={Target} autoFitText />
-        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText />
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Total Target" value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple border-kpi-purple" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText />
-        <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText />
-        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText />
-        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} status={outstandingAR > 0 ? 'red' : 'green'} changeLabel={`${inv.filter(i => !i.paid_date).length} unpaid`} autoFitText />
+        <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText className="bg-kpi-indigo border-kpi-indigo" />
+        <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText className="bg-kpi-orange border-kpi-orange" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-cyan border-kpi-cyan" />
+        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} status={outstandingAR > 0 ? 'red' : 'green'} changeLabel={`${inv.filter(i => !i.paid_date).length} unpaid`} autoFitText className="bg-kpi-rose border-kpi-rose" />
       </div>
 
       <Card className={alerts.length > 0 ? 'border-status-red/30 bg-status-red-bg/20' : ''}>

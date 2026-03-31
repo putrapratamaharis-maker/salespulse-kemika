@@ -198,18 +198,18 @@ export function ManagerDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText />
-        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText />
-        <KPICard label="Total Target" value={formatIDRFull(totalTarget)} icon={Target} autoFitText />
-        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText />
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue border-kpi-blue" />
+        <KPICard label="Total Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal border-kpi-teal" />
+        <KPICard label="Total Target" value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-amber border-kpi-amber" />
+        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple border-kpi-purple" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText />
-        <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText />
-        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText />
+        <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText className="bg-kpi-indigo border-kpi-indigo" />
+        <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText className="bg-kpi-orange border-kpi-orange" />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose border-kpi-rose" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText className="bg-kpi-cyan border-kpi-cyan" />
       </div>
 
       {/* Revenue by Segment + Revenue Trend side by side */}
