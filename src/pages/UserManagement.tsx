@@ -181,10 +181,10 @@ export default function UserManagement() {
     }
   }
 
-  if (!userRole || !['super_admin', 'admin'].includes(userRole.system_role)) {
+  if (!userRole || userRole.system_role !== 'super_admin') {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Anda tidak memiliki akses ke halaman ini.</p>
+        <p className="text-muted-foreground">Halaman ini hanya dapat diakses oleh Super Admin.</p>
       </div>
     );
   }
