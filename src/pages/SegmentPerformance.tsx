@@ -20,12 +20,12 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
   if (segment === 'B2G') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText className="bg-kpi-blue border-kpi-blue" />
-        <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={DollarSign} autoFitText className="bg-kpi-teal border-kpi-teal" />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
-        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={TrendingUp} autoFitText className="bg-kpi-purple border-kpi-purple" />
-        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} autoFitText className="bg-kpi-rose border-kpi-rose" />
-        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
+        <KPICard label="Tender Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={TrendingUp} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" />
+        <KPICard label="AR Aging Health" value="Moderate" status="yellow" icon={RefreshCw} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" />
+        <KPICard label="Repeat Project Rate" value="33%" icon={RefreshCw} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" />
       </div>
     );
   }
@@ -33,24 +33,24 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
   if (segment === 'B2B') {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
-        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-teal border-kpi-teal" />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
-        <KPICard label="Avg Order Value" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-kpi-purple border-kpi-purple" />
-        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
-        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-indigo border-kpi-indigo" />
+        <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
+        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
+        <KPICard label="Avg Order Value" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" />
+        <KPICard label="Margin Compliance" value="85%" status="green" icon={BarChart3} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" />
+        <KPICard label="Repeat Order Rate" value="62%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-indigo " borderAccent="border-l-kpi-indigo-border" />
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue border-kpi-blue" />
-      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} autoFitText className="bg-kpi-teal border-kpi-teal" />
-      <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} autoFitText className="bg-kpi-amber border-kpi-amber" />
-      <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} autoFitText className="bg-kpi-purple border-kpi-purple" />
-      <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-rose border-kpi-rose" />
-      <KPICard label="Marketplaces" value="2 Active" icon={Users} autoFitText className="bg-kpi-emerald border-kpi-emerald" />
+      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
+      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} icon={TrendingUp} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
+      <KPICard label="Contribution Margin" value={formatPercent(marginPct)} status={marginPct >= 20 ? 'green' : 'yellow'} icon={BarChart3} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
+      <KPICard label="Top SKU" value="Widget Pro X" icon={ShoppingCart} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" />
+      <KPICard label="Refund Rate" value="2.3%" status="green" icon={RefreshCw} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" />
+      <KPICard label="Marketplaces" value="2 Active" icon={Users} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" />
     </div>
   );
 }
