@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
-  Database, UserCog
+  Database, UserCog, ClipboardList
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
