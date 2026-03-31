@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Package, Loader2, TrendingUp, BarChart3, Layers } from 'lucide-react';
+import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell } from 'recharts';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ActivityPagination } from '@/components/activities/ActivityPagination';
 
 interface ProductWithSales {
   id: string;
@@ -20,6 +20,15 @@ interface ProductWithSales {
 const Products = () => {
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<ProductWithSales[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+
+  // Filters
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [revenueFilter, setRevenueFilter] = useState('all');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,6 +62,8 @@ const Products = () => {
         };
       }).sort((a, b) => b.totalRevenue - a.totalRevenue);
 
+      const uniqueCats = [...new Set(merged.map(p => p.category).filter(c => c !== '—'))].sort();
+      setCategories(uniqueCats);
       setProducts(merged);
       setLoading(false);
     };
@@ -69,38 +80,34 @@ const Products = () => {
   const stats = useMemo(() => {
     const totalRevenue = products.reduce((s, p) => s + p.totalRevenue, 0);
     const totalUnits = products.reduce((s, p) => s + p.unitsSold, 0);
-    const categories = new Set(products.map(p => p.category).filter(c => c !== '—'));
+    const catCount = new Set(products.map(p => p.category).filter(c => c !== '—')).size;
     const withSales = products.filter(p => p.totalRevenue > 0).length;
-    return { totalRevenue, totalUnits, categoryCount: categories.size, withSales };
+    return { totalRevenue, totalUnits, categoryCount: catCount, withSales };
   }, [products]);
 
-  const maxRevenue = useMemo(() => Math.max(...products.map(p => p.totalRevenue), 1), [products]);
+  const top10 = useMemo(() => products.slice(0, 10), [products]);
+  const top10Max = useMemo(() => Math.max(...top10.map(p => p.totalRevenue), 1), [top10]);
 
-  const topProducts = useMemo(() => products.slice(0, 8), [products]);
+  // Filtered products for table
+  const filteredProducts = useMemo(() => {
+    let result = [...products];
+    if (categoryFilter !== 'all') {
+      result = result.filter(p => p.category === categoryFilter);
+    }
+    if (revenueFilter !== 'all') {
+      const [min, max] = revenueFilter.split('-').map(Number);
+      result = result.filter(p => p.totalRevenue >= min && (max > 0 ? p.totalRevenue <= max : true));
+    }
+    return result;
+  }, [products, categoryFilter, revenueFilter]);
 
-  const chartConfig = useMemo(() => {
-    const cfg: Record<string, { label: string; color: string }> = {};
-    topProducts.forEach((p, i) => {
-      const colors = [
-        'hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))',
-        'hsl(var(--chart-4))', 'hsl(var(--chart-5))',
-        'hsl(var(--primary))', 'hsl(var(--accent))', 'hsl(var(--muted-foreground))',
-      ];
-      cfg[`product_${i}`] = { label: p.name, color: colors[i % colors.length] };
-    });
-    cfg.revenue = { label: 'Revenue', color: 'hsl(var(--accent))' };
-    return cfg;
-  }, [topProducts]);
+  // Reset page on filter change
+  useEffect(() => { setCurrentPage(1); }, [categoryFilter, revenueFilter]);
 
-  const chartData = useMemo(() =>
-    topProducts.map((p, i) => ({
-      name: p.name.length > 14 ? p.name.slice(0, 12) + '…' : p.name,
-      fullName: p.name,
-      revenue: p.totalRevenue,
-      fill: chartConfig[`product_${i}`]?.color || 'hsl(var(--accent))',
-    })),
-    [topProducts, chartConfig]
-  );
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return filteredProducts.slice(start, start + pageSize);
+  }, [filteredProducts, currentPage, pageSize]);
 
   if (loading) {
     return (
@@ -110,6 +117,8 @@ const Products = () => {
     );
   }
 
+  const medalColors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -118,142 +127,210 @@ const Products = () => {
         <p className="text-sm text-muted-foreground">Ringkasan performa penjualan per produk</p>
       </div>
 
-      {/* KPI Summary Row */}
+      {/* KPI Cards — colored backgrounds */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[
-          { label: 'Total Revenue', value: formatIDR(stats.totalRevenue), icon: TrendingUp, accent: true },
-          { label: 'Units Terjual', value: stats.totalUnits.toLocaleString(), icon: Package },
-          { label: 'Produk Aktif', value: `${stats.withSales} / ${products.length}`, icon: BarChart3 },
-          { label: 'Kategori', value: String(stats.categoryCount), icon: Layers },
-        ].map((kpi, i) => (
-          <Card key={i} className="animate-fade-in">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${kpi.accent ? 'bg-accent/10' : 'bg-secondary'}`}>
-                <kpi.icon className={`h-4 w-4 ${kpi.accent ? 'text-accent' : 'text-muted-foreground'}`} />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider truncate">{kpi.label}</p>
-                <p className={`text-lg font-bold tracking-tight ${kpi.accent ? 'text-accent' : 'text-foreground'}`}>{kpi.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <Card className="animate-fade-in border-0 bg-primary text-primary-foreground">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider opacity-75">Total Revenue</p>
+              <p className="text-lg font-bold tracking-tight">{formatIDR(stats.totalRevenue)}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="animate-fade-in border-0 bg-accent text-accent-foreground">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <Package className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider opacity-75">Units Terjual</p>
+              <p className="text-lg font-bold tracking-tight">{stats.totalUnits.toLocaleString()}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="animate-fade-in border-0" style={{ background: 'hsl(var(--chart-4))', color: 'white' }}>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <BarChart3 className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider opacity-75">Produk Aktif</p>
+              <p className="text-lg font-bold tracking-tight">{stats.withSales} / {products.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="animate-fade-in border-0" style={{ background: 'hsl(var(--chart-3))', color: 'white' }}>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <Layers className="h-5 w-5" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wider opacity-75">Kategori</p>
+              <p className="text-lg font-bold tracking-tight">{stats.categoryCount}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Chart + Top Products */}
-      {topProducts.length > 0 && (
+      {/* Top 10 Products Infographic */}
+      {top10.length > 0 && (
         <Card className="animate-fade-in">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Top Produk by Revenue</CardTitle>
+            <div className="flex items-center gap-2">
+              <Crown className="h-4 w-4 text-yellow-500" />
+              <CardTitle className="text-sm font-semibold">Top 10 Produk by Revenue</CardTitle>
+            </div>
           </CardHeader>
-          <CardContent className="pb-4">
-            <ChartContainer config={chartConfig} className="h-[220px] w-full">
-              <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
-                <CartesianGrid horizontal={false} strokeDasharray="3 3" className="stroke-border/40" />
-                <YAxis
-                  dataKey="name"
-                  type="category"
-                  width={100}
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <XAxis
-                  type="number"
-                  tickFormatter={(v) => formatIDR(v)}
-                  tick={{ fontSize: 10 }}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <ChartTooltip
-                  content={
-                    <ChartTooltipContent
-                      formatter={(value, _name, item) => (
-                        <span className="font-semibold">{formatIDR(Number(value))}</span>
-                      )}
-                      labelFormatter={(_label, payload) => payload?.[0]?.payload?.fullName || _label}
-                    />
-                  }
-                />
-                <Bar dataKey="revenue" radius={[0, 4, 4, 0]} maxBarSize={24}>
-                  {chartData.map((entry, idx) => (
-                    <Cell key={idx} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
+          <CardContent className="pb-4 space-y-2">
+            {top10.map((p, idx) => {
+              const pct = (p.totalRevenue / top10Max) * 100;
+              const contributionPct = stats.totalRevenue > 0 ? (p.totalRevenue / stats.totalRevenue) * 100 : 0;
+              return (
+                <div key={p.id} className="flex items-center gap-3 group">
+                  <div className="w-6 text-right">
+                    {idx < 3 ? (
+                      <Crown className={`h-4 w-4 inline ${medalColors[idx]}`} />
+                    ) : (
+                      <span className="text-xs font-semibold text-muted-foreground">{idx + 1}</span>
+                    )}
+                  </div>
+                  <div className="w-[140px] truncate text-sm font-medium" title={p.name}>{p.name}</div>
+                  <div className="flex-1 relative">
+                    <div className="h-6 rounded-md bg-secondary overflow-hidden">
+                      <div
+                        className="h-full rounded-md transition-all duration-500"
+                        style={{
+                          width: `${Math.max(pct, 2)}%`,
+                          background: idx === 0
+                            ? 'hsl(var(--primary))'
+                            : idx === 1
+                              ? 'hsl(var(--accent))'
+                              : idx === 2
+                                ? 'hsl(var(--chart-3))'
+                                : 'hsl(var(--muted-foreground) / 0.35)',
+                        }}
+                      />
+                    </div>
+                  </div>
+                  <div className="w-[90px] text-right text-sm font-semibold tabular-nums">
+                    {formatIDR(p.totalRevenue)}
+                  </div>
+                  <div className="w-[50px] text-right">
+                    <Badge variant="secondary" className="text-[10px] font-normal">
+                      {contributionPct.toFixed(1)}%
+                    </Badge>
+                  </div>
+                </div>
+              );
+            })}
           </CardContent>
         </Card>
       )}
 
-      {/* Product Table */}
+      {/* Product Detail Table */}
       <Card className="animate-fade-in">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-sm font-semibold">Detail Produk</CardTitle>
-            <span className="text-xs text-muted-foreground">{products.length} produk</span>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <CardTitle className="text-sm font-semibold">Detail Produk</CardTitle>
+              <span className="text-xs text-muted-foreground">
+                {filteredProducts.length !== products.length
+                  ? `${filteredProducts.length} / ${products.length} produk`
+                  : `${products.length} produk`}
+              </span>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue placeholder="Kategori" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Kategori</SelectItem>
+                  {categories.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={revenueFilter} onValueChange={setRevenueFilter}>
+                <SelectTrigger className="h-8 w-[160px] text-xs">
+                  <SelectValue placeholder="Range Revenue" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Revenue</SelectItem>
+                  <SelectItem value="1000000000-0">&gt; Rp 1B</SelectItem>
+                  <SelectItem value="500000000-1000000000">Rp 500M – 1B</SelectItem>
+                  <SelectItem value="100000000-500000000">Rp 100M – 500M</SelectItem>
+                  <SelectItem value="10000000-100000000">Rp 10M – 100M</SelectItem>
+                  <SelectItem value="0-10000000">&lt; Rp 10M</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
-          {products.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-12">Belum ada data produk.</p>
+          {filteredProducts.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-12">Tidak ada produk yang cocok dengan filter.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="pl-6 w-[40px]">#</TableHead>
-                    <TableHead>Produk</TableHead>
-                    <TableHead>Kategori</TableHead>
-                    <TableHead className="text-right">Revenue</TableHead>
-                    <TableHead className="text-right">Units</TableHead>
-                    <TableHead className="w-[160px]">Kontribusi</TableHead>
-                    <TableHead>Segment</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {products.map((p, idx) => {
-                    const pct = maxRevenue > 0 ? (p.totalRevenue / stats.totalRevenue) * 100 : 0;
-                    return (
-                      <TableRow key={p.id} className="group">
-                        <TableCell className="pl-6 text-muted-foreground text-xs">{idx + 1}</TableCell>
-                        <TableCell className="font-medium text-sm">{p.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="text-[10px] font-normal">{p.category}</Badge>
-                        </TableCell>
-                        <TableCell className="text-right font-semibold text-sm tabular-nums">
-                          {formatIDR(p.totalRevenue)}
-                        </TableCell>
-                        <TableCell className="text-right text-sm tabular-nums">
-                          {p.unitsSold.toLocaleString()}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Progress value={pct} className="h-1.5 flex-1" />
-                            <span className="text-[10px] text-muted-foreground w-[36px] text-right tabular-nums">
-                              {pct.toFixed(1)}%
-                            </span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {p.segments.length > 0 ? (
-                            <div className="flex gap-1 flex-wrap">
-                              {p.segments.map(s => (
-                                <Badge key={s} variant="outline" className="text-[10px] font-normal px-1.5 py-0">
-                                  {s}
-                                </Badge>
-                              ))}
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="pl-6 w-[40px]">#</TableHead>
+                      <TableHead>Produk</TableHead>
+                      <TableHead>Kategori</TableHead>
+                      <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Units</TableHead>
+                      <TableHead className="w-[160px]">Kontribusi</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedProducts.map((p, idx) => {
+                      const pct = stats.totalRevenue > 0 ? (p.totalRevenue / stats.totalRevenue) * 100 : 0;
+                      const globalIdx = (currentPage - 1) * pageSize + idx + 1;
+                      return (
+                        <TableRow key={p.id}>
+                          <TableCell className="pl-6 text-muted-foreground text-xs">{globalIdx}</TableCell>
+                          <TableCell className="font-medium text-sm">{p.name}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className="text-[10px] font-normal">{p.category}</Badge>
+                          </TableCell>
+                          <TableCell className="text-right font-semibold text-sm tabular-nums">
+                            {formatIDR(p.totalRevenue)}
+                          </TableCell>
+                          <TableCell className="text-right text-sm tabular-nums">
+                            {p.unitsSold.toLocaleString()}
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex items-center gap-2">
+                              <Progress value={pct} className="h-1.5 flex-1" />
+                              <span className="text-[10px] text-muted-foreground w-[36px] text-right tabular-nums">
+                                {pct.toFixed(1)}%
+                              </span>
                             </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="px-4 pb-3">
+                <ActivityPagination
+                  currentPage={currentPage}
+                  totalItems={filteredProducts.length}
+                  pageSize={pageSize}
+                  onPageChange={setCurrentPage}
+                  onPageSizeChange={setPageSize}
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
