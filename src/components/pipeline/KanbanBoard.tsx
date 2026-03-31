@@ -197,7 +197,7 @@ export function KanbanBoard({ deals, getAccountName, getSalesName, onEdit, onDel
           </div>
         </CardHeader>
         <CardContent className="p-0 pb-4">
-          <ScrollArea className="w-full" orientation="horizontal">
+          <ScrollArea className="w-full">
             <div className="flex gap-3 px-6 pb-2">
               {kanbanData.map(col => (
                 <div
