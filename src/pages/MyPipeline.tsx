@@ -157,10 +157,30 @@ const MyPipeline = () => {
       probability: updatedDeal.probability,
       expected_close_date: updatedDeal.expectedCloseDate,
       po_number: updatedDeal.poNumber || '',
+      expected_margin: updatedDeal.expectedMargin || 0,
+      location: updatedDeal.location || '',
+      notes: updatedDeal.notes || '',
     }).eq('id', updatedDeal.id);
     if (error) {
       toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' });
       return;
+    }
+    // Update deal products: delete old, insert new
+    if (updatedDeal.products) {
+      await supabase.from('deal_products').delete().eq('deal_id', updatedDeal.id);
+      if (updatedDeal.products.length > 0) {
+        await supabase.from('deal_products').insert(
+          updatedDeal.products.map(p => ({
+            deal_id: updatedDeal.id,
+            category: p.category,
+            product_name: p.productName,
+            unit: p.unit,
+            qty: p.qty,
+            price_per_unit: p.pricePerUnit,
+            other_cost: p.otherCost,
+          }))
+        );
+      }
     }
     toast({ title: 'Deal berhasil diperbarui' });
     fetchDeals();
