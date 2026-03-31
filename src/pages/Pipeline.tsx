@@ -48,6 +48,8 @@ const Pipeline = () => {
       // Map accounts
       const accMap = new Map((accounts || []).map(a => [a.id, a.name]));
       setAccountMap(accMap);
+      const accContactMap = new Map((accounts || []).filter(a => a.pic_contact).map(a => [a.id, a.pic_contact as string]));
+      setAccountContactMap(accContactMap);
 
       // Map profiles for sales names
       const profileMap = new Map((profiles || []).map(p => [p.user_id, p.full_name]));
