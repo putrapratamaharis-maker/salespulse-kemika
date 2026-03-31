@@ -219,8 +219,27 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   ))}
                 </SelectContent>
               </Select>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); }}>
+              <Select value={stageFilter} onValueChange={setStageFilter}>
+                <SelectTrigger className="h-8 w-[150px] text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {stageFilterOptions.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={monthFilter} onValueChange={setMonthFilter}>
+                <SelectTrigger className="h-8 w-[140px] text-xs">
+                  <SelectValue placeholder="All Months" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all" className="text-xs">All Months</SelectItem>
+                  {monthOptions.map(o => (
+                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
                   <X className="h-3 w-3 mr-1" /> Clear
                 </Button>
               )}
