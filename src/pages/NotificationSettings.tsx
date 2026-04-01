@@ -108,105 +108,117 @@ export default function NotificationSettings() {
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Kategori Alert</CardTitle>
-          <CardDescription>Pilih jenis peringatan bisnis yang ingin ditampilkan</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          {alertSettings.map((setting, i) => {
-            const Icon = setting.icon;
-            return (
-              <div key={setting.key}>
-                {i > 0 && <Separator className="my-3" />}
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 ${setting.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{setting.label}</p>
-                      <p className="text-xs text-muted-foreground">{setting.description}</p>
-                    </div>
-                  </div>
-                  <Switch
-                    checked={prefs[setting.key] as boolean}
-                    onCheckedChange={(val) => handleToggle(setting.key, val)}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="settings" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="settings">Pengaturan</TabsTrigger>
+          <TabsTrigger value="history">Riwayat</TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Metode Pengiriman</CardTitle>
-          <CardDescription>Atur cara notifikasi dikirimkan kepada Anda</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-1">
-          {deliverySettings.map((setting, i) => {
-            const Icon = setting.icon;
-            return (
-              <div key={setting.key}>
-                {i > 0 && <Separator className="my-3" />}
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex items-start gap-3">
-                    <div className={`mt-0.5 ${setting.color}`}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground">{setting.label}</p>
-                      <p className="text-xs text-muted-foreground">{setting.description}</p>
+        <TabsContent value="settings" className="space-y-6 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Kategori Alert</CardTitle>
+              <CardDescription>Pilih jenis peringatan bisnis yang ingin ditampilkan</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {alertSettings.map((setting, i) => {
+                const Icon = setting.icon;
+                return (
+                  <div key={setting.key}>
+                    {i > 0 && <Separator className="my-3" />}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 ${setting.color}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{setting.label}</p>
+                          <p className="text-xs text-muted-foreground">{setting.description}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={prefs[setting.key] as boolean}
+                        onCheckedChange={(val) => handleToggle(setting.key, val)}
+                      />
                     </div>
                   </div>
-                  <Switch
-                    checked={prefs[setting.key] as boolean}
-                    onCheckedChange={(val) => handleToggle(setting.key, val)}
-                  />
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </CardContent>
+          </Card>
 
-          {/* Volume Level Selector */}
-          {prefs.sound_enabled && (
-            <>
-              <Separator className="my-3" />
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5 text-primary">
-                    <Volume1 className="h-5 w-5" />
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Metode Pengiriman</CardTitle>
+              <CardDescription>Atur cara notifikasi dikirimkan kepada Anda</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-1">
+              {deliverySettings.map((setting, i) => {
+                const Icon = setting.icon;
+                return (
+                  <div key={setting.key}>
+                    {i > 0 && <Separator className="my-3" />}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 ${setting.color}`}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">{setting.label}</p>
+                          <p className="text-xs text-muted-foreground">{setting.description}</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={prefs[setting.key] as boolean}
+                        onCheckedChange={(val) => handleToggle(setting.key, val)}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-foreground">Volume Suara</p>
-                    <p className="text-xs text-muted-foreground">Atur tingkat volume notifikasi</p>
+                );
+              })}
+
+              {prefs.sound_enabled && (
+                <>
+                  <Separator className="my-3" />
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 text-primary">
+                        <Volume1 className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">Volume Suara</p>
+                        <p className="text-xs text-muted-foreground">Atur tingkat volume notifikasi</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      {([
+                        { value: 'low' as VolumeLevel, label: 'Rendah', icon: VolumeX },
+                        { value: 'medium' as VolumeLevel, label: 'Sedang', icon: Volume1 },
+                        { value: 'high' as VolumeLevel, label: 'Tinggi', icon: Volume2 },
+                      ]).map(({ value, label, icon: VIcon }) => (
+                        <Button
+                          key={value}
+                          variant={prefs.volume_level === value ? 'default' : 'outline'}
+                          size="sm"
+                          className="text-xs h-8 px-2.5 gap-1"
+                          onClick={() => handleVolumeChange(value)}
+                        >
+                          <VIcon className="h-3.5 w-3.5" />
+                          {label}
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div className="flex gap-1">
-                  {([
-                    { value: 'low' as VolumeLevel, label: 'Rendah', icon: VolumeX },
-                    { value: 'medium' as VolumeLevel, label: 'Sedang', icon: Volume1 },
-                    { value: 'high' as VolumeLevel, label: 'Tinggi', icon: Volume2 },
-                  ]).map(({ value, label, icon: VIcon }) => (
-                    <Button
-                      key={value}
-                      variant={prefs.volume_level === value ? 'default' : 'outline'}
-                      size="sm"
-                      className="text-xs h-8 px-2.5 gap-1"
-                      onClick={() => handleVolumeChange(value)}
-                    >
-                      <VIcon className="h-3.5 w-3.5" />
-                      {label}
-                    </Button>
-                  ))}
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-      </Card>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-4">
+          <NotificationHistory />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
