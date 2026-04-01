@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { toast } from '@/hooks/use-toast';
-import { User, Camera, Lock, Activity, Loader2, Save, MapPin, Building2, Users, Mail } from 'lucide-react';
+import { User, Camera, Lock, Activity, Loader2, Save, MapPin, Building2, Users, Mail, CalendarDays } from 'lucide-react';
 import { formatDate } from '@/types/sales';
 
 const PROVINCES = [
