@@ -2,8 +2,10 @@ import { useNotificationPreferences, NotificationPreferences } from '@/hooks/use
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Bell, Clock, AlertTriangle, TrendingDown, Activity, Trash2, Volume2, Globe } from 'lucide-react';
+import { Bell, Clock, AlertTriangle, TrendingDown, Activity, Trash2, Volume2, Globe, Volume1, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
+import { playNotificationSound, VolumeLevel } from '@/lib/notificationSound';
+import { Button } from '@/components/ui/button';
 
 interface SettingItem {
   key: keyof NotificationPreferences;
