@@ -52,6 +52,9 @@ const AdminPanel = () => {
           <TabsTrigger value="monthly-targets">
             <CalendarRange className="h-4 w-4 mr-1" /> Target Bulanan
           </TabsTrigger>
+          <TabsTrigger value="revenue-targets">
+            <DollarSign className="h-4 w-4 mr-1" /> Revenue Targets
+          </TabsTrigger>
           <TabsTrigger value="kpi-engine">
             <TrendingUp className="h-4 w-4 mr-1" /> KPI Engine
           </TabsTrigger>
