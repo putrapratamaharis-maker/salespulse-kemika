@@ -15,7 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { StatusBadge } from '@/components/StatusBadge';
 import { toast } from '@/hooks/use-toast';
-import { User, Camera, Lock, Activity, Loader2, Save, MapPin, Building2, Users, Mail } from 'lucide-react';
+import { User, Camera, Lock, Activity, Loader2, Save, MapPin, Building2, Users, Mail, CalendarDays } from 'lucide-react';
 import { formatDate } from '@/types/sales';
 
 const PROVINCES = [
@@ -55,6 +55,7 @@ const MyProfile = () => {
   const [supervisorName, setSupervisorName] = useState('');
   const [orgRole, setOrgRole] = useState('');
   const [systemRole, setSystemRole] = useState('');
+  const [joinedAt, setJoinedAt] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -85,6 +86,7 @@ const MyProfile = () => {
       setDivision(prof.division || '');
       setAvatarUrl(prof.avatar_url);
       setPositionName((prof as any).positions?.position_name || '—');
+      setJoinedAt(prof.created_at || '');
 
       if (prof.supervisor_id) {
         const { data: sup } = await supabase.from('profiles').select('full_name').eq('id', prof.supervisor_id).single();
@@ -216,6 +218,7 @@ const MyProfile = () => {
                   <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{positionName}</span>
                     {supervisorName && <span>• Supervisor: {supervisorName}</span>}
+                    {joinedAt && <span className="flex items-center gap-1">• <CalendarDays className="h-3 w-3" />Bergabung {formatDate(joinedAt)}</span>}
                   </div>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {orgRole && (
