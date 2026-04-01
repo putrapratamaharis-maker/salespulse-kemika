@@ -5,13 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, CalendarIcon } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Qualified Prospect' },
