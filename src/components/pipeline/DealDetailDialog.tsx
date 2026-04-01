@@ -38,6 +38,7 @@ const stageLabels: Record<string, string> = {
 };
 
 export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName, getAccountPIC }: DealDetailDialogProps) {
+  const navigate = useNavigate();
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
   const pic = deal && getAccountPIC ? getAccountPIC(deal.accountId) : undefined;
 
