@@ -104,6 +104,21 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     setProbability('');
     setExpectedCloseDate('');
     setNotes('');
+    setInvoiceNumber('');
+    setInvoiceIssueDate(new Date());
+    setInvoiceDueDate(undefined);
+    setInvoicePaidDate(undefined);
+    setGrossProfit('');
+  };
+
+  // Auto-calc gross profit when margin or totalValue changes (for invoice_issued)
+  const handleMarginChangeForInvoice = (val: string) => {
+    setExpectedMargin(val);
+    if (stage === 'invoice_issued') {
+      const pct = Number(val) || 0;
+      const gp = Math.round(totalValue * pct / 100);
+      setGrossProfit(String(gp));
+    }
   };
 
   const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
