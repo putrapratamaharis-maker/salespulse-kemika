@@ -14,6 +14,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
   deletion_alerts: true,
   browser_push: true,
   sound_enabled: true,
+  volume_level: 'medium',
 };
 
 async function requestNotificationPermission(): Promise<boolean> {
