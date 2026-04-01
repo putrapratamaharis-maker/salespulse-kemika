@@ -77,6 +77,10 @@ const AdminPanel = () => {
           <MonthlyKPITargets />
         </TabsContent>
 
+        <TabsContent value="revenue-targets" className="mt-4">
+          <RevenueTargetManagement />
+        </TabsContent>
+
         <TabsContent value="kpi-engine" className="mt-4">
           <KPICalculationEngine />
         </TabsContent>
