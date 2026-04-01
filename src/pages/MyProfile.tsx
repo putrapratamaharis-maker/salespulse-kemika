@@ -55,6 +55,7 @@ const MyProfile = () => {
   const [supervisorName, setSupervisorName] = useState('');
   const [orgRole, setOrgRole] = useState('');
   const [systemRole, setSystemRole] = useState('');
+  const [joinedAt, setJoinedAt] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
