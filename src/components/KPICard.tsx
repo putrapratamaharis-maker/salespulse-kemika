@@ -17,23 +17,9 @@ interface KPICardProps {
 
 export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText, borderAccent, tooltip }: KPICardProps) {
   return (
-    <div className={cn('kpi-card animate-fade-in border-l-[5px]', borderAccent, className)}>
+    <div className={cn('kpi-card animate-fade-in border-l-[5px] relative', borderAccent, className)}>
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
-          {tooltip && (
-            <TooltipProvider delayDuration={200}>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Info className="h-3 w-3 text-muted-foreground cursor-help shrink-0" />
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
-                  {tooltip}
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
-        </div>
+        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
         {Icon && (
           <Icon className={cn(
             'h-4 w-4',
@@ -60,6 +46,18 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
           )}
           {changeLabel && <span className="text-xs text-muted-foreground">{changeLabel}</span>}
         </div>
+      )}
+      {tooltip && (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Info className="absolute bottom-2 right-2 h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" />
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+              {tooltip}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </div>
   );
