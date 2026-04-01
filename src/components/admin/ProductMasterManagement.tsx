@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from 'react';
+import { formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -554,7 +555,7 @@ function ProductTab() {
     doc.setFontSize(14);
     doc.text('Data Produk', 14, 15);
     doc.setFontSize(8);
-    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 21);
+    doc.text(`Diekspor: ${formatDate(new Date().toISOString())}`, 14, 21);
 
     autoTable(doc, {
       startY: 26,
@@ -815,9 +816,9 @@ function ProductTab() {
                   <span className="text-muted-foreground">Status</span>
                   <span><Badge variant={viewItem.is_active ? 'default' : 'secondary'} className="text-[10px]">{viewItem.is_active ? 'Active' : 'Non-Active'}</Badge></span>
                   <span className="text-muted-foreground">Created</span>
-                  <span>{new Date(viewItem.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  <span className="text-muted-foreground">Updated</span>
-                  <span>{new Date(viewItem.updated_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                   <span>{formatDate(viewItem.created_at)}</span>
+                   <span className="text-muted-foreground">Updated</span>
+                   <span>{formatDate(viewItem.updated_at)}</span>
                 </div>
               </div>
             )}

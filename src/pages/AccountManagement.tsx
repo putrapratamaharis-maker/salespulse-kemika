@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -393,7 +394,7 @@ export default function AccountManagement() {
     doc.setFontSize(14);
     doc.text('Data Akun Pelanggan', 14, 15);
     doc.setFontSize(8);
-    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} | Total: ${filtered.length} akun`, 14, 21);
+    doc.text(`Diekspor: ${formatDate(new Date().toISOString())} | Total: ${filtered.length} akun`, 14, 21);
 
     autoTable(doc, {
       startY: 26,
@@ -868,7 +869,7 @@ export default function AccountManagement() {
                 <div><span className="text-muted-foreground">Status:</span></div>
                 <div><Badge variant="outline" className={statusColor(viewingAccount.status || 'Active')}>{viewingAccount.status || 'Active'}</Badge></div>
                 <div><span className="text-muted-foreground">Created:</span></div>
-                <div>{new Date(viewingAccount.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                <div>{formatDate(viewingAccount.created_at)}</div>
               </div>
             </div>
           )}
