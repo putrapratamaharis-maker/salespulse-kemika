@@ -115,7 +115,7 @@ export function AppSidebar() {
             <h1 className="text-lg font-bold text-sidebar-primary-foreground tracking-tight" style={{ color: 'hsl(174, 60%, 50%)' }}>
               KEMIKA SalesPulse
             </h1>
-            <p className="text-[9px] text-white mt-0.5 whitespace-nowrap">Sales Performance Control System Dashboard</p>
+            <p className="text-white mt-0.5 whitespace-nowrap text-xs">Sales Performance Dashboard</p>
           </div>
         )}
         {collapsed && (
@@ -287,7 +287,7 @@ export function AppSidebar() {
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   >
                     <Bell className="mr-2 h-4 w-4 shrink-0" />
-                    {!collapsed && <span>Notifikasi</span>}
+                    {!collapsed && <span>Pengaturan Notifikasi</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
