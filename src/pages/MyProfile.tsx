@@ -43,7 +43,8 @@ const MyProfile = () => {
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [region, setRegion] = useState('');
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [regionPopoverOpen, setRegionPopoverOpen] = useState(false);
   const [segment, setSegment] = useState('');
   const [division, setDivision] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
