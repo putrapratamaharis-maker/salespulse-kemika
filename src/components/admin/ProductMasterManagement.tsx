@@ -815,9 +815,9 @@ function ProductTab() {
                   <span className="text-muted-foreground">Status</span>
                   <span><Badge variant={viewItem.is_active ? 'default' : 'secondary'} className="text-[10px]">{viewItem.is_active ? 'Active' : 'Non-Active'}</Badge></span>
                   <span className="text-muted-foreground">Created</span>
-                  <span>{new Date(viewItem.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                  <span className="text-muted-foreground">Updated</span>
-                  <span>{new Date(viewItem.updated_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                   <span>{formatDate(viewItem.created_at)}</span>
+                   <span className="text-muted-foreground">Updated</span>
+                   <span>{formatDate(viewItem.updated_at)}</span>
                 </div>
               </div>
             )}
