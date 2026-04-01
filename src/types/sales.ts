@@ -137,8 +137,61 @@ export function getAchievementStatus(pct: number): 'green' | 'yellow' | 'red' {
   return 'red';
 }
 
+function getRegionalSettings(): { dateFormat: string; timezone: string; language: string } {
+  const defaults = { dateFormat: 'DD/MM/YYYY', timezone: 'Asia/Jakarta', language: 'id' };
+  try {
+    const raw = localStorage.getItem('app_settings');
+    return raw ? { ...defaults, ...JSON.parse(raw) } : defaults;
+  } catch {
+    return defaults;
+  }
+}
+
 export function formatDate(dateStr: string): string {
+  const { dateFormat, timezone, language } = getRegionalSettings();
   const d = new Date(dateStr);
-  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${d.getDate().toString().padStart(2, '0')} ${months[d.getMonth()]} ${d.getFullYear()}`;
+
+  // Adjust to selected timezone
+  const locale = language === 'en' ? 'en-US' : 'id-ID';
+  const parts = new Intl.DateTimeFormat(locale, {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(d);
+
+  const day = parts.find(p => p.type === 'day')?.value || '';
+  const month = parts.find(p => p.type === 'month')?.value || '';
+  const year = parts.find(p => p.type === 'year')?.value || '';
+
+  const monthShort = new Intl.DateTimeFormat(locale, {
+    timeZone: timezone,
+    month: 'short',
+  }).format(d);
+
+  switch (dateFormat) {
+    case 'MM/DD/YYYY':
+      return `${month}/${day}/${year}`;
+    case 'YYYY-MM-DD':
+      return `${year}-${month}-${day}`;
+    case 'DD MMM YYYY':
+      return `${day} ${monthShort} ${year}`;
+    case 'DD/MM/YYYY':
+    default:
+      return `${day}/${month}/${year}`;
+  }
+}
+
+export function formatDateTime(dateStr: string): string {
+  const { timezone, language } = getRegionalSettings();
+  const d = new Date(dateStr);
+  const locale = language === 'en' ? 'en-US' : 'id-ID';
+  return new Intl.DateTimeFormat(locale, {
+    timeZone: timezone,
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  }).format(d);
 }
