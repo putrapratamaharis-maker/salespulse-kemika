@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sliders, Loader2, Target, FileText, CalendarRange, TrendingUp } from 'lucide-react';
+import { Sliders, Loader2, Target, FileText, CalendarRange, TrendingUp, DollarSign } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIMasterManagement } from '@/components/admin/KPIMasterManagement';
 import { KPITemplateManagement } from '@/components/admin/KPITemplateManagement';
 import { MonthlyKPITargets } from '@/components/admin/MonthlyKPITargets';
 import { KPICalculationEngine } from '@/components/admin/KPICalculationEngine';
+import { RevenueTargetManagement } from '@/components/admin/RevenueTargetManagement';
 import { useToast } from '@/hooks/use-toast';
 
 const AdminPanel = () => {
@@ -51,6 +52,9 @@ const AdminPanel = () => {
           <TabsTrigger value="monthly-targets">
             <CalendarRange className="h-4 w-4 mr-1" /> Target Bulanan
           </TabsTrigger>
+          <TabsTrigger value="revenue-targets">
+            <DollarSign className="h-4 w-4 mr-1" /> Revenue Targets
+          </TabsTrigger>
           <TabsTrigger value="kpi-engine">
             <TrendingUp className="h-4 w-4 mr-1" /> KPI Engine
           </TabsTrigger>
@@ -71,6 +75,10 @@ const AdminPanel = () => {
 
         <TabsContent value="monthly-targets" className="mt-4">
           <MonthlyKPITargets />
+        </TabsContent>
+
+        <TabsContent value="revenue-targets" className="mt-4">
+          <RevenueTargetManagement />
         </TabsContent>
 
         <TabsContent value="kpi-engine" className="mt-4">
