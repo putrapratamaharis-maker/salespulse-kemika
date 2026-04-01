@@ -228,13 +228,51 @@ const MyProfile = () => {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Region</Label>
-                  <Select value={region} onValueChange={setRegion}>
-                    <SelectTrigger><SelectValue placeholder="Pilih Region" /></SelectTrigger>
-                    <SelectContent>
-                      {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label>Region (Provinsi)</Label>
+                  <Popover open={regionPopoverOpen} onOpenChange={setRegionPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between font-normal h-auto min-h-10 text-left">
+                        <span className="truncate">
+                          {selectedRegions.length === 0
+                            ? 'Pilih Provinsi'
+                            : selectedRegions.length === PROVINCES.length
+                              ? 'Semua Provinsi'
+                              : `${selectedRegions.length} provinsi dipilih`}
+                        </span>
+                        <MapPin className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <div className="p-2 border-b">
+                        <label className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded hover:bg-accent">
+                          <Checkbox
+                            checked={selectedRegions.length === PROVINCES.length}
+                            onCheckedChange={(checked) => {
+                              setSelectedRegions(checked ? [...PROVINCES] : []);
+                            }}
+                          />
+                          <span className="text-sm font-medium">Pilih Semua</span>
+                        </label>
+                      </div>
+                      <ScrollArea className="h-60">
+                        <div className="p-2 space-y-0.5">
+                          {PROVINCES.map(prov => (
+                            <label key={prov} className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded hover:bg-accent">
+                              <Checkbox
+                                checked={selectedRegions.includes(prov)}
+                                onCheckedChange={(checked) => {
+                                  setSelectedRegions(prev =>
+                                    checked ? [...prev, prov] : prev.filter(r => r !== prov)
+                                  );
+                                }}
+                              />
+                              <span className="text-sm">{prov}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Segment</Label>
