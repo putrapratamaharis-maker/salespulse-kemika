@@ -6,6 +6,8 @@ import { Bell, Clock, AlertTriangle, TrendingDown, Activity, Trash2, Volume2, Gl
 import { toast } from 'sonner';
 import { playNotificationSound, VolumeLevel } from '@/lib/notificationSound';
 import { Button } from '@/components/ui/button';
+import { NotificationHistory } from '@/components/NotificationHistory';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type BooleanPrefKey = Exclude<keyof NotificationPreferences, 'volume_level'>;
 
