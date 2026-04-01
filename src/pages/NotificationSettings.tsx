@@ -7,8 +7,10 @@ import { toast } from 'sonner';
 import { playNotificationSound, VolumeLevel } from '@/lib/notificationSound';
 import { Button } from '@/components/ui/button';
 
+type BooleanPrefKey = Exclude<keyof NotificationPreferences, 'volume_level'>;
+
 interface SettingItem {
-  key: keyof NotificationPreferences;
+  key: BooleanPrefKey;
   label: string;
   description: string;
   icon: typeof Bell;
