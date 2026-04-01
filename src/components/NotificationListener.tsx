@@ -57,6 +57,7 @@ export function NotificationListener() {
             deletion_alerts: (data as any).deletion_alerts,
             browser_push: (data as any).browser_push,
             sound_enabled: (data as any).sound_enabled,
+            volume_level: (data as any).volume_level || 'medium',
           });
         }
       });
