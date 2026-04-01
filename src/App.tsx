@@ -29,6 +29,7 @@ import AuditLog from "./pages/AuditLog";
 import DealDeletionApproval from "./pages/DealDeletionApproval";
 import Auth from "./pages/Auth";
 import ResetPassword from "./pages/ResetPassword";
+import NotificationSettings from "./pages/NotificationSettings";
 import NotFound from "./pages/NotFound";
 import { Loader2 } from "lucide-react";
 
