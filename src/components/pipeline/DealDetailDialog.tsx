@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export interface AccountPIC {
   picName?: string;
