@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -15,7 +18,15 @@ import { toast } from '@/hooks/use-toast';
 import { User, Camera, Lock, Activity, Loader2, Save, MapPin, Building2, Users, Mail } from 'lucide-react';
 import { formatDate } from '@/types/sales';
 
-const REGIONS = ['Jabodetabek', 'Jawa Barat', 'Jawa Tengah', 'Jawa Timur', 'Sumatera', 'Kalimantan', 'Sulawesi', 'Bali & Nusa Tenggara', 'Papua & Maluku'];
+const PROVINCES = [
+  'Aceh', 'Sumatera Utara', 'Sumatera Barat', 'Riau', 'Kepulauan Riau', 'Jambi',
+  'Sumatera Selatan', 'Bangka Belitung', 'Bengkulu', 'Lampung',
+  'DKI Jakarta', 'Banten', 'Jawa Barat', 'Jawa Tengah', 'DI Yogyakarta', 'Jawa Timur',
+  'Bali', 'Nusa Tenggara Barat', 'Nusa Tenggara Timur',
+  'Kalimantan Barat', 'Kalimantan Tengah', 'Kalimantan Selatan', 'Kalimantan Timur', 'Kalimantan Utara',
+  'Sulawesi Utara', 'Gorontalo', 'Sulawesi Tengah', 'Sulawesi Selatan', 'Sulawesi Barat', 'Sulawesi Tenggara',
+  'Maluku', 'Maluku Utara', 'Papua', 'Papua Barat', 'Papua Barat Daya', 'Papua Tengah', 'Papua Pegunungan', 'Papua Selatan',
+];
 const SEGMENTS = ['B2B', 'B2C', 'B2G', 'Enterprise'];
 const DIVISIONS = ['BOD', 'HR-GA', 'Sales & Marketing', 'FAT', 'WH', 'Lainnya'];
 
@@ -35,7 +46,8 @@ const MyProfile = () => {
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [region, setRegion] = useState('');
+  const [selectedRegions, setSelectedRegions] = useState<string[]>([]);
+  const [regionPopoverOpen, setRegionPopoverOpen] = useState(false);
   const [segment, setSegment] = useState('');
   const [division, setDivision] = useState('');
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -65,7 +77,7 @@ const MyProfile = () => {
     if (prof) {
       setFullName(prof.full_name || '');
       setEmail(prof.email || '');
-      setRegion(prof.region || '');
+      setSelectedRegions(prof.region ? prof.region.split(', ').filter(Boolean) : []);
       setSegment(prof.segment || '');
       setDivision(prof.division || '');
       setAvatarUrl(prof.avatar_url);
@@ -88,7 +100,7 @@ const MyProfile = () => {
     setSaving(true);
     const { error } = await supabase.from('profiles').update({
       full_name: fullName.trim(),
-      region,
+      region: selectedRegions.join(', '),
       segment,
       division,
     }).eq('user_id', user!.id);
@@ -219,13 +231,51 @@ const MyProfile = () => {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Region</Label>
-                  <Select value={region} onValueChange={setRegion}>
-                    <SelectTrigger><SelectValue placeholder="Pilih Region" /></SelectTrigger>
-                    <SelectContent>
-                      {REGIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                  <Label>Region (Provinsi)</Label>
+                  <Popover open={regionPopoverOpen} onOpenChange={setRegionPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="w-full justify-between font-normal h-auto min-h-10 text-left">
+                        <span className="truncate">
+                          {selectedRegions.length === 0
+                            ? 'Pilih Provinsi'
+                            : selectedRegions.length === PROVINCES.length
+                              ? 'Semua Provinsi'
+                              : `${selectedRegions.length} provinsi dipilih`}
+                        </span>
+                        <MapPin className="h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-72 p-0" align="start">
+                      <div className="p-2 border-b">
+                        <label className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded hover:bg-accent">
+                          <Checkbox
+                            checked={selectedRegions.length === PROVINCES.length}
+                            onCheckedChange={(checked) => {
+                              setSelectedRegions(checked ? [...PROVINCES] : []);
+                            }}
+                          />
+                          <span className="text-sm font-medium">Pilih Semua</span>
+                        </label>
+                      </div>
+                      <ScrollArea className="h-60">
+                        <div className="p-2 space-y-0.5">
+                          {PROVINCES.map(prov => (
+                            <label key={prov} className="flex items-center gap-2 cursor-pointer px-2 py-1.5 rounded hover:bg-accent">
+                              <Checkbox
+                                checked={selectedRegions.includes(prov)}
+                                onCheckedChange={(checked) => {
+                                  setSelectedRegions(prev =>
+                                    checked ? [...prev, prov] : prev.filter(r => r !== prov)
+                                  );
+                                }}
+                              />
+                              <span className="text-sm">{prov}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-1.5">
                   <Label>Segment</Label>
