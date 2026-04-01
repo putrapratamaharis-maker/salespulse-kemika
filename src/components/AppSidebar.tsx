@@ -270,24 +270,30 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
-
-                {/* Notification Settings */}
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild>
-                    <NavLink
-                      to="/notification-settings"
-                      className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <Bell className="mr-2 h-4 w-4 shrink-0" />
-                      {!collapsed && <span>Notifikasi</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Notification Settings — visible to all users */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild>
+                  <NavLink
+                    to="/notification-settings"
+                    className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  >
+                    <Bell className="mr-2 h-4 w-4 shrink-0" />
+                    {!collapsed && <span>Notifikasi</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
     </Sidebar>
