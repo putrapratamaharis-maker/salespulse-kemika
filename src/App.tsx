@@ -19,6 +19,7 @@ import Revenue from "./pages/Revenue";
 import Products from "./pages/Products";
 import ARCashflow from "./pages/ARCashflow";
 import ProfilePage from "./pages/ProfilePage";
+import MyProfile from "./pages/MyProfile";
 import AdminPanel from "./pages/AdminPanel";
 import AccountManagement from "./pages/AccountManagement";
 import UserManagement from "./pages/UserManagement";
@@ -62,6 +63,7 @@ function ProtectedRoutes() {
           <Route path="/revenue" element={<Revenue />} />
           <Route path="/products" element={<Products />} />
           <Route path="/ar-cashflow" element={<ARCashflow />} />
+          <Route path="/profile" element={<MyProfile />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/accounts" element={<AccountManagement />} />
           <Route path="/users" element={<UserManagement />} />
