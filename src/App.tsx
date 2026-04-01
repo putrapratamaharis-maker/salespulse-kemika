@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { AppProvider } from "@/context/AppContext";
 import { AppLayout } from "@/components/AppLayout";
+import { NotificationListener } from "@/components/NotificationListener";
 import Index from "./pages/Index";
 import MyPerformance from "./pages/MyPerformance";
 import MyKPIs from "./pages/MyKPIs";
@@ -50,6 +51,7 @@ function ProtectedRoutes() {
 
   return (
     <AppProvider>
+      <NotificationListener />
       <AppLayout>
         <Routes>
           <Route path="/" element={<Index />} />
