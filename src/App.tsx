@@ -51,6 +51,7 @@ function ProtectedRoutes() {
 
   return (
     <AppProvider>
+      <NotificationListener />
       <AppLayout>
         <Routes>
           <Route path="/" element={<Index />} />
