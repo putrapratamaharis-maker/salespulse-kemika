@@ -18,7 +18,7 @@ interface DualKPICardProps {
 
 export function DualKPICard({ items, icon: Icon, className }: DualKPICardProps) {
   return (
-    <div className={cn('kpi-card animate-fade-in', className)}>
+    <div className={cn('kpi-card animate-fade-in relative', className)}>
       {Icon && (
         <div className="flex justify-end mb-2">
           <div className="p-1.5 rounded-md bg-secondary">
@@ -28,22 +28,8 @@ export function DualKPICard({ items, icon: Icon, className }: DualKPICardProps) 
       )}
       <div className="space-y-3">
         {items.map((item, idx) => (
-          <div key={idx} className={cn(idx === 1 && 'pt-3 border-t border-border')}>
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider">{item.label}</span>
-              {item.tooltip && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Info className="h-3 w-3 text-muted-foreground cursor-help shrink-0" />
-                    </TooltipTrigger>
-                    <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
-                      {item.tooltip}
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
+          <div key={idx} className={cn(idx === 1 && 'pt-3 border-t border-border', 'relative')}>
+            <span className="text-xs font-bold text-foreground uppercase tracking-wider">{item.label}</span>
             <div className={cn(
               "font-bold text-foreground tracking-tight text-base sm:text-lg leading-tight mt-0.5",
               item.status === 'green' && 'text-status-green',
@@ -53,6 +39,18 @@ export function DualKPICard({ items, icon: Icon, className }: DualKPICardProps) 
             </div>
             {item.changeLabel && (
               <span className="text-xs text-muted-foreground">{item.changeLabel}</span>
+            )}
+            {item.tooltip && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="absolute bottom-0.5 right-0 h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" />
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                    {item.tooltip}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             )}
           </div>
         ))}
