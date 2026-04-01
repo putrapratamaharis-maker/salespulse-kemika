@@ -82,7 +82,7 @@ export function ManagerDashboard() {
       setOutstandingAR(allInvoices.filter(inv => !inv.paid_date).reduce((s, inv) => s + Number(inv.net_sales), 0));
 
       // Pipeline
-      const openDeals = allDeals.filter(d => !['closed_won', 'closed_lost', 'canceled', 'lost'].includes(d.stage));
+      const openDeals = allDeals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
       const now30 = Date.now() + 30 * 86400000;
       const now60 = Date.now() + 60 * 86400000;
       setPipeline30(openDeals.filter(d => new Date(d.expected_close_date).getTime() <= now30).reduce((s, d) => s + Number(d.value), 0));

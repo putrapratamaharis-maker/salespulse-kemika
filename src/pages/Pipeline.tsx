@@ -110,7 +110,7 @@ const Pipeline = () => {
   const allDeals = salesFilter === 'all'
     ? localDeals
     : localDeals.filter(d => d.salesId === salesFilter);
-  const openDeals = allDeals.filter(d => !['canceled', 'lost'].includes(d.stage));
+  const openDeals = allDeals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
   const stuckDeals = openDeals.filter(d => d.daysInStage > 10);
