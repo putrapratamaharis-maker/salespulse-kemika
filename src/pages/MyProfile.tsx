@@ -217,6 +217,20 @@ const MyProfile = () => {
                     <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{positionName}</span>
                     {supervisorName && <span>• Supervisor: {supervisorName}</span>}
                   </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {orgRole && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                        <Users className="h-3 w-3" />
+                        {orgRole.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </span>
+                    )}
+                    {systemRole && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-accent text-accent-foreground border border-border">
+                        <Lock className="h-3 w-3" />
+                        {systemRole.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
             </CardContent>
