@@ -74,7 +74,7 @@ const MyProfile = () => {
     if (prof) {
       setFullName(prof.full_name || '');
       setEmail(prof.email || '');
-      setRegion(prof.region || '');
+      setSelectedRegions(prof.region ? prof.region.split(', ').filter(Boolean) : []);
       setSegment(prof.segment || '');
       setDivision(prof.division || '');
       setAvatarUrl(prof.avatar_url);
