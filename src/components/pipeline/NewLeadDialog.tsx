@@ -434,7 +434,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lead-margin">{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => handleMarginChangeForInvoice(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-prob">Probability (%)</Label>
@@ -446,6 +446,78 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
               </div>
             </div>
 
+            {/* Gross Profit - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="space-y-1.5">
+                <Label>Gross Profit (Rp)</Label>
+                <Input
+                  type="number"
+                  value={grossProfit}
+                  onChange={e => setGrossProfit(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
+
+            {/* Invoice fields - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                <div className="space-y-1.5">
+                  <Label>No. Invoice <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={invoiceNumber}
+                    onChange={e => setInvoiceNumber(e.target.value)}
+                    placeholder="Contoh: INV-2026-001"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Tanggal Terbit <span className="text-destructive">*</span></Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoiceIssueDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceIssueDate ? format(invoiceIssueDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={invoiceIssueDate} onSelect={setInvoiceIssueDate} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Jatuh Tempo <span className="text-destructive">*</span></Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoiceDueDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceDueDate ? format(invoiceDueDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={invoiceDueDate} onSelect={setInvoiceDueDate} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tanggal Bayar (opsional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoicePaidDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {invoicePaidDate ? format(invoicePaidDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={invoicePaidDate} onSelect={setInvoicePaidDate} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            )}
+
             {/* Notes */}
             <div className="space-y-1.5">
               <Label htmlFor="lead-notes">Notes</Label>
@@ -455,7 +527,10 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Batal</Button>
-              <Button type="submit">Simpan Lead</Button>
+              <Button type="submit" disabled={savingInvoice}>
+                {savingInvoice && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                {stage === 'invoice_issued' ? 'Simpan Lead & Buat Invoice' : 'Simpan Lead'}
+              </Button>
             </div>
           </form>
         </ScrollArea>
