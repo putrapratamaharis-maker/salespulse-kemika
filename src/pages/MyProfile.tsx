@@ -97,7 +97,7 @@ const MyProfile = () => {
     setSaving(true);
     const { error } = await supabase.from('profiles').update({
       full_name: fullName.trim(),
-      region,
+      region: selectedRegions.join(', '),
       segment,
       division,
     }).eq('user_id', user!.id);
