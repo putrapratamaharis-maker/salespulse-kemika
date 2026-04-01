@@ -71,9 +71,10 @@ const MyProfile = () => {
 
   async function fetchData() {
     setLoading(true);
-    const [{ data: prof }, { data: acts }] = await Promise.all([
+    const [{ data: prof }, { data: acts }, { data: roleData }] = await Promise.all([
       supabase.from('profiles').select('*, positions(position_name)').eq('user_id', user!.id).single(),
       supabase.from('sales_activities').select('*').eq('sales_id', user!.id).order('activity_date', { ascending: false }).limit(10),
+      supabase.from('user_roles').select('org_role, system_role').eq('user_id', user!.id).single(),
     ]);
 
     if (prof) {
