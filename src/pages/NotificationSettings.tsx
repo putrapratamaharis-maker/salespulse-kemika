@@ -75,9 +75,15 @@ const deliverySettings: SettingItem[] = [
 export default function NotificationSettings() {
   const { prefs, loading, updatePref } = useNotificationPreferences();
 
-  const handleToggle = async (key: keyof NotificationPreferences, value: boolean) => {
+  const handleToggle = async (key: BooleanPrefKey, value: boolean) => {
     await updatePref(key, value);
     toast.success('Pengaturan disimpan', { duration: 2000 });
+  };
+
+  const handleVolumeChange = async (level: VolumeLevel) => {
+    await updatePref('volume_level', level);
+    playNotificationSound(level);
+    toast.success('Volume disimpan', { duration: 2000 });
   };
 
   if (loading) {
