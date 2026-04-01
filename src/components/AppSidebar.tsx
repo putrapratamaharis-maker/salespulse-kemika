@@ -286,7 +286,7 @@ export function AppSidebar() {
                     className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   >
-                    <SettingsIcon className="mr-2 h-4 w-4 shrink-0" />
+                    <Settings className="mr-2 h-4 w-4 shrink-0" />
                     {!collapsed && <span>Pengaturan</span>}
                   </NavLink>
                 </SidebarMenuButton>
