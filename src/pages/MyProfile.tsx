@@ -86,6 +86,7 @@ const MyProfile = () => {
       setDivision(prof.division || '');
       setAvatarUrl(prof.avatar_url);
       setPositionName((prof as any).positions?.position_name || '—');
+      setJoinedAt(prof.created_at || '');
 
       if (prof.supervisor_id) {
         const { data: sup } = await supabase.from('profiles').select('full_name').eq('id', prof.supervisor_id).single();
