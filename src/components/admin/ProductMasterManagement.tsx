@@ -554,7 +554,7 @@ function ProductTab() {
     doc.setFontSize(14);
     doc.text('Data Produk', 14, 15);
     doc.setFontSize(8);
-    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })}`, 14, 21);
+    doc.text(`Diekspor: ${formatDate(new Date().toISOString())}`, 14, 21);
 
     autoTable(doc, {
       startY: 26,

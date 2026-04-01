@@ -393,7 +393,7 @@ export default function AccountManagement() {
     doc.setFontSize(14);
     doc.text('Data Akun Pelanggan', 14, 15);
     doc.setFontSize(8);
-    doc.text(`Diekspor: ${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })} | Total: ${filtered.length} akun`, 14, 21);
+    doc.text(`Diekspor: ${formatDate(new Date().toISOString())} | Total: ${filtered.length} akun`, 14, 21);
 
     autoTable(doc, {
       startY: 26,
