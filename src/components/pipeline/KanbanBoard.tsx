@@ -20,6 +20,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { StageTransitionDialog } from '@/components/pipeline/StageTransitionDialog';
+import { InvoiceTransitionDialog } from '@/components/pipeline/InvoiceTransitionDialog';
 import { DeleteDealRequestDialog } from '@/components/pipeline/DeleteDealRequestDialog';
 
 const stageOrder: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
@@ -376,13 +377,29 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </CardContent>
       </Card>
 
-      {/* Stage Transition Form for PO Secured / Invoice Issued */}
-      {stageConfirm && (stageConfirm.targetStage === 'po_secured' || stageConfirm.targetStage === 'invoice_issued') && (
+      {/* Stage Transition Form for PO Secured */}
+      {stageConfirm && stageConfirm.targetStage === 'po_secured' && (
         <StageTransitionDialog
           open={true}
           onOpenChange={(open) => !open && setStageConfirm(null)}
           dealName={stageConfirm.deal.name}
           targetStage={stageConfirm.targetStage}
+          onConfirm={(data) => {
+            if (onStageChange) {
+              onStageChange(stageConfirm.deal.id, stageConfirm.targetStage, data);
+            }
+            setStageConfirm(null);
+          }}
+        />
+      )}
+
+      {/* Invoice Transition Form for Invoice Issued */}
+      {stageConfirm && stageConfirm.targetStage === 'invoice_issued' && (
+        <InvoiceTransitionDialog
+          open={true}
+          onOpenChange={(open) => !open && setStageConfirm(null)}
+          deal={stageConfirm.deal}
+          getAccountName={getAccountName}
           onConfirm={(data) => {
             if (onStageChange) {
               onStageChange(stageConfirm.deal.id, stageConfirm.targetStage, data);
