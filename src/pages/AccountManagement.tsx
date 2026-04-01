@@ -868,7 +868,7 @@ export default function AccountManagement() {
                 <div><span className="text-muted-foreground">Status:</span></div>
                 <div><Badge variant="outline" className={statusColor(viewingAccount.status || 'Active')}>{viewingAccount.status || 'Active'}</Badge></div>
                 <div><span className="text-muted-foreground">Created:</span></div>
-                <div>{new Date(viewingAccount.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</div>
+                <div>{formatDate(viewingAccount.created_at)}</div>
               </div>
             </div>
           )}
