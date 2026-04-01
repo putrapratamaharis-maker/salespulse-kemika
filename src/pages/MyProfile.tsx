@@ -53,6 +53,8 @@ const MyProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [positionName, setPositionName] = useState('');
   const [supervisorName, setSupervisorName] = useState('');
+  const [orgRole, setOrgRole] = useState('');
+  const [systemRole, setSystemRole] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -69,9 +71,10 @@ const MyProfile = () => {
 
   async function fetchData() {
     setLoading(true);
-    const [{ data: prof }, { data: acts }] = await Promise.all([
+    const [{ data: prof }, { data: acts }, { data: roleData }] = await Promise.all([
       supabase.from('profiles').select('*, positions(position_name)').eq('user_id', user!.id).single(),
       supabase.from('sales_activities').select('*').eq('sales_id', user!.id).order('activity_date', { ascending: false }).limit(10),
+      supabase.from('user_roles').select('org_role, system_role').eq('user_id', user!.id).single(),
     ]);
 
     if (prof) {
@@ -87,6 +90,10 @@ const MyProfile = () => {
         const { data: sup } = await supabase.from('profiles').select('full_name').eq('id', prof.supervisor_id).single();
         setSupervisorName(sup?.full_name || '—');
       }
+    }
+    if (roleData) {
+      setOrgRole(roleData.org_role || '');
+      setSystemRole(roleData.system_role || '');
     }
     setActivities(acts || []);
     setLoading(false);
@@ -209,6 +216,20 @@ const MyProfile = () => {
                   <div className="flex flex-wrap gap-2 mt-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Building2 className="h-3 w-3" />{positionName}</span>
                     {supervisorName && <span>• Supervisor: {supervisorName}</span>}
+                  </div>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {orgRole && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
+                        <Users className="h-3 w-3" />
+                        {orgRole.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </span>
+                    )}
+                    {systemRole && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-accent text-accent-foreground border border-border">
+                        <Lock className="h-3 w-3" />
+                        {systemRole.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
