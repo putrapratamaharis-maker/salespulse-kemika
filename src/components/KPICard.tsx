@@ -1,5 +1,6 @@
-import { LucideIcon } from 'lucide-react';
+import { LucideIcon, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface KPICardProps {
   label: string;
@@ -11,13 +12,28 @@ interface KPICardProps {
   className?: string;
   autoFitText?: boolean;
   borderAccent?: string;
+  tooltip?: string;
 }
 
-export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText, borderAccent }: KPICardProps) {
+export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText, borderAccent, tooltip }: KPICardProps) {
   return (
     <div className={cn('kpi-card animate-fade-in border-l-[5px]', borderAccent, className)}>
       <div className="flex items-start justify-between mb-3">
-        <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
+          {tooltip && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-3 w-3 text-muted-foreground cursor-help shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                  {tooltip}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+        </div>
         {Icon && (
           <Icon className={cn(
             'h-4 w-4',
