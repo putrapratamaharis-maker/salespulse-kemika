@@ -74,7 +74,7 @@ function ProtectedRoutes() {
           <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/deal-deletion-approval" element={<DealDeletionApproval />} />
           <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/notification-settings" element={<NotificationSettings />} />
+          <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AppLayout>
