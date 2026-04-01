@@ -91,6 +91,10 @@ const MyProfile = () => {
         setSupervisorName(sup?.full_name || '—');
       }
     }
+    if (roleData) {
+      setOrgRole(roleData.org_role || '');
+      setSystemRole(roleData.system_role || '');
+    }
     setActivities(acts || []);
     setLoading(false);
   }
