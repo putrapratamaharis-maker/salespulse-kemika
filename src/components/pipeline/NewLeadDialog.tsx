@@ -5,13 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, Loader2, CalendarIcon } from 'lucide-react';
 import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Qualified Prospect' },
@@ -79,6 +84,14 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Invoice-specific fields (when stage === 'invoice_issued')
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceIssueDate, setInvoiceIssueDate] = useState<Date | undefined>(new Date());
+  const [invoiceDueDate, setInvoiceDueDate] = useState<Date | undefined>();
+  const [invoicePaidDate, setInvoicePaidDate] = useState<Date | undefined>();
+  const [grossProfit, setGrossProfit] = useState('');
+  const [savingInvoice, setSavingInvoice] = useState(false);
+
   const selectedAccount = accountOptions.find(a => a.id === accountId);
 
   const resetForm = () => {
@@ -91,6 +104,21 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     setProbability('');
     setExpectedCloseDate('');
     setNotes('');
+    setInvoiceNumber('');
+    setInvoiceIssueDate(new Date());
+    setInvoiceDueDate(undefined);
+    setInvoicePaidDate(undefined);
+    setGrossProfit('');
+  };
+
+  // Auto-calc gross profit when margin or totalValue changes (for invoice_issued)
+  const handleMarginChangeForInvoice = (val: string) => {
+    setExpectedMargin(val);
+    if (stage === 'invoice_issued') {
+      const pct = Number(val) || 0;
+      const gp = Math.round(totalValue * pct / 100);
+      setGrossProfit(String(gp));
+    }
   };
 
   const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
@@ -130,15 +158,24 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     return dbProducts.filter(p => p.category_id === cat.id);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isInvoiceStage = stage === 'invoice_issued';
 
     if (!accountId || !expectedCloseDate || products.some(p => !p.productName || !p.category)) {
       toast({ title: 'Lengkapi semua field yang diperlukan', variant: 'destructive' });
       return;
     }
 
-    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
+    // Invoice-specific validations
+    if (isInvoiceStage) {
+      if (!invoiceNumber.trim()) { sonnerToast.error('Nomor Invoice wajib diisi'); return; }
+      if (!invoiceIssueDate) { sonnerToast.error('Tanggal Terbit Invoice wajib diisi'); return; }
+      if (!invoiceDueDate) { sonnerToast.error('Tanggal Jatuh Tempo wajib diisi'); return; }
+    }
+
+    const skipProb = stage === 'po_secured' || isInvoiceStage;
     const validationErrors = validateDealInputs({
       products,
       expectedMargin,
@@ -155,6 +192,33 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       return;
     }
 
+    // If invoice_issued, create invoice record first
+    if (isInvoiceStage) {
+      setSavingInvoice(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { sonnerToast.error('Anda harus login'); setSavingInvoice(false); return; }
+
+      const { error } = await supabase.from('invoices').insert({
+        invoice_number: invoiceNumber.trim(),
+        account_id: accountId,
+        sales_id: user.id,
+        segment: (segment === 'B2C/e-Commerce' ? 'B2C' : segment),
+        net_sales: totalValue,
+        gross_profit: Number(grossProfit) || 0,
+        issue_date: format(invoiceIssueDate!, 'yyyy-MM-dd'),
+        due_date: format(invoiceDueDate!, 'yyyy-MM-dd'),
+        paid_date: invoicePaidDate ? format(invoicePaidDate, 'yyyy-MM-dd') : null,
+      });
+
+      if (error) {
+        const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal membuat invoice: ' + error.message;
+        sonnerToast.error(msg);
+        setSavingInvoice(false);
+        return;
+      }
+      setSavingInvoice(false);
+    }
+
     const now = new Date().toISOString().split('T')[0];
     const dealName = products.length === 1
       ? products[0].productName
@@ -168,7 +232,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       segment: (segment === 'B2C/e-Commerce' ? 'B2C' : segment) as Segment,
       stage,
       value: totalValue,
-      probability: Number(probability) || 0,
+      probability: isInvoiceStage ? 100 : (Number(probability) || 0),
       expectedCloseDate,
       createdAt: now,
       updatedAt: now,
@@ -177,9 +241,11 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
+      poNumber: isInvoiceStage ? invoiceNumber.trim() : undefined,
     };
 
     onAdd(newDeal);
+    if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
     resetForm();
     setOpen(false);
   };
@@ -368,7 +434,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="lead-margin">{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                <Input id="lead-margin" type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => handleMarginChangeForInvoice(e.target.value)} placeholder="0-100" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="lead-prob">Probability (%)</Label>
@@ -380,6 +446,78 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
               </div>
             </div>
 
+            {/* Gross Profit - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="space-y-1.5">
+                <Label>Gross Profit (Rp)</Label>
+                <Input
+                  type="number"
+                  value={grossProfit}
+                  onChange={e => setGrossProfit(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
+
+            {/* Invoice fields - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                <div className="space-y-1.5">
+                  <Label>No. Invoice <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={invoiceNumber}
+                    onChange={e => setInvoiceNumber(e.target.value)}
+                    placeholder="Contoh: INV-2026-001"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Tanggal Terbit <span className="text-destructive">*</span></Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoiceIssueDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceIssueDate ? format(invoiceIssueDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={invoiceIssueDate} onSelect={setInvoiceIssueDate} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Jatuh Tempo <span className="text-destructive">*</span></Label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoiceDueDate && "text-muted-foreground")}>
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {invoiceDueDate ? format(invoiceDueDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar mode="single" selected={invoiceDueDate} onSelect={setInvoiceDueDate} initialFocus className="p-3 pointer-events-auto" />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tanggal Bayar (opsional)</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !invoicePaidDate && "text-muted-foreground")}>
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {invoicePaidDate ? format(invoicePaidDate, 'dd MMM yyyy') : 'Pilih tanggal'}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar mode="single" selected={invoicePaidDate} onSelect={setInvoicePaidDate} initialFocus className="p-3 pointer-events-auto" />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            )}
+
             {/* Notes */}
             <div className="space-y-1.5">
               <Label htmlFor="lead-notes">Notes</Label>
@@ -389,7 +527,10 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>Batal</Button>
-              <Button type="submit">Simpan Lead</Button>
+              <Button type="submit" disabled={savingInvoice}>
+                {savingInvoice && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                {stage === 'invoice_issued' ? 'Simpan Lead & Buat Invoice' : 'Simpan Lead'}
+              </Button>
             </div>
           </form>
         </ScrollArea>
