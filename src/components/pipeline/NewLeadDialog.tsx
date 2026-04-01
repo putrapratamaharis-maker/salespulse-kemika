@@ -158,15 +158,24 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     return dbProducts.filter(p => p.category_id === cat.id);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isInvoiceStage = stage === 'invoice_issued';
 
     if (!accountId || !expectedCloseDate || products.some(p => !p.productName || !p.category)) {
       toast({ title: 'Lengkapi semua field yang diperlukan', variant: 'destructive' });
       return;
     }
 
-    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
+    // Invoice-specific validations
+    if (isInvoiceStage) {
+      if (!invoiceNumber.trim()) { sonnerToast.error('Nomor Invoice wajib diisi'); return; }
+      if (!invoiceIssueDate) { sonnerToast.error('Tanggal Terbit Invoice wajib diisi'); return; }
+      if (!invoiceDueDate) { sonnerToast.error('Tanggal Jatuh Tempo wajib diisi'); return; }
+    }
+
+    const skipProb = stage === 'po_secured' || isInvoiceStage;
     const validationErrors = validateDealInputs({
       products,
       expectedMargin,
@@ -183,6 +192,33 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       return;
     }
 
+    // If invoice_issued, create invoice record first
+    if (isInvoiceStage) {
+      setSavingInvoice(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { sonnerToast.error('Anda harus login'); setSavingInvoice(false); return; }
+
+      const { error } = await supabase.from('invoices').insert({
+        invoice_number: invoiceNumber.trim(),
+        account_id: accountId,
+        sales_id: user.id,
+        segment: (segment === 'B2C/e-Commerce' ? 'B2C' : segment),
+        net_sales: totalValue,
+        gross_profit: Number(grossProfit) || 0,
+        issue_date: format(invoiceIssueDate!, 'yyyy-MM-dd'),
+        due_date: format(invoiceDueDate!, 'yyyy-MM-dd'),
+        paid_date: invoicePaidDate ? format(invoicePaidDate, 'yyyy-MM-dd') : null,
+      });
+
+      if (error) {
+        const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal membuat invoice: ' + error.message;
+        sonnerToast.error(msg);
+        setSavingInvoice(false);
+        return;
+      }
+      setSavingInvoice(false);
+    }
+
     const now = new Date().toISOString().split('T')[0];
     const dealName = products.length === 1
       ? products[0].productName
@@ -196,7 +232,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       segment: (segment === 'B2C/e-Commerce' ? 'B2C' : segment) as Segment,
       stage,
       value: totalValue,
-      probability: Number(probability) || 0,
+      probability: isInvoiceStage ? 100 : (Number(probability) || 0),
       expectedCloseDate,
       createdAt: now,
       updatedAt: now,
@@ -205,9 +241,11 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
+      poNumber: isInvoiceStage ? invoiceNumber.trim() : undefined,
     };
 
     onAdd(newDeal);
+    if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
     resetForm();
     setOpen(false);
   };
