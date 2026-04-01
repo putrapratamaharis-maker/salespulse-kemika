@@ -19,6 +19,7 @@ import Revenue from "./pages/Revenue";
 import Products from "./pages/Products";
 import ARCashflow from "./pages/ARCashflow";
 import ProfilePage from "./pages/ProfilePage";
+import MyProfile from "./pages/MyProfile";
 import AdminPanel from "./pages/AdminPanel";
 import AccountManagement from "./pages/AccountManagement";
 import UserManagement from "./pages/UserManagement";
