@@ -128,7 +128,7 @@ export default function NotificationSettings() {
                     </div>
                   </div>
                   <Switch
-                    checked={prefs[setting.key]}
+                    checked={prefs[setting.key] as boolean}
                     onCheckedChange={(val) => handleToggle(setting.key, val)}
                   />
                 </div>
