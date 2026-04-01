@@ -743,6 +743,48 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          browser_push: boolean
+          created_at: string
+          deletion_alerts: boolean
+          id: string
+          low_activity: boolean
+          low_margin: boolean
+          overdue_invoice: boolean
+          sound_enabled: boolean
+          stagnant_deal: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          browser_push?: boolean
+          created_at?: string
+          deletion_alerts?: boolean
+          id?: string
+          low_activity?: boolean
+          low_margin?: boolean
+          overdue_invoice?: boolean
+          sound_enabled?: boolean
+          stagnant_deal?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          browser_push?: boolean
+          created_at?: string
+          deletion_alerts?: boolean
+          id?: string
+          low_activity?: boolean
+          low_margin?: boolean
+          overdue_invoice?: boolean
+          sound_enabled?: boolean
+          stagnant_deal?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       notifications: {
         Row: {
           created_at: string
