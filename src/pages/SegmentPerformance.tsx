@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
-import { formatIDRFull, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatIDR, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Trophy, Users, ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Trophy, ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface SegmentData {
   revenue: number;
@@ -12,6 +14,12 @@ interface SegmentData {
   winRate: number;
   avgDealSize: number;
   conversionRate: number;
+}
+
+interface MonthlyMovement {
+  month: string;
+  realisasi: number;
+  target: number;
 }
 
 function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: SegmentData }) {
@@ -29,6 +37,110 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
   );
 }
 
+const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+function RevenueMovementChart({ data }: { data: MonthlyMovement[] }) {
+  const totalRealisasi = data.reduce((s, d) => s + d.realisasi, 0);
+  const totalTarget = data.reduce((s, d) => s + d.target, 0);
+  const achievementPct = totalTarget > 0 ? (totalRealisasi / totalTarget) * 100 : 0;
+  const avgMonthlyTarget = totalTarget > 0 ? totalTarget / data.filter(d => d.target > 0).length : 0;
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <CardTitle className="text-sm font-semibold">Revenue Movement Annual</CardTitle>
+            <p className="text-xs text-muted-foreground mt-0.5">Realisasi vs Target per bulan (tahun berjalan)</p>
+          </div>
+          <div className="flex items-center gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground">YTD Realisasi:</span>
+              <span className="font-bold text-foreground">{formatIDR(totalRealisasi)}</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-muted-foreground">YTD Target:</span>
+              <span className="font-bold text-foreground">{formatIDR(totalTarget)}</span>
+            </div>
+            <div className={`px-2 py-0.5 rounded-full font-bold ${
+              achievementPct >= 100 ? 'bg-emerald-500/15 text-emerald-600' :
+              achievementPct >= 80 ? 'bg-amber-500/15 text-amber-600' :
+              'bg-red-500/15 text-red-600'
+            }`}>
+              {achievementPct.toFixed(1)}%
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="h-[300px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} barGap={2} barCategoryGap="20%">
+              <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 11 }}
+                className="text-muted-foreground"
+              />
+              <YAxis
+                tick={{ fontSize: 10 }}
+                tickFormatter={(v) => {
+                  if (v >= 1_000_000_000) return `${(v / 1_000_000_000).toFixed(1)}M`;
+                  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(0)}Jt`;
+                  if (v >= 1_000) return `${(v / 1_000).toFixed(0)}Rb`;
+                  return v;
+                }}
+                className="text-muted-foreground"
+              />
+              <Tooltip
+                formatter={(value: number, name: string) => [
+                  formatIDRFull(value),
+                  name === 'target' ? 'Target' : 'Realisasi'
+                ]}
+                contentStyle={{
+                  borderRadius: '8px',
+                  border: '1px solid hsl(var(--border))',
+                  background: 'hsl(var(--card))',
+                  color: 'hsl(var(--foreground))',
+                  fontSize: '12px',
+                }}
+              />
+              <Legend
+                formatter={(value) => (
+                  <span className="text-xs text-foreground">
+                    {value === 'target' ? 'Target' : 'Realisasi'}
+                  </span>
+                )}
+              />
+              {avgMonthlyTarget > 0 && (
+                <ReferenceLine
+                  y={avgMonthlyTarget}
+                  stroke="hsl(var(--destructive))"
+                  strokeDasharray="6 3"
+                  strokeWidth={1.5}
+                  label={{ value: 'Avg Target', position: 'right', fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                />
+              )}
+              <Bar
+                dataKey="target"
+                fill="hsl(var(--muted-foreground) / 0.25)"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
+              />
+              <Bar
+                dataKey="realisasi"
+                fill="hsl(var(--primary))"
+                radius={[4, 4, 0, 0]}
+                maxBarSize={32}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function computeSegment(invoices: any[], deals: any[]): SegmentData {
   const revenue = invoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
   const grossProfit = invoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
@@ -43,27 +155,61 @@ function computeSegment(invoices: any[], deals: any[]): SegmentData {
   return { revenue, grossProfit, marginPct, winRate, avgDealSize, conversionRate };
 }
 
+function buildMovementData(
+  invoices: any[],
+  targets: any[],
+  segment: string,
+  year: number
+): MonthlyMovement[] {
+  return MONTH_LABELS.map((label, idx) => {
+    const month = idx + 1;
+    const monthStr = `${year}-${String(month).padStart(2, '0')}`;
+
+    // Realisasi = net_sales from invoices in this segment & month
+    const realisasi = invoices
+      .filter((inv: any) => inv.segment === segment && inv.issue_date?.startsWith(monthStr))
+      .reduce((s: number, inv: any) => s + (inv.net_sales || 0), 0);
+
+    // Target = revenue_target from targets table for this segment & month
+    const target = targets
+      .filter((t: any) => t.segment === segment && t.month === monthStr)
+      .reduce((s: number, t: any) => s + (t.revenue_target || 0), 0);
+
+    return { month: label, realisasi, target };
+  });
+}
+
 const SegmentPerformance = () => {
   const [loading, setLoading] = useState(true);
   const [segmentData, setSegmentData] = useState<Record<string, SegmentData>>({});
+  const [movementData, setMovementData] = useState<Record<string, MonthlyMovement[]>>({});
 
   useEffect(() => {
-    const fetch = async () => {
+    const fetchData = async () => {
       setLoading(true);
-      const [{ data: invoices }, { data: deals }] = await Promise.all([
-        supabase.from('invoices').select('net_sales, gross_profit, segment, paid_date'),
+      const year = new Date().getFullYear();
+
+      const [{ data: invoices }, { data: deals }, { data: targets }] = await Promise.all([
+        supabase.from('invoices').select('net_sales, gross_profit, segment, paid_date, issue_date'),
         supabase.from('deals').select('value, stage, segment'),
+        supabase.from('targets').select('revenue_target, segment, month'),
       ]);
+
       const result: Record<string, SegmentData> = {};
+      const movement: Record<string, MonthlyMovement[]> = {};
+
       for (const seg of ['B2G', 'B2B', 'B2C']) {
         const segInv = (invoices || []).filter((i: any) => i.segment === seg);
         const segDeals = (deals || []).filter((d: any) => d.segment === seg);
         result[seg] = computeSegment(segInv, segDeals);
+        movement[seg] = buildMovementData(invoices || [], targets || [], seg, year);
       }
+
       setSegmentData(result);
+      setMovementData(movement);
       setLoading(false);
     };
-    fetch();
+    fetchData();
   }, []);
 
   if (loading) {
@@ -73,6 +219,9 @@ const SegmentPerformance = () => {
       </div>
     );
   }
+
+  const emptySegment: SegmentData = { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 };
+  const emptyMovement: MonthlyMovement[] = MONTH_LABELS.map(m => ({ month: m, realisasi: 0, target: 0 }));
 
   return (
     <div className="space-y-6">
@@ -87,15 +236,12 @@ const SegmentPerformance = () => {
           <TabsTrigger value="B2B">B2B (Private)</TabsTrigger>
           <TabsTrigger value="B2C">B2C (E-Commerce)</TabsTrigger>
         </TabsList>
-        <TabsContent value="B2G" className="mt-4">
-          <SegmentKPIs segment="B2G" data={segmentData['B2G'] || { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 }} />
-        </TabsContent>
-        <TabsContent value="B2B" className="mt-4">
-          <SegmentKPIs segment="B2B" data={segmentData['B2B'] || { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 }} />
-        </TabsContent>
-        <TabsContent value="B2C" className="mt-4">
-          <SegmentKPIs segment="B2C" data={segmentData['B2C'] || { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 }} />
-        </TabsContent>
+        {(['B2G', 'B2B', 'B2C'] as const).map(seg => (
+          <TabsContent key={seg} value={seg} className="mt-4 space-y-4">
+            <SegmentKPIs segment={seg} data={segmentData[seg] || emptySegment} />
+            <RevenueMovementChart data={movementData[seg] || emptyMovement} />
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );
