@@ -275,25 +275,6 @@ export function AppSidebar() {
           </SidebarGroup>
         )}
 
-        {/* Settings — visible to all users */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <NavLink
-                    to="/settings"
-                    className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
-                    <Settings className="mr-2 h-4 w-4 shrink-0" />
-                    {!collapsed && <span>Pengaturan</span>}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
     </Sidebar>
