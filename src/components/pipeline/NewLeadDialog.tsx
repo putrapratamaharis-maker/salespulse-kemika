@@ -84,6 +84,14 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // Invoice-specific fields (when stage === 'invoice_issued')
+  const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [invoiceIssueDate, setInvoiceIssueDate] = useState<Date | undefined>(new Date());
+  const [invoiceDueDate, setInvoiceDueDate] = useState<Date | undefined>();
+  const [invoicePaidDate, setInvoicePaidDate] = useState<Date | undefined>();
+  const [grossProfit, setGrossProfit] = useState('');
+  const [savingInvoice, setSavingInvoice] = useState(false);
+
   const selectedAccount = accountOptions.find(a => a.id === accountId);
 
   const resetForm = () => {
