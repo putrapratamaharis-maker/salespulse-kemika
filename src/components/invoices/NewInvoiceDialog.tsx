@@ -79,7 +79,8 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
 
     setSaving(false);
     if (error) {
-      toast.error('Gagal menyimpan invoice: ' + error.message);
+      const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal menyimpan invoice: ' + error.message;
+      toast.error(msg);
     } else {
       toast.success('Invoice berhasil dibuat');
       resetForm();

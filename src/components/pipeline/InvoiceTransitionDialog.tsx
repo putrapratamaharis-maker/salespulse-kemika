@@ -90,7 +90,8 @@ export function InvoiceTransitionDialog({ open, onOpenChange, deal, getAccountNa
     });
 
     if (error) {
-      toast.error('Gagal membuat invoice: ' + error.message);
+      const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal membuat invoice: ' + error.message;
+      toast.error(msg);
       setSaving(false);
       return;
     }
