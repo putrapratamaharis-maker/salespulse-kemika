@@ -80,7 +80,7 @@ export function NotificationListener() {
       toast.warning(title, { description: message, duration: 8000 });
     }
     showBrowserNotification(title, message, prefs.browser_push);
-    if (prefs.sound_enabled) playNotificationSound();
+    if (prefs.sound_enabled) playNotificationSound(prefs.volume_level);
   };
 
   // Realtime DB notifications
