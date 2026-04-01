@@ -8,8 +8,9 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 export interface AccountPIC {
   picName?: string;
@@ -37,6 +38,7 @@ const stageLabels: Record<string, string> = {
 };
 
 export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, getSalesName, getAccountPIC }: DealDetailDialogProps) {
+  const navigate = useNavigate();
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
   const pic = deal && getAccountPIC ? getAccountPIC(deal.accountId) : undefined;
 
@@ -70,8 +72,24 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
               <InfoRow icon={TrendingUp} label={deal.stage === 'po_secured' || deal.stage === 'invoice_issued' ? 'Gross Margin' : 'Expected Margin'} value={formatPercent(deal.expectedMargin)} />
             )}
             {deal.location && <InfoRow icon={MapPin} label="Location" value={deal.location} />}
-            {deal.poNumber && (deal.stage === 'po_secured' || deal.stage === 'invoice_issued') && (
-              <InfoRow icon={Hash} label={deal.stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'} value={deal.poNumber} highlight />
+            {deal.poNumber && (deal.stage === 'po_secured') && (
+              <InfoRow icon={Hash} label="No. PO/SP/SPK" value={deal.poNumber} highlight />
+            )}
+            {deal.poNumber && deal.stage === 'invoice_issued' && (
+              <div className="flex items-start gap-2 col-span-2">
+                <Hash className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-muted-foreground leading-tight">No. Invoice</p>
+                  <button
+                    type="button"
+                    onClick={() => { onOpenChange(false); navigate('/revenue'); }}
+                    className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                  >
+                    {deal.poNumber}
+                    <ExternalLink className="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
