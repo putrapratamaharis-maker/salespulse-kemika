@@ -53,6 +53,8 @@ const MyProfile = () => {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [positionName, setPositionName] = useState('');
   const [supervisorName, setSupervisorName] = useState('');
+  const [orgRole, setOrgRole] = useState('');
+  const [systemRole, setSystemRole] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
