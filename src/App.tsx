@@ -63,6 +63,7 @@ function ProtectedRoutes() {
           <Route path="/revenue" element={<Revenue />} />
           <Route path="/products" element={<Products />} />
           <Route path="/ar-cashflow" element={<ARCashflow />} />
+          <Route path="/profile" element={<MyProfile />} />
           <Route path="/profile/:userId" element={<ProfilePage />} />
           <Route path="/accounts" element={<AccountManagement />} />
           <Route path="/users" element={<UserManagement />} />
