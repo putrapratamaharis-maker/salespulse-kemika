@@ -14,6 +14,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
   deletion_alerts: true,
   browser_push: true,
   sound_enabled: true,
+  volume_level: 'medium',
 };
 
 async function requestNotificationPermission(): Promise<boolean> {
@@ -56,6 +57,7 @@ export function NotificationListener() {
             deletion_alerts: (data as any).deletion_alerts,
             browser_push: (data as any).browser_push,
             sound_enabled: (data as any).sound_enabled,
+            volume_level: (data as any).volume_level || 'medium',
           });
         }
       });
@@ -78,7 +80,7 @@ export function NotificationListener() {
       toast.warning(title, { description: message, duration: 8000 });
     }
     showBrowserNotification(title, message, prefs.browser_push);
-    if (prefs.sound_enabled) playNotificationSound();
+    if (prefs.sound_enabled) playNotificationSound(prefs.volume_level);
   };
 
   // Realtime DB notifications

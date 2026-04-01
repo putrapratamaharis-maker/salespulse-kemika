@@ -756,6 +756,7 @@ export type Database = {
           stagnant_deal: boolean
           updated_at: string
           user_id: string
+          volume_level: string
         }
         Insert: {
           browser_push?: boolean
@@ -769,6 +770,7 @@ export type Database = {
           stagnant_deal?: boolean
           updated_at?: string
           user_id: string
+          volume_level?: string
         }
         Update: {
           browser_push?: boolean
@@ -782,6 +784,7 @@ export type Database = {
           stagnant_deal?: boolean
           updated_at?: string
           user_id?: string
+          volume_level?: string
         }
         Relationships: []
       }

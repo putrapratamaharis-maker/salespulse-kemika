@@ -2,11 +2,15 @@ import { useNotificationPreferences, NotificationPreferences } from '@/hooks/use
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { Bell, Clock, AlertTriangle, TrendingDown, Activity, Trash2, Volume2, Globe } from 'lucide-react';
+import { Bell, Clock, AlertTriangle, TrendingDown, Activity, Trash2, Volume2, Globe, Volume1, VolumeX } from 'lucide-react';
 import { toast } from 'sonner';
+import { playNotificationSound, VolumeLevel } from '@/lib/notificationSound';
+import { Button } from '@/components/ui/button';
+
+type BooleanPrefKey = Exclude<keyof NotificationPreferences, 'volume_level'>;
 
 interface SettingItem {
-  key: keyof NotificationPreferences;
+  key: BooleanPrefKey;
   label: string;
   description: string;
   icon: typeof Bell;
@@ -71,9 +75,15 @@ const deliverySettings: SettingItem[] = [
 export default function NotificationSettings() {
   const { prefs, loading, updatePref } = useNotificationPreferences();
 
-  const handleToggle = async (key: keyof NotificationPreferences, value: boolean) => {
+  const handleToggle = async (key: BooleanPrefKey, value: boolean) => {
     await updatePref(key, value);
     toast.success('Pengaturan disimpan', { duration: 2000 });
+  };
+
+  const handleVolumeChange = async (level: VolumeLevel) => {
+    await updatePref('volume_level', level);
+    playNotificationSound(level);
+    toast.success('Volume disimpan', { duration: 2000 });
   };
 
   if (loading) {
@@ -118,7 +128,7 @@ export default function NotificationSettings() {
                     </div>
                   </div>
                   <Switch
-                    checked={prefs[setting.key]}
+                    checked={prefs[setting.key] as boolean}
                     onCheckedChange={(val) => handleToggle(setting.key, val)}
                   />
                 </div>
@@ -150,13 +160,49 @@ export default function NotificationSettings() {
                     </div>
                   </div>
                   <Switch
-                    checked={prefs[setting.key]}
+                    checked={prefs[setting.key] as boolean}
                     onCheckedChange={(val) => handleToggle(setting.key, val)}
                   />
                 </div>
               </div>
             );
           })}
+
+          {/* Volume Level Selector */}
+          {prefs.sound_enabled && (
+            <>
+              <Separator className="my-3" />
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5 text-primary">
+                    <Volume1 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Volume Suara</p>
+                    <p className="text-xs text-muted-foreground">Atur tingkat volume notifikasi</p>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  {([
+                    { value: 'low' as VolumeLevel, label: 'Rendah', icon: VolumeX },
+                    { value: 'medium' as VolumeLevel, label: 'Sedang', icon: Volume1 },
+                    { value: 'high' as VolumeLevel, label: 'Tinggi', icon: Volume2 },
+                  ]).map(({ value, label, icon: VIcon }) => (
+                    <Button
+                      key={value}
+                      variant={prefs.volume_level === value ? 'default' : 'outline'}
+                      size="sm"
+                      className="text-xs h-8 px-2.5 gap-1"
+                      onClick={() => handleVolumeChange(value)}
+                    >
+                      <VIcon className="h-3.5 w-3.5" />
+                      {label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

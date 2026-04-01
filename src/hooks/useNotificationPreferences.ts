@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import type { VolumeLevel } from '@/lib/notificationSound';
 
 export interface NotificationPreferences {
   stagnant_deal: boolean;
@@ -10,6 +11,7 @@ export interface NotificationPreferences {
   deletion_alerts: boolean;
   browser_push: boolean;
   sound_enabled: boolean;
+  volume_level: VolumeLevel;
 }
 
 const DEFAULT_PREFS: NotificationPreferences = {
@@ -20,6 +22,7 @@ const DEFAULT_PREFS: NotificationPreferences = {
   deletion_alerts: true,
   browser_push: true,
   sound_enabled: true,
+  volume_level: 'medium',
 };
 
 export function useNotificationPreferences() {
@@ -49,17 +52,17 @@ export function useNotificationPreferences() {
         deletion_alerts: (data as any).deletion_alerts,
         browser_push: (data as any).browser_push,
         sound_enabled: (data as any).sound_enabled,
+        volume_level: (data as any).volume_level || 'medium',
       });
     }
     setLoading(false);
   }
 
-  async function updatePref(key: keyof NotificationPreferences, value: boolean) {
+  async function updatePref(key: keyof NotificationPreferences, value: boolean | string) {
     if (!user) return;
     const newPrefs = { ...prefs, [key]: value };
     setPrefs(newPrefs);
 
-    // Upsert
     const { data: existing } = await supabase
       .from('notification_preferences' as any)
       .select('id')

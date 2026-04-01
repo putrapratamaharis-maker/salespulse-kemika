@@ -1,0 +1,1 @@
+ALTER TABLE public.notification_preferences ADD COLUMN volume_level text NOT NULL DEFAULT 'medium';
