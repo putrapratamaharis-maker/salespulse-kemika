@@ -287,7 +287,7 @@ export function AppSidebar() {
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   >
                     <Bell className="mr-2 h-4 w-4 shrink-0" />
-                    {!collapsed && <span>Notifikasi</span>}
+                    {!collapsed && <span>Pengaturan Notifikasi</span>}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
