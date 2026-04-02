@@ -213,6 +213,9 @@ export function ManagerDashboard() {
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText className="bg-kpi-cyan " borderAccent="border-l-kpi-cyan-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
       </div>
 
+      {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
+      <LiveStatusRow />
+
       {/* Revenue by Segment + Revenue Trend side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
