@@ -5,6 +5,7 @@ import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
+import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
@@ -211,6 +212,9 @@ export function ManagerDashboard() {
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText className="bg-kpi-cyan " borderAccent="border-l-kpi-cyan-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
       </div>
+
+      {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
+      <LiveStatusRow />
 
       {/* Revenue by Segment + Revenue Trend side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
