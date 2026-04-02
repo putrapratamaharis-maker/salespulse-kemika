@@ -226,11 +226,22 @@ export function LiveStatusRow() {
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <ClipboardCheck className="h-4 w-4 text-amber-500" />
             Pending Approvals
-            {pendingApprovals.length > 0 && (
-              <Badge variant="destructive" className="ml-auto text-[10px] animate-pulse">
-                {pendingApprovals.length} pending
-              </Badge>
-            )}
+            <div className="ml-auto flex items-center gap-1.5">
+              {pendingApprovals.length > 0 && (
+                <Badge variant="destructive" className="text-[10px] animate-pulse">
+                  {pendingApprovals.length} pending
+                </Badge>
+              )}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                onClick={() => navigate('/deal-deletion-approval')}
+                title="Buka halaman Approval"
+              >
+                <ExternalLink className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
