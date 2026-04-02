@@ -71,18 +71,7 @@ const AdminPanel = () => {
         </TabsContent>
 
         <TabsContent value="sales-targets" className="mt-4">
-          <Tabs defaultValue="revenue-targets">
-            <TabsList className="mb-4">
-              <TabsTrigger value="revenue-targets">Revenue & Margin Targets</TabsTrigger>
-              <TabsTrigger value="kpi-monthly">KPI Monthly Targets</TabsTrigger>
-            </TabsList>
-            <TabsContent value="revenue-targets">
-              <RevenueTargetManagement />
-            </TabsContent>
-            <TabsContent value="kpi-monthly">
-              <MonthlyKPITargets />
-            </TabsContent>
-          </Tabs>
+          <RevenueTargetManagement />
         </TabsContent>
 
         <TabsContent value="kpi-engine" className="mt-4">
