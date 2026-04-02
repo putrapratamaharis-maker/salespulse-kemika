@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sliders, Loader2, Target, FileText, TrendingUp, Crosshair } from 'lucide-react';
+import { Sliders, Loader2, Target, FileText, TrendingUp, Crosshair, CalendarRange } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIMasterManagement } from '@/components/admin/KPIMasterManagement';
 import { KPITemplateManagement } from '@/components/admin/KPITemplateManagement';
@@ -52,6 +52,9 @@ const AdminPanel = () => {
           <TabsTrigger value="sales-targets">
             <Crosshair className="h-4 w-4 mr-1" /> Sales Targets
           </TabsTrigger>
+          <TabsTrigger value="kpi-monthly">
+            <CalendarRange className="h-4 w-4 mr-1" /> KPI Monthly
+          </TabsTrigger>
           <TabsTrigger value="kpi-engine">
             <TrendingUp className="h-4 w-4 mr-1" /> KPI Engine
           </TabsTrigger>
@@ -71,18 +74,11 @@ const AdminPanel = () => {
         </TabsContent>
 
         <TabsContent value="sales-targets" className="mt-4">
-          <Tabs defaultValue="revenue-targets">
-            <TabsList className="mb-4">
-              <TabsTrigger value="revenue-targets">Revenue & Margin Targets</TabsTrigger>
-              <TabsTrigger value="kpi-monthly">KPI Monthly Targets</TabsTrigger>
-            </TabsList>
-            <TabsContent value="revenue-targets">
-              <RevenueTargetManagement />
-            </TabsContent>
-            <TabsContent value="kpi-monthly">
-              <MonthlyKPITargets />
-            </TabsContent>
-          </Tabs>
+          <RevenueTargetManagement />
+        </TabsContent>
+
+        <TabsContent value="kpi-monthly" className="mt-4">
+          <MonthlyKPITargets />
         </TabsContent>
 
         <TabsContent value="kpi-engine" className="mt-4">
