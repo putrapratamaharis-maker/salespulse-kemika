@@ -5,6 +5,7 @@ import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
+import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
