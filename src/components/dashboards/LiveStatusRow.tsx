@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
-import { Users, ClipboardCheck, Activity, Circle, Clock, AlertTriangle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Users, ClipboardCheck, Activity, Circle, Clock, AlertTriangle, ExternalLink } from 'lucide-react';
 import { formatDateTime } from '@/types/sales';
 
 interface OnlineUser {
