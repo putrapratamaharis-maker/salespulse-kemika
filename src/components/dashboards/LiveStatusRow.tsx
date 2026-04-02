@@ -44,6 +44,7 @@ const activityTypeLabels: Record<string, string> = {
 };
 
 export function LiveStatusRow() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
