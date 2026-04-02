@@ -49,11 +49,8 @@ const AdminPanel = () => {
           <TabsTrigger value="kpi-templates">
             <FileText className="h-4 w-4 mr-1" /> KPI Templates
           </TabsTrigger>
-          <TabsTrigger value="monthly-targets">
-            <CalendarRange className="h-4 w-4 mr-1" /> Target Bulanan
-          </TabsTrigger>
-          <TabsTrigger value="revenue-targets">
-            <DollarSign className="h-4 w-4 mr-1" /> Revenue Targets
+          <TabsTrigger value="sales-targets">
+            <Crosshair className="h-4 w-4 mr-1" /> Sales Targets
           </TabsTrigger>
           <TabsTrigger value="kpi-engine">
             <TrendingUp className="h-4 w-4 mr-1" /> KPI Engine
@@ -73,12 +70,19 @@ const AdminPanel = () => {
           <KPITemplateManagement />
         </TabsContent>
 
-        <TabsContent value="monthly-targets" className="mt-4">
-          <MonthlyKPITargets />
-        </TabsContent>
-
-        <TabsContent value="revenue-targets" className="mt-4">
-          <RevenueTargetManagement />
+        <TabsContent value="sales-targets" className="mt-4">
+          <Tabs defaultValue="revenue-targets">
+            <TabsList className="mb-4">
+              <TabsTrigger value="revenue-targets">Revenue & Margin Targets</TabsTrigger>
+              <TabsTrigger value="kpi-monthly">KPI Monthly Targets</TabsTrigger>
+            </TabsList>
+            <TabsContent value="revenue-targets">
+              <RevenueTargetManagement />
+            </TabsContent>
+            <TabsContent value="kpi-monthly">
+              <MonthlyKPITargets />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="kpi-engine" className="mt-4">
