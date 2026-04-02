@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sliders, Loader2, Target, FileText, CalendarRange, TrendingUp, DollarSign } from 'lucide-react';
+import { Sliders, Loader2, Target, FileText, TrendingUp, Crosshair } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { KPIMasterManagement } from '@/components/admin/KPIMasterManagement';
 import { KPITemplateManagement } from '@/components/admin/KPITemplateManagement';
