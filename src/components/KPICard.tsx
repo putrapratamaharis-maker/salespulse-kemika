@@ -53,7 +53,7 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
             <TooltipTrigger asChild>
               <Info className="absolute bottom-2 right-2 h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" />
             </TooltipTrigger>
-            <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+            <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed z-[100]">
               {tooltip}
             </TooltipContent>
           </Tooltip>

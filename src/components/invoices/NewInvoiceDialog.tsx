@@ -65,28 +65,57 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) { toast.error('Anda harus login'); setSaving(false); return; }
 
-    const { error } = await supabase.from('invoices').insert({
+    const netSalesNum = Number(netSales);
+    const grossProfitNum = Number(grossProfit || 0);
+    const marginPct = netSalesNum > 0 ? (grossProfitNum / netSalesNum) * 100 : 0;
+
+    const { data: invoiceData, error } = await supabase.from('invoices').insert({
       invoice_number: invoiceNumber.trim(),
       account_id: accountId,
       sales_id: user.id,
       segment,
-      net_sales: Number(netSales),
-      gross_profit: Number(grossProfit || 0),
+      net_sales: netSalesNum,
+      gross_profit: grossProfitNum,
       issue_date: format(issueDate, 'yyyy-MM-dd'),
       due_date: format(dueDate, 'yyyy-MM-dd'),
       paid_date: paidDate ? format(paidDate, 'yyyy-MM-dd') : null,
+    }).select('id').single();
+
+    if (error) {
+      setSaving(false);
+      const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal menyimpan invoice: ' + error.message;
+      toast.error(msg);
+      return;
+    }
+
+    // Auto-create deal at invoice_issued stage for pipeline sync
+    const selectedAccount = accounts.find(a => a.id === accountId);
+    const dealName = `${invoiceNumber.trim()} - ${selectedAccount?.name || 'Invoice'}`;
+    
+    const { error: dealError } = await supabase.from('deals').insert({
+      name: dealName,
+      account_id: accountId,
+      sales_id: user.id,
+      stage: 'invoice_issued' as any,
+      value: netSalesNum,
+      probability: 100,
+      expected_close_date: format(issueDate, 'yyyy-MM-dd'),
+      expected_margin: Math.round(marginPct * 100) / 100,
+      segment,
+      po_number: invoiceNumber.trim(),
+      notes: `Auto-created from invoice ${invoiceNumber.trim()}`,
     });
 
     setSaving(false);
-    if (error) {
-      const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal menyimpan invoice: ' + error.message;
-      toast.error(msg);
+    if (dealError) {
+      console.warn('Invoice saved but failed to create pipeline deal:', dealError.message);
+      toast.success('Invoice berhasil dibuat (deal pipeline gagal disinkronkan)');
     } else {
-      toast.success('Invoice berhasil dibuat');
-      resetForm();
-      setOpen(false);
-      onCreated();
+      toast.success('Invoice berhasil dibuat & tersinkronisasi ke Pipeline');
     }
+    resetForm();
+    setOpen(false);
+    onCreated();
   };
 
   return (

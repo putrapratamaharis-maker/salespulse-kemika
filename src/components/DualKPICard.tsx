@@ -46,7 +46,7 @@ export function DualKPICard({ items, icon: Icon, className }: DualKPICardProps) 
                   <TooltipTrigger asChild>
                     <Info className="absolute bottom-0.5 right-0 h-3.5 w-3.5 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" />
                   </TooltipTrigger>
-                  <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed">
+                  <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed z-[100]">
                     {item.tooltip}
                   </TooltipContent>
                 </Tooltip>
