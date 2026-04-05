@@ -416,48 +416,37 @@ export function RevenueTargetManagement() {
   return (
     <div className="space-y-4">
       {/* ═══ TOOLBAR ═══ */}
-      <div className="flex flex-col gap-3">
-        {/* Actions */}
-        <div className="flex items-center gap-2 flex-wrap">
-          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMonth(monthStr); setShowAddForm(true); }}>
-            <Plus className="h-3 w-3 mr-1" /> Tambah
+      <div className="flex items-center gap-2 flex-wrap">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline" className="h-9 text-sm px-4">
+              <Download className="h-4 w-4 mr-2" /> Template
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={() => handleTemplateExport(false)}>
+              <FileDown className="h-3.5 w-3.5 mr-2" /> Download Template Kosong
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleTemplateExport(true)} disabled={allYearTargets.length === 0}>
+              <Download className="h-3.5 w-3.5 mr-2" /> Export Data ({selYear})
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <Button size="sm" variant="outline" className="h-9 text-sm px-4" onClick={() => setShowTemplateImport(true)}>
+          <Upload className="h-4 w-4 mr-2" /> Import
+        </Button>
+        <Button size="sm" variant="outline" className="h-9 text-sm px-4" onClick={handleExportCSV} disabled={activeData.length === 0}>
+          <FileSpreadsheet className="h-4 w-4 mr-2" /> Ekspor
+        </Button>
+        <Button size="sm" className="h-9 text-sm px-4" onClick={() => { setAddMonth(monthStr); setShowAddForm(true); }}>
+          <Plus className="h-4 w-4 mr-2" /> Tambah
+        </Button>
+        {dirtyCount > 0 && (
+          <Button size="sm" className="h-9 text-sm px-4 ml-auto" onClick={handleSave} disabled={saving}>
+            {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
+            Simpan ({dirtyCount})
           </Button>
-          {viewMode === 'monthly' && (
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowImport(true)}>
-              <Upload className="h-3 w-3 mr-1" /> Import Bulan Ini
-            </Button>
-          )}
-          {dirtyCount > 0 && (
-            <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving}>
-              {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
-              Simpan ({dirtyCount})
-            </Button>
-          )}
-          <div className="ml-auto flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button size="sm" variant="outline" className="h-7 text-xs">
-                  <FileSpreadsheet className="h-3 w-3 mr-1" /> Template
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => handleTemplateExport(false)}>
-                  <FileDown className="h-3.5 w-3.5 mr-2" /> Download Template Kosong
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleTemplateExport(true)} disabled={allYearTargets.length === 0}>
-                  <Download className="h-3.5 w-3.5 mr-2" /> Export Data ({selYear})
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => setShowTemplateImport(true)}>
-                  <Upload className="h-3.5 w-3.5 mr-2" /> Import dari Template
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleExportCSV} disabled={activeData.length === 0}>
-              <Download className="h-3 w-3 mr-1" /> Export Excel
-            </Button>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* ═══ SUMMARY CARDS ═══ */}
