@@ -703,17 +703,6 @@ export function RevenueTargetManagement() {
             </CardTitle>
             <div className="flex flex-wrap items-end gap-2">
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tampilan</Label>
-                <Select value={viewMode} onValueChange={v => setViewMode(v as any)}>
-                  <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly"><span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Bulanan</span></SelectItem>
-                    <SelectItem value="annually"><span className="flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> Tahunan</span></SelectItem>
-                    <SelectItem value="individual"><span className="flex items-center gap-1.5"><User className="h-3 w-3" /> Per Sales</span></SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1">
                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tahun</Label>
                 <Select value={String(selYear)} onValueChange={v => setSelYear(Number(v))}>
                   <SelectTrigger className="w-[90px] h-8 text-xs"><SelectValue /></SelectTrigger>
