@@ -295,43 +295,44 @@ export function RevenueTargetManagement() {
     setImportText('');
   };
 
+  const exportToXlsx = (data: Record<string, any>[], filename: string) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const colWidths = Object.keys(data[0] || {}).map(key => ({ wch: Math.max(key.length, 18) }));
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sales Targets');
+    XLSX.writeFile(wb, filename);
+  };
+
   const handleExportCSV = () => {
-    const header = 'Email,Nama,Segment,Bulan,Revenue Target,Margin Target (%)';
     const src = viewMode === 'monthly' ? targets : allYearTargets;
-    const rows = src.map(t => {
+    const data = src.map(t => {
       const p = profiles.find(pr => pr.user_id === t.user_id);
-      return `${p?.email || ''},${t.full_name},${t.segment},${t.month},${t.revenue_target},${t.margin_target}`;
+      return { Email: p?.email || '', Nama: t.full_name, Segment: t.segment, Bulan: t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target };
     });
-    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Export CSV berhasil' });
+    exportToXlsx(data, `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.xlsx`);
+    toast({ title: 'Export Excel berhasil' });
   };
 
   const handleTemplateExport = (filled: boolean) => {
-    const header = 'Email,Nama,Segment,Bulan (YYYY-MM),Revenue Target,Margin Target (%)';
-    let rows: string[] = [];
+    let data: Record<string, any>[] = [];
     if (filled) {
       allYearTargets.forEach(t => {
         const p = profiles.find(pr => pr.user_id === t.user_id);
-        rows.push(`${p?.email || ''},${t.full_name},${t.segment},${t.month},${t.revenue_target},${t.margin_target}`);
+        data.push({ Email: p?.email || '', Nama: t.full_name, Segment: t.segment, 'Bulan (YYYY-MM)': t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target });
       });
     } else {
       profiles.forEach(p => {
         SEGMENTS.forEach(seg => {
           for (let i = 1; i <= 12; i++) {
             const m = `${selYear}-${String(i).padStart(2, '0')}`;
-            rows.push(`${p.email},${p.full_name},${seg},${m},0,0`);
+            data.push({ Email: p.email, Nama: p.full_name, Segment: seg, 'Bulan (YYYY-MM)': m, 'Revenue Target': 0, 'Margin Target (%)': 0 });
           }
         });
       });
     }
-    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filled ? `sales_targets_filled_${selYear}.csv` : `sales_targets_template_${selYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: filled ? 'Data exported' : 'Template downloaded' });
+    exportToXlsx(data, filled ? `sales_targets_filled_${selYear}.xlsx` : `sales_targets_template_${selYear}.xlsx`);
+    toast({ title: filled ? 'Data exported (.xlsx)' : 'Template downloaded (.xlsx)' });
   };
 
   const handleTemplateImport = async () => {
