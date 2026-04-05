@@ -335,8 +335,17 @@ export function RevenueTargetManagement() {
     toast({ title: filled ? 'Data exported (.xlsx)' : 'Template downloaded (.xlsx)' });
   };
 
-  const handleTemplateImport = async () => {
-    const lines = templateImportText.trim().split('\n').filter(l => l.trim());
+  const handleTemplateImport = async (file?: File) => {
+    let lines: string[] = [];
+    if (file) {
+      const ab = await file.arrayBuffer();
+      const wb = XLSX.read(ab, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      lines = csv.split('\n').filter(l => l.trim());
+    } else {
+      lines = templateImportText.trim().split('\n').filter(l => l.trim());
+    }
     if (lines.length === 0) { toast({ title: 'Data kosong', variant: 'destructive' }); return; }
     let startIdx = 0;
     if (lines[0].toLowerCase().includes('email') && lines[0].toLowerCase().includes('segment')) startIdx = 1;
