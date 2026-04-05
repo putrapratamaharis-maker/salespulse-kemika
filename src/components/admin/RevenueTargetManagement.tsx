@@ -375,8 +375,9 @@ export function RevenueTargetManagement() {
   const saveWorkbook = async (workbook: XLSX.WorkBook, filename: string) => {
     const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const pickerWindow = window as Window & { showSaveFilePicker?: (options?: unknown) => Promise<any> };
 
+    // Method 1: File System Access API (Chrome/Edge desktop — lets user pick save location)
+    const pickerWindow = window as Window & { showSaveFilePicker?: (options?: unknown) => Promise<any> };
     if (typeof pickerWindow.showSaveFilePicker === 'function') {
       try {
         const handle = await pickerWindow.showSaveFilePicker({
@@ -392,9 +393,19 @@ export function RevenueTargetManagement() {
         return true;
       } catch (error) {
         if ((error as { name?: string })?.name === 'AbortError') return false;
+        // Fall through to next method
       }
     }
 
+    // Method 2: XLSX.writeFile (uses FileSaver.js internally, more reliable cross-browser)
+    try {
+      XLSX.writeFile(workbook, filename);
+      return true;
+    } catch {
+      // Fall through to method 3
+    }
+
+    // Method 3: Manual blob download with longer timeout
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -402,8 +413,10 @@ export function RevenueTargetManagement() {
     a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    a.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    setTimeout(() => {
+      a.remove();
+      URL.revokeObjectURL(url);
+    }, 5000);
     return true;
   };
 
