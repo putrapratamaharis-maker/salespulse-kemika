@@ -640,50 +640,57 @@ export function RevenueTargetManagement() {
       {/* ═══ SUMMARY CARDS ═══ */}
       {/* Row 1: Total + Segment Sales Targets */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="border-l-4 border-l-primary">
+        <Card className="border-l-4 border-l-primary relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Total Sales Targets</p>
             <p className="text-sm font-bold">{formatIDR(grandTotal.revenue)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh sales target (semua segment & bulan). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2G</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2G')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2G. Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2G.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2B</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2B')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2B. Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2B.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2C (e-Commerce)</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2C')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2C (e-Commerce). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2C.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
       </div>
       {/* Row 2: Avg Margin, Jumlah Sales, Entries */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="border-l-4 border-l-chart-2">
+        <Card className="border-l-4 border-l-chart-2 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Avg Margin</p>
             <p className="text-sm font-bold">{grandTotal.avgMargin.toFixed(1)}%</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Rata-rata margin target dari seluruh entri target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-3">
+        <Card className="border-l-4 border-l-chart-3 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Jumlah Sales</p>
             <p className="text-sm font-bold">{grandTotal.userCount}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Jumlah sales person unik yang memiliki target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-4">
+        <Card className="border-l-4 border-l-chart-4 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Entries</p>
             <p className="text-sm font-bold">{grandTotal.entryCount}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah entri target yang tercatat di sistem.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
       </div>
 
