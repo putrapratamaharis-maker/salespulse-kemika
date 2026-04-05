@@ -894,16 +894,30 @@ export function RevenueTargetManagement() {
           <DialogHeader>
             <DialogTitle className="text-sm">Import dari Template</DialogTitle>
             <DialogDescription className="text-xs">
-              Format CSV: <code className="bg-muted px-1 rounded text-[10px]">Email, Nama, Segment, Bulan (YYYY-MM), Revenue, Margin (%)</code>
-              <br /><span className="text-muted-foreground">Download template kosong terlebih dahulu, isi, lalu paste di sini. Data existing akan di-update (upsert).</span>
+              Upload file Excel (.xlsx) atau paste data CSV. Format: <code className="bg-muted px-1 rounded text-[10px]">Email, Nama, Segment, Bulan (YYYY-MM), Revenue, Margin (%)</code>
+              <br /><span className="text-muted-foreground">Download template kosong terlebih dahulu, isi, lalu upload atau paste di sini. Data existing akan di-update (upsert).</span>
             </DialogDescription>
           </DialogHeader>
-          <Textarea className="min-h-[160px] text-xs font-mono"
-            placeholder={`Email,Nama,Segment,Bulan,Revenue,Margin\njohn@co.com,John,B2B,${selYear}-01,500000000,17.5`}
-            value={templateImportText} onChange={e => setTemplateImportText(e.target.value)} />
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-medium">Upload File Excel (.xlsx)</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv" className="text-xs mt-1" onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) handleTemplateImport(file);
+              }} />
+            </div>
+            <div className="relative">
+              <div className="absolute inset-x-0 top-0 flex items-center justify-center -mt-1.5">
+                <span className="bg-background px-2 text-[10px] text-muted-foreground">atau paste data</span>
+              </div>
+            </div>
+            <Textarea className="min-h-[120px] text-xs font-mono"
+              placeholder={`Email,Nama,Segment,Bulan,Revenue,Margin\njohn@co.com,John,B2B,${selYear}-01,500000000,17.5`}
+              value={templateImportText} onChange={e => setTemplateImportText(e.target.value)} />
+          </div>
           <DialogFooter>
             <Button size="sm" variant="outline" onClick={() => { setShowTemplateImport(false); setTemplateImportText(''); }}>Batal</Button>
-            <Button size="sm" onClick={handleTemplateImport} disabled={saving}>
+            <Button size="sm" onClick={() => handleTemplateImport()} disabled={saving || !templateImportText.trim()}>
               {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Upload className="h-3 w-3 mr-1" />} Import
             </Button>
           </DialogFooter>
