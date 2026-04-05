@@ -755,52 +755,6 @@ export function RevenueTargetManagement() {
       {/* ═══ ANNUAL VIEW ═══ */}
       {viewMode === 'annually' && (
         <>
-          {/* Segment x Month matrix */}
-          <Card>
-            <CardHeader className="pb-2 pt-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <BarChart3 className="h-4 w-4" /> Revenue per Segment — {selYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-[10px] w-[60px]">Seg</TableHead>
-                      {monthNames.map((n, i) => <TableHead key={i} className="text-[10px] text-center px-1">{n}</TableHead>)}
-                      <TableHead className="text-[10px] text-center font-bold px-1">Total</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {(selSegment === 'ALL' ? SEGMENTS : [selSegment]).map(seg => {
-                      const breakdown = segmentMonthlyBreakdown[seg] || [];
-                      const segData = segmentSummaries.find(s => s.segment === seg);
-                      return (
-                        <TableRow key={seg}>
-                          <TableCell className="py-1.5"><Badge variant="outline" className="text-[10px]">{seg}</Badge></TableCell>
-                          {breakdown.map((b, i) => <TableCell key={i} className="text-[10px] text-center px-1 py-1.5">{b.revenue > 0 ? formatIDR(b.revenue) : <span className="text-muted-foreground">-</span>}</TableCell>)}
-                          <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDR(segData?.revenue || 0)}</TableCell>
-                        </TableRow>
-                      );
-                    })}
-                    {selSegment === 'ALL' && (
-                      <TableRow className="bg-muted/50">
-                        <TableCell className="text-[10px] font-bold py-1.5">ALL</TableCell>
-                        {Array.from({ length: 12 }, (_, i) => {
-                          const m = `${selYear}-${String(i + 1).padStart(2, '0')}`;
-                          const total = allYearTargets.filter(t => t.month === m).reduce((s, t) => s + t.revenue_target, 0);
-                          return <TableCell key={i} className="text-[10px] text-center font-bold px-1 py-1.5">{total > 0 ? formatIDR(total) : '-'}</TableCell>;
-                        })}
-                        <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDR(grandTotal.revenue)}</TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Per-user annual summary */}
           <Card>
             <CardHeader className="pb-2 pt-3">
