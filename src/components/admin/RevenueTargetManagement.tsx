@@ -767,10 +767,11 @@ export function RevenueTargetManagement() {
                       {filteredTargets.map((row, idx) => {
                         const rowKey = getRowKey(row, idx);
                         const isEditing = inlineEditKey === rowKey;
+                        const justSaved = recentlySavedKey === rowKey;
                         return (
                           <TableRow
                             key={rowKey}
-                            className={isEditing ? 'bg-primary/5' : 'hover:bg-muted/50'}
+                            className={`transition-colors duration-700 ${isEditing ? 'bg-primary/5' : justSaved ? 'bg-status-green-bg ring-1 ring-inset ring-status-green/30' : 'hover:bg-muted/50'}`}
                           >
                             <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
                             <TableCell className="py-1.5">
