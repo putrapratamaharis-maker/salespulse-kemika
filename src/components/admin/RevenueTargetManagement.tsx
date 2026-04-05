@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { formatIDR } from '@/types/sales';
+import * as XLSX from 'xlsx';
 
 // ─── Types ───────────────────────────────────────────────────
 interface Profile {
@@ -294,47 +295,57 @@ export function RevenueTargetManagement() {
     setImportText('');
   };
 
+  const exportToXlsx = (data: Record<string, any>[], filename: string) => {
+    const ws = XLSX.utils.json_to_sheet(data);
+    const colWidths = Object.keys(data[0] || {}).map(key => ({ wch: Math.max(key.length, 18) }));
+    ws['!cols'] = colWidths;
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Sales Targets');
+    XLSX.writeFile(wb, filename);
+  };
+
   const handleExportCSV = () => {
-    const header = 'Email,Nama,Segment,Bulan,Revenue Target,Margin Target (%)';
     const src = viewMode === 'monthly' ? targets : allYearTargets;
-    const rows = src.map(t => {
+    const data = src.map(t => {
       const p = profiles.find(pr => pr.user_id === t.user_id);
-      return `${p?.email || ''},${t.full_name},${t.segment},${t.month},${t.revenue_target},${t.margin_target}`;
+      return { Email: p?.email || '', Nama: t.full_name, Segment: t.segment, Bulan: t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target };
     });
-    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: 'Export CSV berhasil' });
+    exportToXlsx(data, `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.xlsx`);
+    toast({ title: 'Export Excel berhasil' });
   };
 
   const handleTemplateExport = (filled: boolean) => {
-    const header = 'Email,Nama,Segment,Bulan (YYYY-MM),Revenue Target,Margin Target (%)';
-    let rows: string[] = [];
+    let data: Record<string, any>[] = [];
     if (filled) {
       allYearTargets.forEach(t => {
         const p = profiles.find(pr => pr.user_id === t.user_id);
-        rows.push(`${p?.email || ''},${t.full_name},${t.segment},${t.month},${t.revenue_target},${t.margin_target}`);
+        data.push({ Email: p?.email || '', Nama: t.full_name, Segment: t.segment, 'Bulan (YYYY-MM)': t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target });
       });
     } else {
       profiles.forEach(p => {
         SEGMENTS.forEach(seg => {
           for (let i = 1; i <= 12; i++) {
             const m = `${selYear}-${String(i).padStart(2, '0')}`;
-            rows.push(`${p.email},${p.full_name},${seg},${m},0,0`);
+            data.push({ Email: p.email, Nama: p.full_name, Segment: seg, 'Bulan (YYYY-MM)': m, 'Revenue Target': 0, 'Margin Target (%)': 0 });
           }
         });
       });
     }
-    const blob = new Blob([[header, ...rows].join('\n')], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = filled ? `sales_targets_filled_${selYear}.csv` : `sales_targets_template_${selYear}.csv`; a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: filled ? 'Data exported' : 'Template downloaded' });
+    exportToXlsx(data, filled ? `sales_targets_filled_${selYear}.xlsx` : `sales_targets_template_${selYear}.xlsx`);
+    toast({ title: filled ? 'Data exported (.xlsx)' : 'Template downloaded (.xlsx)' });
   };
 
-  const handleTemplateImport = async () => {
-    const lines = templateImportText.trim().split('\n').filter(l => l.trim());
+  const handleTemplateImport = async (file?: File) => {
+    let lines: string[] = [];
+    if (file) {
+      const ab = await file.arrayBuffer();
+      const wb = XLSX.read(ab, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const csv = XLSX.utils.sheet_to_csv(ws);
+      lines = csv.split('\n').filter(l => l.trim());
+    } else {
+      lines = templateImportText.trim().split('\n').filter(l => l.trim());
+    }
     if (lines.length === 0) { toast({ title: 'Data kosong', variant: 'destructive' }); return; }
     let startIdx = 0;
     if (lines[0].toLowerCase().includes('email') && lines[0].toLowerCase().includes('segment')) startIdx = 1;
@@ -477,7 +488,7 @@ export function RevenueTargetManagement() {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleExportCSV} disabled={activeData.length === 0}>
-              <Download className="h-3 w-3 mr-1" /> Export CSV
+              <Download className="h-3 w-3 mr-1" /> Export Excel
             </Button>
           </div>
         </div>
@@ -883,16 +894,30 @@ export function RevenueTargetManagement() {
           <DialogHeader>
             <DialogTitle className="text-sm">Import dari Template</DialogTitle>
             <DialogDescription className="text-xs">
-              Format CSV: <code className="bg-muted px-1 rounded text-[10px]">Email, Nama, Segment, Bulan (YYYY-MM), Revenue, Margin (%)</code>
-              <br /><span className="text-muted-foreground">Download template kosong terlebih dahulu, isi, lalu paste di sini. Data existing akan di-update (upsert).</span>
+              Upload file Excel (.xlsx) atau paste data CSV. Format: <code className="bg-muted px-1 rounded text-[10px]">Email, Nama, Segment, Bulan (YYYY-MM), Revenue, Margin (%)</code>
+              <br /><span className="text-muted-foreground">Download template kosong terlebih dahulu, isi, lalu upload atau paste di sini. Data existing akan di-update (upsert).</span>
             </DialogDescription>
           </DialogHeader>
-          <Textarea className="min-h-[160px] text-xs font-mono"
-            placeholder={`Email,Nama,Segment,Bulan,Revenue,Margin\njohn@co.com,John,B2B,${selYear}-01,500000000,17.5`}
-            value={templateImportText} onChange={e => setTemplateImportText(e.target.value)} />
+          <div className="space-y-3">
+            <div>
+              <Label className="text-xs font-medium">Upload File Excel (.xlsx)</Label>
+              <Input type="file" accept=".xlsx,.xls,.csv" className="text-xs mt-1" onChange={e => {
+                const file = e.target.files?.[0];
+                if (file) handleTemplateImport(file);
+              }} />
+            </div>
+            <div className="relative">
+              <div className="absolute inset-x-0 top-0 flex items-center justify-center -mt-1.5">
+                <span className="bg-background px-2 text-[10px] text-muted-foreground">atau paste data</span>
+              </div>
+            </div>
+            <Textarea className="min-h-[120px] text-xs font-mono"
+              placeholder={`Email,Nama,Segment,Bulan,Revenue,Margin\njohn@co.com,John,B2B,${selYear}-01,500000000,17.5`}
+              value={templateImportText} onChange={e => setTemplateImportText(e.target.value)} />
+          </div>
           <DialogFooter>
             <Button size="sm" variant="outline" onClick={() => { setShowTemplateImport(false); setTemplateImportText(''); }}>Batal</Button>
-            <Button size="sm" onClick={handleTemplateImport} disabled={saving}>
+            <Button size="sm" onClick={() => handleTemplateImport()} disabled={saving || !templateImportText.trim()}>
               {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Upload className="h-3 w-3 mr-1" />} Import
             </Button>
           </DialogFooter>
