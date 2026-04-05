@@ -109,7 +109,10 @@ export function RevenueTargetManagement() {
     setInlineSaving(false);
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     toast({ title: 'Tersimpan' });
+    const savedKey = inlineEditKey;
     setInlineEditKey(null);
+    setRecentlySavedKey(savedKey);
+    setTimeout(() => setRecentlySavedKey(null), 2000);
     loadTargets();
     loadAllYearTargets();
   };
