@@ -88,6 +88,7 @@ export function RevenueTargetManagement() {
   const [inlineRevenue, setInlineRevenue] = useState(0);
   const [inlineMargin, setInlineMargin] = useState(0);
   const [inlineSaving, setInlineSaving] = useState(false);
+  const [recentlySavedKey, setRecentlySavedKey] = useState<string | null>(null);
 
   const getRowKey = (row: TargetRow, idx: number) => `${row.user_id}-${row.segment}-${row.month}-${idx}`;
 
