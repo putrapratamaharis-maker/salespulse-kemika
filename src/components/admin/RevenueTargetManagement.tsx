@@ -9,7 +9,8 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, Upload, Download, Plus, Trash2, DollarSign, TrendingUp, BarChart3, Users, Calendar, CalendarRange, User, FileSpreadsheet, FileDown, MoreVertical, Eye, Pencil, Search, Check, X } from 'lucide-react';
+import { Loader2, Save, Upload, Download, Plus, Trash2, DollarSign, TrendingUp, BarChart3, Users, Calendar, CalendarRange, User, FileSpreadsheet, FileDown, MoreVertical, Eye, Pencil, Search, Check, X, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -194,9 +195,8 @@ export function RevenueTargetManagement() {
   }, [allYearTargets, selUserId, selSegment, selYear, viewMode]);
 
   const segmentSummaries = useMemo(() => {
-    const src = viewMode === 'monthly' ? targets : allYearTargets;
     return SEGMENTS.map(seg => {
-      const rows = src.filter(t => t.segment === seg);
+      const rows = allYearTargets.filter(t => t.segment === seg);
       return {
         segment: seg,
         revenue: rows.reduce((s, t) => s + t.revenue_target, 0),
@@ -204,14 +204,14 @@ export function RevenueTargetManagement() {
         userCount: new Set(rows.map(r => r.user_id)).size,
       };
     });
-  }, [targets, allYearTargets, viewMode]);
+  }, [allYearTargets]);
 
   const grandTotal = useMemo(() => ({
-    revenue: activeData.reduce((s, t) => s + t.revenue_target, 0),
-    avgMargin: activeData.length > 0 ? activeData.reduce((s, t) => s + t.margin_target, 0) / activeData.length : 0,
-    userCount: new Set(activeData.map(r => r.user_id)).size,
-    entryCount: activeData.length,
-  }), [activeData]);
+    revenue: allYearTargets.reduce((s, t) => s + t.revenue_target, 0),
+    avgMargin: allYearTargets.length > 0 ? allYearTargets.reduce((s, t) => s + t.margin_target, 0) / allYearTargets.length : 0,
+    userCount: new Set(allYearTargets.map(r => r.user_id)).size,
+    entryCount: allYearTargets.length,
+  }), [allYearTargets]);
 
   const annualIndividualSummary = useMemo(() => {
     if (viewMode !== 'annually') return [];
@@ -640,50 +640,57 @@ export function RevenueTargetManagement() {
       {/* ═══ SUMMARY CARDS ═══ */}
       {/* Row 1: Total + Segment Sales Targets */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Card className="border-l-4 border-l-primary">
+        <Card className="border-l-4 border-l-primary relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Total Sales Targets</p>
             <p className="text-sm font-bold">{formatIDR(grandTotal.revenue)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh sales target (semua segment & bulan). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2G</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2G')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2G. Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2G.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2B</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2B')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2B. Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2B.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-1">
+        <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2C (e-Commerce)</p>
             <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2C')?.revenue || 0)}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2C (e-Commerce). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2C.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
       </div>
       {/* Row 2: Avg Margin, Jumlah Sales, Entries */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="border-l-4 border-l-chart-2">
+        <Card className="border-l-4 border-l-chart-2 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Avg Margin</p>
             <p className="text-sm font-bold">{grandTotal.avgMargin.toFixed(1)}%</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Rata-rata margin target dari seluruh entri target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-3">
+        <Card className="border-l-4 border-l-chart-3 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Jumlah Sales</p>
             <p className="text-sm font-bold">{grandTotal.userCount}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Jumlah sales person unik yang memiliki target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
-        <Card className="border-l-4 border-l-chart-4">
+        <Card className="border-l-4 border-l-chart-4 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Entries</p>
             <p className="text-sm font-bold">{grandTotal.entryCount}</p>
           </CardContent>
+          <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah entri target yang tercatat di sistem.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
       </div>
 
@@ -695,17 +702,6 @@ export function RevenueTargetManagement() {
               <BarChart3 className="h-4 w-4" /> Sales Target Summary
             </CardTitle>
             <div className="flex flex-wrap items-end gap-2">
-              <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tampilan</Label>
-                <Select value={viewMode} onValueChange={v => setViewMode(v as any)}>
-                  <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly"><span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Bulanan</span></SelectItem>
-                    <SelectItem value="annually"><span className="flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> Tahunan</span></SelectItem>
-                    <SelectItem value="individual"><span className="flex items-center gap-1.5"><User className="h-3 w-3" /> Per Sales</span></SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="space-y-1">
                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tahun</Label>
                 <Select value={String(selYear)} onValueChange={v => setSelYear(Number(v))}>
