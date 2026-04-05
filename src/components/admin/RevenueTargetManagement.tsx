@@ -195,9 +195,8 @@ export function RevenueTargetManagement() {
   }, [allYearTargets, selUserId, selSegment, selYear, viewMode]);
 
   const segmentSummaries = useMemo(() => {
-    const src = viewMode === 'monthly' ? targets : allYearTargets;
     return SEGMENTS.map(seg => {
-      const rows = src.filter(t => t.segment === seg);
+      const rows = allYearTargets.filter(t => t.segment === seg);
       return {
         segment: seg,
         revenue: rows.reduce((s, t) => s + t.revenue_target, 0),
@@ -205,14 +204,14 @@ export function RevenueTargetManagement() {
         userCount: new Set(rows.map(r => r.user_id)).size,
       };
     });
-  }, [targets, allYearTargets, viewMode]);
+  }, [allYearTargets]);
 
   const grandTotal = useMemo(() => ({
-    revenue: activeData.reduce((s, t) => s + t.revenue_target, 0),
-    avgMargin: activeData.length > 0 ? activeData.reduce((s, t) => s + t.margin_target, 0) / activeData.length : 0,
-    userCount: new Set(activeData.map(r => r.user_id)).size,
-    entryCount: activeData.length,
-  }), [activeData]);
+    revenue: allYearTargets.reduce((s, t) => s + t.revenue_target, 0),
+    avgMargin: allYearTargets.length > 0 ? allYearTargets.reduce((s, t) => s + t.margin_target, 0) / allYearTargets.length : 0,
+    userCount: new Set(allYearTargets.map(r => r.user_id)).size,
+    entryCount: allYearTargets.length,
+  }), [allYearTargets]);
 
   const annualIndividualSummary = useMemo(() => {
     if (viewMode !== 'annually') return [];
