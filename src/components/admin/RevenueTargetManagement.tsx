@@ -754,60 +754,7 @@ export function RevenueTargetManagement() {
 
       {/* ═══ ANNUAL VIEW ═══ */}
       {viewMode === 'annually' && (
-        <>
-          {/* Per-user annual summary */}
-          <Card>
-            <CardHeader className="pb-2 pt-3">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                <Users className="h-4 w-4" /> Ranking Sales — {selYear}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="border rounded-md overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-[10px] w-[30px]">#</TableHead>
-                      <TableHead className="text-[10px]">Nama Sales</TableHead>
-                      {SEGMENTS.map(s => <TableHead key={s} className="text-[10px] text-center">{s}</TableHead>)}
-                      <TableHead className="text-[10px] text-center font-bold">Total</TableHead>
-                      <TableHead className="text-[10px] text-center">Margin</TableHead>
-                      <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {annualIndividualSummary.length === 0 ? (
-                      <TableRow><TableCell colSpan={7} className="text-center text-xs text-muted-foreground py-8">Belum ada target tahun {selYear}.</TableCell></TableRow>
-                    ) : annualIndividualSummary
-                        .filter(u => selSegment === 'ALL' || Object.keys(u.segments).includes(selSegment))
-                        .filter(u => !searchQuery || u.full_name.toLowerCase().includes(searchQuery.toLowerCase()))
-                        .map((u, idx) => (
-                      <TableRow key={u.user_id}>
-                        <TableCell className="text-[10px] text-muted-foreground py-1.5">{idx + 1}</TableCell>
-                        <TableCell className="text-xs font-medium py-1.5">{u.full_name}</TableCell>
-                        {SEGMENTS.map(s => <TableCell key={s} className="text-[10px] text-center py-1.5">{u.segments[s] ? formatIDR(u.segments[s]) : <span className="text-muted-foreground">-</span>}</TableCell>)}
-                        <TableCell className="text-[10px] text-center font-bold py-1.5">{formatIDR(u.totalRevenue)}</TableCell>
-                        <TableCell className="text-[10px] text-center py-1.5">{u.avgMargin.toFixed(1)}%</TableCell>
-                        <TableCell className="py-1.5 text-center">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => { setViewMode('individual'); setSelUserId(u.user_id); }}>
-                                <Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </>
+        <></>
       )}
 
       {/* ═══ DIALOGS ═══ */}
