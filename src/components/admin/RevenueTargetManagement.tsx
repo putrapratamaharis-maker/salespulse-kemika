@@ -409,72 +409,7 @@ export function RevenueTargetManagement() {
     <div className="space-y-4">
       {/* ═══ TOOLBAR ═══ */}
       <div className="flex flex-col gap-3">
-        {/* Row 1: View + Filters */}
-        <div className="flex flex-wrap items-end gap-2">
-          <div className="space-y-1">
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tampilan</Label>
-            <Select value={viewMode} onValueChange={v => setViewMode(v as any)}>
-              <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="monthly"><span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Bulanan</span></SelectItem>
-                <SelectItem value="annually"><span className="flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> Tahunan</span></SelectItem>
-                <SelectItem value="individual"><span className="flex items-center gap-1.5"><User className="h-3 w-3" /> Per Sales</span></SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tahun</Label>
-            <Select value={String(selYear)} onValueChange={v => setSelYear(Number(v))}>
-              <SelectTrigger className="w-[90px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {[currentYear - 1, currentYear, currentYear + 1].map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          {viewMode === 'monthly' && (
-            <div className="space-y-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Bulan</Label>
-              <Select value={String(selMonth)} onValueChange={v => setSelMonth(Number(v))}>
-                <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {monthNamesFull.map((n, i) => <SelectItem key={i} value={String(i + 1)}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          <div className="space-y-1">
-            <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Segment</Label>
-            <Select value={selSegment} onValueChange={setSelSegment}>
-              <SelectTrigger className="w-[100px] h-8 text-xs"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="ALL">Semua</SelectItem>
-                {SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          {viewMode === 'individual' && (
-            <div className="space-y-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Sales</Label>
-              <Select value={selUserId} onValueChange={setSelUserId}>
-                <SelectTrigger className="w-[180px] h-8 text-xs"><SelectValue placeholder="Pilih..." /></SelectTrigger>
-                <SelectContent>
-                  {profiles.map(p => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-          {viewMode !== 'individual' && (
-            <div className="space-y-1">
-              <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Cari</Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input className="h-8 text-xs pl-7 w-[150px]" placeholder="Nama sales..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Row 2: Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMonth(monthStr); setShowAddForm(true); }}>
             <Plus className="h-3 w-3 mr-1" /> Tambah
@@ -548,10 +483,60 @@ export function RevenueTargetManagement() {
       {/* ═══ SALES TARGET TABLE CARD ═══ */}
       {viewMode !== 'individual' && (
         <Card>
-          <CardHeader className="pb-2 pt-3">
+          <CardHeader className="pb-2 pt-3 space-y-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
               <BarChart3 className="h-4 w-4" /> Sales Target Summary
             </CardTitle>
+            <div className="flex flex-wrap items-end gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tampilan</Label>
+                <Select value={viewMode} onValueChange={v => setViewMode(v as any)}>
+                  <SelectTrigger className="w-[130px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="monthly"><span className="flex items-center gap-1.5"><Calendar className="h-3 w-3" /> Bulanan</span></SelectItem>
+                    <SelectItem value="annually"><span className="flex items-center gap-1.5"><CalendarRange className="h-3 w-3" /> Tahunan</span></SelectItem>
+                    <SelectItem value="individual"><span className="flex items-center gap-1.5"><User className="h-3 w-3" /> Per Sales</span></SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Tahun</Label>
+                <Select value={String(selYear)} onValueChange={v => setSelYear(Number(v))}>
+                  <SelectTrigger className="w-[90px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[currentYear - 1, currentYear, currentYear + 1].map(y => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {viewMode === 'monthly' && (
+                <div className="space-y-1">
+                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Bulan</Label>
+                  <Select value={String(selMonth)} onValueChange={v => setSelMonth(Number(v))}>
+                    <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {monthNamesFull.map((n, i) => <SelectItem key={i} value={String(i + 1)}>{n}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Segment</Label>
+                <Select value={selSegment} onValueChange={setSelSegment}>
+                  <SelectTrigger className="w-[100px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Semua</SelectItem>
+                    {SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Cari</Label>
+                <div className="relative">
+                  <Search className="absolute left-2 top-2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input className="h-8 text-xs pl-7 w-[150px]" placeholder="Nama sales..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
             <div className="border-t rounded-b-md overflow-auto">
