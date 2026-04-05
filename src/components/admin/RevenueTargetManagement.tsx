@@ -713,27 +713,27 @@ export function RevenueTargetManagement() {
           <CardContent className="p-0">
             <div className="border-t rounded-b-md overflow-auto">
               <Table>
-                <TableHeader>
+               <TableHeader>
                   <TableRow>
                     <TableHead className="text-[10px]">Bulan</TableHead>
                     <TableHead className="text-[10px]">Segment</TableHead>
                     <TableHead className="text-[10px]">Sales Person</TableHead>
                     <TableHead className="text-[10px] text-right">Revenue Target</TableHead>
                     <TableHead className="text-[10px] text-right">Margin %</TableHead>
+                    <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTargets.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Belum ada data target.</TableCell>
+                      <TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-6">Belum ada data target.</TableCell>
                     </TableRow>
                   ) : (
                     <>
                       {filteredTargets.map((row, idx) => (
                         <TableRow
                           key={`${row.user_id}-${row.segment}-${row.month}-${idx}`}
-                          className="cursor-pointer hover:bg-muted/50"
-                          onClick={() => setSelSegment(selSegment === row.segment ? 'ALL' : row.segment)}
+                          className="hover:bg-muted/50"
                         >
                           <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
                           <TableCell className="py-1.5">
@@ -742,6 +742,19 @@ export function RevenueTargetManagement() {
                           <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
                           <TableCell className="text-xs font-medium text-right py-1.5">{formatIDR(row.revenue_target)}</TableCell>
                           <TableCell className="text-xs text-right py-1.5">{row.margin_target.toFixed(1)}%</TableCell>
+                          <TableCell className="py-1.5 text-center">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openDetail(row, 'edit')}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
                         </TableRow>
                       ))}
                       <TableRow className="bg-muted/50 font-semibold">
@@ -750,6 +763,7 @@ export function RevenueTargetManagement() {
                         <TableCell className="text-xs font-bold text-right py-1.5">
                           {filteredTargets.length > 0 ? (filteredTargets.reduce((s, t) => s + t.margin_target, 0) / filteredTargets.length).toFixed(1) : '0.0'}%
                         </TableCell>
+                        <TableCell></TableCell>
                       </TableRow>
                     </>
                   )}
