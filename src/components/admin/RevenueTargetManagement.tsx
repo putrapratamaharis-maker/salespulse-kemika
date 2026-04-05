@@ -570,21 +570,9 @@ export function RevenueTargetManagement() {
     <div className="space-y-4">
       {/* ═══ TOOLBAR ═══ */}
       <div className="flex items-center gap-2 flex-wrap">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button size="sm" variant="outline" className="h-9 text-sm px-4">
-              <Download className="h-4 w-4 mr-2" /> Template
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => handleTemplateExport(false)}>
-              <FileDown className="h-3.5 w-3.5 mr-2" /> Download Template Kosong
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleTemplateExport(true)} disabled={allYearTargets.length === 0}>
-              <Download className="h-3.5 w-3.5 mr-2" /> Export Data ({selYear})
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <Button size="sm" variant="outline" className="h-9 text-sm px-4" onClick={handleTemplateExport}>
+          <Download className="h-4 w-4 mr-2" /> Template
+        </Button>
         <Button size="sm" variant="outline" className="h-9 text-sm px-4" onClick={() => setShowTemplateImport(true)}>
           <Upload className="h-4 w-4 mr-2" /> Import
         </Button>
