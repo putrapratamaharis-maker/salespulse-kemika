@@ -488,7 +488,7 @@ export function RevenueTargetManagement() {
               </DropdownMenuContent>
             </DropdownMenu>
             <Button size="sm" variant="outline" className="h-7 text-xs" onClick={handleExportCSV} disabled={activeData.length === 0}>
-              <Download className="h-3 w-3 mr-1" /> Export CSV
+              <Download className="h-3 w-3 mr-1" /> Export Excel
             </Button>
           </div>
         </div>
