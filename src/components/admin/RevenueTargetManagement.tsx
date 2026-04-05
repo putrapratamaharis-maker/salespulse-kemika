@@ -782,13 +782,13 @@ export function RevenueTargetManagement() {
               <Table>
                <TableHeader>
                   <TableRow>
-                    <TableHead className="text-[10px]">Bulan</TableHead>
-                    <TableHead className="text-[10px]">Segment</TableHead>
-                    <TableHead className="text-[10px]">Sales Person</TableHead>
-                    <TableHead className="text-[10px] text-right">Revenue Target</TableHead>
-                    <TableHead className="text-[10px] text-right">Margin %</TableHead>
-                    <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
-                  </TableRow>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('month')}>Bulan <SortIcon col="month" /></TableHead>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('segment')}>Segment <SortIcon col="segment" /></TableHead>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('full_name')}>Sales Person <SortIcon col="full_name" /></TableHead>
+                     <TableHead className="text-[10px] text-right cursor-pointer select-none" onClick={() => toggleSort('revenue_target')}>Revenue Target <SortIcon col="revenue_target" /></TableHead>
+                     <TableHead className="text-[10px] text-right cursor-pointer select-none" onClick={() => toggleSort('margin_target')}>Margin % <SortIcon col="margin_target" /></TableHead>
+                     <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTargets.length === 0 ? (
