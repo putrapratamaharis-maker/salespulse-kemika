@@ -65,6 +65,22 @@ export function RevenueTargetManagement() {
   const [selSegment, setSelSegment] = useState<string>('ALL');
   const [selUserId, setSelUserId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortCol, setSortCol] = useState<'month' | 'segment' | 'full_name' | 'revenue_target' | 'margin_target' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSort = (col: typeof sortCol) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: typeof sortCol }) => {
+    if (sortCol !== col) return <ArrowUpDown className="inline h-3 w-3 ml-0.5 text-muted-foreground/50" />;
+    return sortDir === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-0.5 text-primary" /> : <ArrowDown className="inline h-3 w-3 ml-0.5 text-primary" />;
+  };
 
   // Dialogs
   const [showAddForm, setShowAddForm] = useState(false);
