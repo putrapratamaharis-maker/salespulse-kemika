@@ -92,12 +92,20 @@ export function RevenueTargetManagement() {
     loadProfiles();
   }, []);
 
-  const monthStr = `${selYear}-${String(selMonth).padStart(2, '0')}`;
+  const monthStr = selMonth > 0 ? `${selYear}-${String(selMonth).padStart(2, '0')}` : '';
 
   // ─── Load targets ─────────────────────────────────────────
   const loadTargets = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('targets').select('*').eq('month', monthStr);
+    let query = supabase.from('targets').select('*');
+    if (selMonth > 0) {
+      query = query.eq('month', `${selYear}-${String(selMonth).padStart(2, '0')}`);
+    } else {
+      // Load all months for selected year
+      const monthPatterns = Array.from({ length: 12 }, (_, i) => `${selYear}-${String(i + 1).padStart(2, '0')}`);
+      query = query.in('month', monthPatterns);
+    }
+    const { data, error } = await query;
     if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); setLoading(false); return; }
     const rows: TargetRow[] = (data || []).map((t: any) => {
       const profile = profiles.find(p => p.user_id === t.user_id);
@@ -105,7 +113,7 @@ export function RevenueTargetManagement() {
     });
     setTargets(rows);
     setLoading(false);
-  }, [monthStr, profiles, toast]);
+  }, [selYear, selMonth, profiles, toast]);
 
   const loadAllYearTargets = useCallback(async () => {
     const monthPatterns = Array.from({ length: 12 }, (_, i) => `${selYear}-${String(i + 1).padStart(2, '0')}`);
