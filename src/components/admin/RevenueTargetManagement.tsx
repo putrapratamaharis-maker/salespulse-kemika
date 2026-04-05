@@ -760,33 +760,86 @@ export function RevenueTargetManagement() {
                     </TableRow>
                   ) : (
                     <>
-                      {filteredTargets.map((row, idx) => (
-                        <TableRow
-                          key={`${row.user_id}-${row.segment}-${row.month}-${idx}`}
-                          className="hover:bg-muted/50"
-                        >
-                          <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
-                          <TableCell className="py-1.5">
-                            <Badge variant={selSegment === row.segment ? 'default' : 'outline'} className="text-[10px]">{row.segment}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
-                          <TableCell className="text-xs font-medium text-right py-1.5">{formatIDR(row.revenue_target)}</TableCell>
-                          <TableCell className="text-xs text-right py-1.5">{row.margin_target.toFixed(1)}%</TableCell>
-                          <TableCell className="py-1.5 text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openDetail(row, 'edit')}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {filteredTargets.map((row, idx) => {
+                        const rowKey = getRowKey(row, idx);
+                        const isEditing = inlineEditKey === rowKey;
+                        return (
+                          <TableRow
+                            key={rowKey}
+                            className={isEditing ? 'bg-primary/5' : 'hover:bg-muted/50'}
+                          >
+                            <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
+                            <TableCell className="py-1.5">
+                              <Badge variant={selSegment === row.segment ? 'default' : 'outline'} className="text-[10px]">{row.segment}</Badge>
+                            </TableCell>
+                            <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
+                            <TableCell className="text-xs font-medium text-right py-1.5">
+                              {isEditing ? (
+                                <Input
+                                  type="number"
+                                  className="h-7 text-xs text-right w-[130px] ml-auto"
+                                  value={inlineRevenue}
+                                  onChange={e => setInlineRevenue(Number(e.target.value))}
+                                  autoFocus
+                                  onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
+                                />
+                              ) : (
+                                <span
+                                  className="cursor-pointer hover:underline hover:text-primary"
+                                  onClick={() => startInlineEdit(row, idx)}
+                                  title="Klik untuk edit"
+                                >
+                                  {formatIDR(row.revenue_target)}
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-xs text-right py-1.5">
+                              {isEditing ? (
+                                <Input
+                                  type="number"
+                                  step="0.1"
+                                  className="h-7 text-xs text-right w-[80px] ml-auto"
+                                  value={inlineMargin}
+                                  onChange={e => setInlineMargin(Number(e.target.value))}
+                                  onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
+                                />
+                              ) : (
+                                <span
+                                  className="cursor-pointer hover:underline hover:text-primary"
+                                  onClick={() => startInlineEdit(row, idx)}
+                                  title="Klik untuk edit"
+                                >
+                                  {row.margin_target.toFixed(1)}%
+                                </span>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-1.5 text-center">
+                              {isEditing ? (
+                                <div className="flex items-center justify-center gap-1">
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => saveInlineEdit(row)} disabled={inlineSaving}>
+                                    {inlineSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                  </Button>
+                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={cancelInlineEdit}>
+                                    <X className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              ) : (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => startInlineEdit(row, idx)}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                       <TableRow className="bg-muted/50 font-semibold">
                         <TableCell colSpan={3} className="text-xs py-1.5 font-bold">Total ({filteredTargets.length} entries, {new Set(filteredTargets.map(r => r.user_id)).size} sales)</TableCell>
                         <TableCell className="text-xs font-bold text-right py-1.5">{formatIDR(filteredTargets.reduce((s, t) => s + t.revenue_target, 0))}</TableCell>
