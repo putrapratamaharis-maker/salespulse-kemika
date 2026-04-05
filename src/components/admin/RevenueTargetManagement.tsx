@@ -545,24 +545,62 @@ export function RevenueTargetManagement() {
         </Card>
       </div>
 
-      {/* ═══ SEGMENT SUMMARY (compact) ═══ */}
+      {/* ═══ SALES TARGET TABLE CARD ═══ */}
       {viewMode !== 'individual' && (
-        <div className="grid grid-cols-3 gap-3">
-          {segmentSummaries.map(s => (
-            <Card key={s.segment} className="cursor-pointer hover:shadow-md transition-shadow" onClick={() => setSelSegment(selSegment === s.segment ? 'ALL' : s.segment)}>
-              <CardContent className="p-3 flex items-center justify-between">
-                <div>
-                  <Badge variant={selSegment === s.segment ? 'default' : 'outline'} className="text-[10px] mb-1">{s.segment}</Badge>
-                  <p className="text-sm font-bold">{formatIDR(s.revenue)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] text-muted-foreground">{s.userCount} sales</p>
-                  <p className="text-xs text-muted-foreground">Margin {s.avgMargin.toFixed(1)}%</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardHeader className="pb-2 pt-3">
+            <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <BarChart3 className="h-4 w-4" /> Sales Target Summary
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="border-t rounded-b-md overflow-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="text-[10px]">Bulan</TableHead>
+                    <TableHead className="text-[10px]">Segment</TableHead>
+                    <TableHead className="text-[10px]">Sales Person</TableHead>
+                    <TableHead className="text-[10px] text-right">Revenue Target</TableHead>
+                    <TableHead className="text-[10px] text-right">Margin %</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredTargets.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-xs text-muted-foreground py-6">Belum ada data target.</TableCell>
+                    </TableRow>
+                  ) : (
+                    <>
+                      {filteredTargets.map((row, idx) => (
+                        <TableRow
+                          key={`${row.user_id}-${row.segment}-${row.month}-${idx}`}
+                          className="cursor-pointer hover:bg-muted/50"
+                          onClick={() => setSelSegment(selSegment === row.segment ? 'ALL' : row.segment)}
+                        >
+                          <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
+                          <TableCell className="py-1.5">
+                            <Badge variant={selSegment === row.segment ? 'default' : 'outline'} className="text-[10px]">{row.segment}</Badge>
+                          </TableCell>
+                          <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
+                          <TableCell className="text-xs font-medium text-right py-1.5">{formatIDR(row.revenue_target)}</TableCell>
+                          <TableCell className="text-xs text-right py-1.5">{row.margin_target.toFixed(1)}%</TableCell>
+                        </TableRow>
+                      ))}
+                      <TableRow className="bg-muted/50 font-semibold">
+                        <TableCell colSpan={3} className="text-xs py-1.5 font-bold">Total ({filteredTargets.length} entries, {new Set(filteredTargets.map(r => r.user_id)).size} sales)</TableCell>
+                        <TableCell className="text-xs font-bold text-right py-1.5">{formatIDR(filteredTargets.reduce((s, t) => s + t.revenue_target, 0))}</TableCell>
+                        <TableCell className="text-xs font-bold text-right py-1.5">
+                          {filteredTargets.length > 0 ? (filteredTargets.reduce((s, t) => s + t.margin_target, 0) / filteredTargets.length).toFixed(1) : '0.0'}%
+                        </TableCell>
+                      </TableRow>
+                    </>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* ═══ INDIVIDUAL VIEW ═══ */}
