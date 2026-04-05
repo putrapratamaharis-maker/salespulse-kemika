@@ -516,17 +516,16 @@ export function RevenueTargetManagement() {
                   </SelectContent>
                 </Select>
               </div>
-              {viewMode === 'monthly' && (
-                <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Bulan</Label>
-                  <Select value={String(selMonth)} onValueChange={v => setSelMonth(Number(v))}>
-                    <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {monthNamesFull.map((n, i) => <SelectItem key={i} value={String(i + 1)}>{n}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
+              <div className="space-y-1">
+                <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Bulan</Label>
+                <Select value={String(selMonth)} onValueChange={v => setSelMonth(Number(v))}>
+                  <SelectTrigger className="w-[120px] h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">Semua</SelectItem>
+                    {monthNamesFull.map((n, i) => <SelectItem key={i} value={String(i + 1)}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-1">
                 <Label className="text-[10px] text-muted-foreground uppercase tracking-wider">Segment</Label>
                 <Select value={selSegment} onValueChange={setSelSegment}>
