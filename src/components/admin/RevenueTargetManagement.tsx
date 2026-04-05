@@ -604,6 +604,7 @@ export function RevenueTargetManagement() {
       </div>
 
       {/* ═══ SUMMARY CARDS ═══ */}
+      {/* Row 1: Total Revenue + Segment Revenue */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="border-l-4 border-l-primary">
           <CardContent className="p-3">
@@ -611,6 +612,17 @@ export function RevenueTargetManagement() {
             <p className="text-sm font-bold">{formatIDR(grandTotal.revenue)}</p>
           </CardContent>
         </Card>
+        {segmentSummaries.map(seg => (
+          <Card key={seg.segment} className="border-l-4 border-l-chart-1">
+            <CardContent className="p-3">
+              <p className="text-[10px] text-muted-foreground uppercase">Revenue {seg.segment}</p>
+              <p className="text-sm font-bold">{formatIDR(seg.revenue)}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      {/* Row 2: Avg Margin, Jumlah Sales, Entries */}
+      <div className="grid grid-cols-3 gap-3">
         <Card className="border-l-4 border-l-chart-2">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Avg Margin</p>
