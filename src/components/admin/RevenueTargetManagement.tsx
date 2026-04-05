@@ -105,6 +105,16 @@ export function RevenueTargetManagement() {
 
   const saveInlineEdit = async (row: TargetRow) => {
     if (!row.id) return;
+    // Validasi: Revenue tidak boleh negatif
+    if (inlineRevenue < 0) {
+      toast({ title: 'Validasi Gagal', description: 'Sales Target tidak boleh negatif', variant: 'destructive' });
+      return;
+    }
+    // Validasi: Margin harus 0–100%
+    if (inlineMargin < 0 || inlineMargin > 100) {
+      toast({ title: 'Validasi Gagal', description: 'Margin harus antara 0–100%', variant: 'destructive' });
+      return;
+    }
     setInlineSaving(true);
     const { error } = await supabase.from('targets').update({ revenue_target: inlineRevenue, margin_target: inlineMargin }).eq('id', row.id);
     setInlineSaving(false);
