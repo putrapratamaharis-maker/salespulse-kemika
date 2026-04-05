@@ -476,15 +476,13 @@ export function RevenueTargetManagement() {
 
         {/* Row 2: Actions */}
         <div className="flex items-center gap-2 flex-wrap">
+          <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMonth(monthStr); setShowAddForm(true); }}>
+            <Plus className="h-3 w-3 mr-1" /> Tambah
+          </Button>
           {viewMode === 'monthly' && (
-            <>
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowAddForm(true)}>
-                <Plus className="h-3 w-3 mr-1" /> Tambah
-              </Button>
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowImport(true)}>
-                <Upload className="h-3 w-3 mr-1" /> Import Bulan Ini
-              </Button>
-            </>
+            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setShowImport(true)}>
+              <Upload className="h-3 w-3 mr-1" /> Import Bulan Ini
+            </Button>
           )}
           {dirtyCount > 0 && (
             <Button size="sm" className="h-7 text-xs" onClick={handleSave} disabled={saving}>
