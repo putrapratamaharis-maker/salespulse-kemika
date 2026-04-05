@@ -799,87 +799,94 @@ export function RevenueTargetManagement() {
                     </TableRow>
                   ) : (
                     <>
-                      {filteredTargets.map((row, idx) => {
-                        const rowKey = getRowKey(row, idx);
-                        const isEditing = inlineEditKey === rowKey;
-                        const justSaved = recentlySavedKey === rowKey;
-                        return (
-                          <TableRow
-                            key={rowKey}
-                            className={`transition-colors duration-700 ${isEditing ? 'bg-primary/5' : justSaved ? 'bg-status-green-bg ring-1 ring-inset ring-status-green/30' : 'hover:bg-muted/50'}`}
-                          >
-                            <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
-                            <TableCell className="py-1.5">
-                              <Badge variant={selSegment === row.segment ? 'default' : 'outline'} className="text-[10px]">{row.segment}</Badge>
-                            </TableCell>
-                            <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
-                            <TableCell className="text-xs font-medium text-right py-1.5">
-                              {isEditing ? (
-                                <Input
-                                  type="number"
-                                  className="h-7 text-xs text-right w-[130px] ml-auto"
-                                  value={inlineRevenue}
-                                  onChange={e => setInlineRevenue(Number(e.target.value))}
-                                  autoFocus
-                                  onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
-                                />
-                              ) : (
-                                <span
-                                  className="cursor-pointer hover:underline hover:text-primary"
-                                  onClick={() => startInlineEdit(row, idx)}
-                                  title="Klik untuk edit"
-                                >
-                                  {formatIDRFull(row.revenue_target)}
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-xs text-right py-1.5">
-                              {isEditing ? (
-                                <Input
-                                  type="number"
-                                  step="0.1"
-                                  className="h-7 text-xs text-right w-[80px] ml-auto"
-                                  value={inlineMargin}
-                                  onChange={e => setInlineMargin(Number(e.target.value))}
-                                  onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
-                                />
-                              ) : (
-                                <span
-                                  className="cursor-pointer hover:underline hover:text-primary"
-                                  onClick={() => startInlineEdit(row, idx)}
-                                  title="Klik untuk edit"
-                                >
-                                  {row.margin_target.toFixed(1)}%
-                                </span>
-                              )}
-                            </TableCell>
-                            <TableCell className="py-1.5 text-center">
-                              {isEditing ? (
-                                <div className="flex items-center justify-center gap-1">
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => saveInlineEdit(row)} disabled={inlineSaving}>
-                                    {inlineSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
-                                  </Button>
-                                  <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={cancelInlineEdit}>
-                                    <X className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              ) : (
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => startInlineEdit(row, idx)}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                    <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })}
+                      {(() => {
+                        const totalPages = Math.ceil(filteredTargets.length / pageSize);
+                        const safePage = Math.min(currentPage, totalPages || 1);
+                        const startIdx = (safePage - 1) * pageSize;
+                        const pageData = filteredTargets.slice(startIdx, startIdx + pageSize);
+                        return pageData.map((row, idx) => {
+                          const globalIdx = startIdx + idx;
+                          const rowKey = getRowKey(row, globalIdx);
+                          const isEditing = inlineEditKey === rowKey;
+                          const justSaved = recentlySavedKey === rowKey;
+                          return (
+                            <TableRow
+                              key={rowKey}
+                              className={`transition-colors duration-700 ${isEditing ? 'bg-primary/5' : justSaved ? 'bg-status-green-bg ring-1 ring-inset ring-status-green/30' : 'hover:bg-muted/50'}`}
+                            >
+                              <TableCell className="text-xs py-1.5">{monthLabel(row.month)}</TableCell>
+                              <TableCell className="py-1.5">
+                                <Badge variant={selSegment === row.segment ? 'default' : 'outline'} className="text-[10px]">{row.segment}</Badge>
+                              </TableCell>
+                              <TableCell className="text-xs py-1.5">{row.full_name}</TableCell>
+                              <TableCell className="text-xs font-medium text-right py-1.5">
+                                {isEditing ? (
+                                  <Input
+                                    type="number"
+                                    className="h-7 text-xs text-right w-[130px] ml-auto"
+                                    value={inlineRevenue}
+                                    onChange={e => setInlineRevenue(Number(e.target.value))}
+                                    autoFocus
+                                    onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
+                                  />
+                                ) : (
+                                  <span
+                                    className="cursor-pointer hover:underline hover:text-primary"
+                                    onClick={() => startInlineEdit(row, globalIdx)}
+                                    title="Klik untuk edit"
+                                  >
+                                    {formatIDRFull(row.revenue_target)}
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="text-xs text-right py-1.5">
+                                {isEditing ? (
+                                  <Input
+                                    type="number"
+                                    step="0.1"
+                                    className="h-7 text-xs text-right w-[80px] ml-auto"
+                                    value={inlineMargin}
+                                    onChange={e => setInlineMargin(Number(e.target.value))}
+                                    onKeyDown={e => { if (e.key === 'Enter') saveInlineEdit(row); if (e.key === 'Escape') cancelInlineEdit(); }}
+                                  />
+                                ) : (
+                                  <span
+                                    className="cursor-pointer hover:underline hover:text-primary"
+                                    onClick={() => startInlineEdit(row, globalIdx)}
+                                    title="Klik untuk edit"
+                                  >
+                                    {row.margin_target.toFixed(1)}%
+                                  </span>
+                                )}
+                              </TableCell>
+                              <TableCell className="py-1.5 text-center">
+                                {isEditing ? (
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-primary" onClick={() => saveInlineEdit(row)} disabled={inlineSaving}>
+                                      {inlineSaving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+                                    </Button>
+                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground" onClick={cancelInlineEdit}>
+                                      <X className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                      <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
+                                      <DropdownMenuItem onClick={() => startInlineEdit(row, globalIdx)}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
+                                      <DropdownMenuSeparator />
+                                      <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          );
+                        });
+                      })()}
                       <TableRow className="bg-muted/50 font-semibold">
                         <TableCell colSpan={3} className="text-xs py-1.5 font-bold">Total ({filteredTargets.length} entries, {new Set(filteredTargets.map(r => r.user_id)).size} sales)</TableCell>
                         <TableCell className="text-xs font-bold text-right py-1.5">{formatIDRFull(filteredTargets.reduce((s, t) => s + t.revenue_target, 0))}</TableCell>
@@ -893,6 +900,36 @@ export function RevenueTargetManagement() {
                 </TableBody>
               </Table>
             </div>
+            {/* Pagination */}
+            {filteredTargets.length > pageSize && (
+              <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
+                <span>Halaman {Math.min(currentPage, Math.ceil(filteredTargets.length / pageSize))} dari {Math.ceil(filteredTargets.length / pageSize)} ({filteredTargets.length} data)</span>
+                <div className="flex items-center gap-1">
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)}>«</Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>‹</Button>
+                  {Array.from({ length: Math.ceil(filteredTargets.length / pageSize) }, (_, i) => i + 1)
+                    .filter(p => {
+                      const cur = Math.min(currentPage, Math.ceil(filteredTargets.length / pageSize));
+                      return p === 1 || p === Math.ceil(filteredTargets.length / pageSize) || Math.abs(p - cur) <= 1;
+                    })
+                    .map((p, i, arr) => (
+                      <span key={p}>
+                        {i > 0 && arr[i - 1] !== p - 1 && <span className="px-1">…</span>}
+                        <Button
+                          variant={p === Math.min(currentPage, Math.ceil(filteredTargets.length / pageSize)) ? 'default' : 'outline'}
+                          size="sm"
+                          className="h-7 text-xs px-2.5 min-w-[28px]"
+                          onClick={() => setCurrentPage(p)}
+                        >
+                          {p}
+                        </Button>
+                      </span>
+                    ))}
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage >= Math.ceil(filteredTargets.length / pageSize)} onClick={() => setCurrentPage(p => p + 1)}>›</Button>
+                  <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage >= Math.ceil(filteredTargets.length / pageSize)} onClick={() => setCurrentPage(Math.ceil(filteredTargets.length / pageSize))}>»</Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
