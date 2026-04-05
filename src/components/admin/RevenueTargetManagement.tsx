@@ -319,88 +319,241 @@ export function RevenueTargetManagement() {
     setImportText('');
   };
 
-  const exportToXlsx = (data: Record<string, any>[], filename: string) => {
+  const normalizeMonthValue = (value: string) => {
+    const trimmed = value.trim();
+    if (/^\d{4}-\d{2}$/.test(trimmed)) return trimmed;
+    const yearMatch = trimmed.match(/\b(20\d{2})\b/);
+    const monthIndex = monthNamesFull.findIndex(name => trimmed.toLowerCase().includes(name.toLowerCase()));
+    if (yearMatch && monthIndex >= 0) {
+      return `${yearMatch[1]}-${String(monthIndex + 1).padStart(2, '0')}`;
+    }
+    return trimmed;
+  };
+
+  const readTemplateValue = (row: Record<string, unknown>, aliases: string[]) => {
+    const normalizedEntries = Object.entries(row).map(([key, value]) => [key.toLowerCase().replace(/[^a-z0-9]+/g, ''), value] as const);
+    for (const alias of aliases) {
+      const normalizedAlias = alias.toLowerCase().replace(/[^a-z0-9]+/g, '');
+      const match = normalizedEntries.find(([key]) => key === normalizedAlias);
+      if (match) return match[1];
+    }
+    return '';
+  };
+
+  const buildWorkbook = (data: Record<string, any>[], sheetName: string, includeGuide = false) => {
     const ws = XLSX.utils.json_to_sheet(data);
-    const colWidths = Object.keys(data[0] || {}).map(key => ({ wch: Math.max(key.length, 18) }));
-    ws['!cols'] = colWidths;
+    const headers = Object.keys(data[0] || {});
+    ws['!cols'] = headers.map((key) => ({
+      wch: Math.max(
+        key.length + 2,
+        14,
+        ...data.slice(0, 50).map(row => String(row[key] ?? '').length + 2),
+      ),
+    }));
+    if (headers.length > 0) {
+      ws['!autofilter'] = { ref: `A1:${XLSX.utils.encode_col(headers.length - 1)}${Math.max(data.length + 1, 2)}` };
+    }
+
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Sales Targets');
-    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+
+    if (includeGuide) {
+      const guideSheet = XLSX.utils.json_to_sheet([
+        { Kolom: 'Bulan', Keterangan: 'Format wajib YYYY-MM, contoh 2026-04' },
+        { Kolom: 'Segment', Keterangan: `Pilih salah satu: ${SEGMENTS.join(', ')}` },
+        { Kolom: 'Sales Person', Keterangan: 'Isi sesuai nama sales yang ada di sistem' },
+        { Kolom: 'Revenue Target', Keterangan: 'Isi angka tanpa simbol mata uang' },
+        { Kolom: 'Margin %', Keterangan: 'Isi angka persen, contoh 17.5' },
+      ]);
+      guideSheet['!cols'] = [{ wch: 18 }, { wch: 42 }];
+      XLSX.utils.book_append_sheet(wb, guideSheet, 'Panduan');
+    }
+
+    return wb;
+  };
+
+  const saveWorkbook = async (workbook: XLSX.WorkBook, filename: string) => {
+    const wbout = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
     const blob = new Blob([wbout], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const pickerWindow = window as Window & { showSaveFilePicker?: (options?: unknown) => Promise<any> };
+
+    if (typeof pickerWindow.showSaveFilePicker === 'function') {
+      try {
+        const handle = await pickerWindow.showSaveFilePicker({
+          suggestedName: filename,
+          types: [{
+            description: 'Excel Workbook',
+            accept: { 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'] },
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+        return true;
+      } catch (error) {
+        if ((error as { name?: string })?.name === 'AbortError') return false;
+      }
+    }
+
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
     a.download = filename;
+    a.style.display = 'none';
     document.body.appendChild(a);
     a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    a.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1500);
+    return true;
   };
 
-  const handleExportCSV = () => {
+  const exportToXlsx = async (data: Record<string, any>[], filename: string, sheetName = 'Sales Targets', includeGuide = false) => {
+    const workbook = buildWorkbook(data, sheetName, includeGuide);
+    return saveWorkbook(workbook, filename);
+  };
+
+  const handleExportCSV = async () => {
     const src = viewMode === 'monthly' ? targets : allYearTargets;
     const data = src.map(t => {
       const p = profiles.find(pr => pr.user_id === t.user_id);
       return { Email: p?.email || '', Nama: t.full_name, Segment: t.segment, Bulan: t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target };
     });
-    exportToXlsx(data, `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.xlsx`);
-    toast({ title: 'Export Excel berhasil' });
+    const saved = await exportToXlsx(data, `sales_targets_${viewMode === 'monthly' ? monthStr : selYear}.xlsx`);
+    if (saved) toast({ title: 'Export Excel berhasil' });
   };
 
-  const handleTemplateExport = (filled: boolean) => {
-    let data: Record<string, any>[] = [];
-    if (filled) {
-      allYearTargets.forEach(t => {
-        const p = profiles.find(pr => pr.user_id === t.user_id);
-        data.push({ Email: p?.email || '', Nama: t.full_name, Segment: t.segment, 'Bulan (YYYY-MM)': t.month, 'Revenue Target': t.revenue_target, 'Margin Target (%)': t.margin_target });
-      });
-    } else {
-      profiles.forEach(p => {
-        SEGMENTS.forEach(seg => {
-          for (let i = 1; i <= 12; i++) {
-            const m = `${selYear}-${String(i).padStart(2, '0')}`;
-            data.push({ Email: p.email, Nama: p.full_name, Segment: seg, 'Bulan (YYYY-MM)': m, 'Revenue Target': 0, 'Margin Target (%)': 0 });
-          }
-        });
-      });
+  const handleTemplateExport = async () => {
+    const fallbackMonths = selMonth === 0
+      ? Array.from({ length: 12 }, (_, i) => `${selYear}-${String(i + 1).padStart(2, '0')}`)
+      : [`${selYear}-${String(selMonth).padStart(2, '0')}`];
+    const fallbackSegments = selSegment === 'ALL' ? SEGMENTS : [selSegment];
+    const fallbackProfiles = profiles.filter(p => !searchQuery || p.full_name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const baseRows = filteredTargets.length > 0
+      ? filteredTargets.map(row => ({ month: row.month, segment: row.segment, full_name: row.full_name }))
+      : fallbackProfiles.flatMap(profile =>
+          fallbackSegments.flatMap(segment =>
+            fallbackMonths.map(month => ({ month, segment, full_name: profile.full_name })),
+          ),
+        );
+
+    const uniqueRows = Array.from(
+      new Map(baseRows.map(row => [`${row.month}-${row.segment}-${row.full_name.toLowerCase()}`, row])).values(),
+    );
+
+    const data = uniqueRows.map(row => ({
+      Bulan: row.month,
+      Segment: row.segment,
+      'Sales Person': row.full_name,
+      'Revenue Target': '',
+      'Margin %': '',
+    }));
+
+    if (data.length === 0) {
+      toast({ title: 'Template tidak tersedia', description: 'Tidak ada data sales yang cocok dengan filter saat ini.', variant: 'destructive' });
+      return;
     }
-    exportToXlsx(data, filled ? `sales_targets_filled_${selYear}.xlsx` : `sales_targets_template_${selYear}.xlsx`);
-    toast({ title: filled ? 'Data exported (.xlsx)' : 'Template downloaded (.xlsx)' });
+
+    const fileSuffix = selMonth === 0 ? `${selYear}_all` : `${selYear}_${String(selMonth).padStart(2, '0')}`;
+    const saved = await exportToXlsx(data, `sales_target_summary_template_${fileSuffix}.xlsx`, 'Sales Target Summary', true);
+    if (saved) {
+      toast({ title: 'Template XLSX berhasil dibuat', description: 'Kolom template sudah disamakan dengan tabel Sales Target Summary.' });
+    }
+  };
+
+  const parseTemplateTextRows = (lines: string[]) => {
+    if (lines.length === 0) return [] as Array<{ email: string; salesPerson: string; segment: string; monthVal: string; revenue: number; margin: number }>;
+
+    const headerLine = lines[0].toLowerCase();
+    const startIdx = headerLine.includes('bulan') || headerLine.includes('email') || headerLine.includes('sales person') ? 1 : 0;
+
+    return lines
+      .slice(startIdx)
+      .map(line => {
+        const cols = line.split(/[,\t;]/).map(c => c.trim());
+        if (cols.length >= 6) {
+          const [email, salesPerson, segment, monthVal, revStr, marginStr] = cols;
+          return { email, salesPerson, segment, monthVal: normalizeMonthValue(monthVal), revenue: parseFloat(revStr.replace(/,/g, '')), margin: parseFloat(marginStr.replace(/,/g, '')) };
+        }
+        if (cols.length >= 5) {
+          const [monthVal, segment, salesPerson, revStr, marginStr] = cols;
+          return { email: '', salesPerson, segment, monthVal: normalizeMonthValue(monthVal), revenue: parseFloat(revStr.replace(/,/g, '')), margin: parseFloat(marginStr.replace(/,/g, '')) };
+        }
+        return null;
+      })
+      .filter((row): row is { email: string; salesPerson: string; segment: string; monthVal: string; revenue: number; margin: number } => Boolean(row));
   };
 
   const handleTemplateImport = async (file?: File) => {
-    let lines: string[] = [];
+    let parsedRows: Array<{ email: string; salesPerson: string; segment: string; monthVal: string; revenue: number; margin: number }> = [];
+
     if (file) {
       const ab = await file.arrayBuffer();
       const wb = XLSX.read(ab, { type: 'array' });
       const ws = wb.Sheets[wb.SheetNames[0]];
-      const csv = XLSX.utils.sheet_to_csv(ws);
-      lines = csv.split('\n').filter(l => l.trim());
+      const jsonRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(ws, { defval: '' });
+
+      parsedRows = jsonRows.length > 0
+        ? jsonRows
+            .map(row => ({
+              email: String(readTemplateValue(row, ['email'])).trim(),
+              salesPerson: String(readTemplateValue(row, ['sales person', 'nama'])).trim(),
+              segment: String(readTemplateValue(row, ['segment'])).trim(),
+              monthVal: normalizeMonthValue(String(readTemplateValue(row, ['bulan', 'bulan(yyyy-mm)', 'bulan yyyy mm'])).trim()),
+              revenue: parseFloat(String(readTemplateValue(row, ['revenue target', 'revenue'])).replace(/,/g, '')),
+              margin: parseFloat(String(readTemplateValue(row, ['margin %', 'margin target %', 'margin'])).replace(/,/g, '')),
+            }))
+            .filter(row => row.email || row.salesPerson || row.segment || row.monthVal)
+        : parseTemplateTextRows(XLSX.utils.sheet_to_csv(ws).split('\n').filter(l => l.trim()));
     } else {
-      lines = templateImportText.trim().split('\n').filter(l => l.trim());
+      parsedRows = parseTemplateTextRows(templateImportText.trim().split('\n').filter(l => l.trim()));
     }
-    if (lines.length === 0) { toast({ title: 'Data kosong', variant: 'destructive' }); return; }
-    let startIdx = 0;
-    if (lines[0].toLowerCase().includes('email') && lines[0].toLowerCase().includes('segment')) startIdx = 1;
+
+    if (parsedRows.length === 0) {
+      toast({ title: 'Data kosong', variant: 'destructive' });
+      return;
+    }
+
     setSaving(true);
     let imported = 0, errors = 0;
-    for (let i = startIdx; i < lines.length; i++) {
-      const cols = lines[i].split(/[,\t;]/).map(c => c.trim());
-      if (cols.length < 5) { errors++; continue; }
-      const email = cols[0], segment = cols[2], monthVal = cols[3], revStr = cols[4], marginStr = cols.length >= 6 ? cols[5] : '0';
-      const profile = profiles.find(p => p.email.toLowerCase() === email.toLowerCase());
-      if (!profile || !SEGMENTS.includes(segment) || !/^\d{4}-\d{2}$/.test(monthVal)) { errors++; continue; }
-      const revenue = parseFloat(revStr), margin = parseFloat(marginStr);
-      if (isNaN(revenue) || (revenue === 0 && (isNaN(margin) || margin === 0))) continue;
-      const { data: existing } = await supabase.from('targets').select('id').eq('user_id', profile.user_id).eq('segment', segment).eq('month', monthVal).maybeSingle();
-      if (existing) {
-        await supabase.from('targets').update({ revenue_target: revenue, margin_target: isNaN(margin) ? 0 : margin }).eq('id', existing.id);
-      } else {
-        await supabase.from('targets').insert({ user_id: profile.user_id, segment, month: monthVal, revenue_target: revenue, margin_target: isNaN(margin) ? 0 : margin });
+
+    try {
+      for (const row of parsedRows) {
+        const matches = row.email
+          ? profiles.filter(p => p.email.toLowerCase() === row.email.toLowerCase())
+          : profiles.filter(p => p.full_name.trim().toLowerCase() === row.salesPerson.trim().toLowerCase());
+
+        const profile = matches.length === 1 ? matches[0] : null;
+        const revenue = isNaN(row.revenue) ? 0 : row.revenue;
+        const margin = isNaN(row.margin) ? 0 : row.margin;
+
+        if (!profile || !SEGMENTS.includes(row.segment) || !/^\d{4}-\d{2}$/.test(row.monthVal)) {
+          errors++;
+          continue;
+        }
+
+        if (revenue === 0 && margin === 0) continue;
+
+        const { data: existing } = await supabase
+          .from('targets')
+          .select('id')
+          .eq('user_id', profile.user_id)
+          .eq('segment', row.segment)
+          .eq('month', row.monthVal)
+          .maybeSingle();
+
+        if (existing) {
+          await supabase.from('targets').update({ revenue_target: revenue, margin_target: margin }).eq('id', existing.id);
+        } else {
+          await supabase.from('targets').insert({ user_id: profile.user_id, segment: row.segment, month: row.monthVal, revenue_target: revenue, margin_target: margin });
+        }
+
+        imported++;
       }
-      imported++;
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
+
     toast({ title: 'Import selesai', description: `${imported} berhasil, ${errors} error`, variant: errors > 0 ? 'destructive' : 'default' });
     setShowTemplateImport(false);
     setTemplateImportText('');
