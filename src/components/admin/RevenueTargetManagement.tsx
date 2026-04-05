@@ -829,7 +829,7 @@ export function RevenueTargetManagement() {
                                   onClick={() => startInlineEdit(row, idx)}
                                   title="Klik untuk edit"
                                 >
-                                  {formatIDR(row.revenue_target)}
+                                  {formatIDRFull(row.revenue_target)}
                                 </span>
                               )}
                             </TableCell>
