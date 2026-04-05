@@ -905,9 +905,22 @@ export function RevenueTargetManagement() {
               </Table>
             </div>
             {/* Pagination */}
-            {filteredTargets.length > pageSize && (
+            {filteredTargets.length > 0 && (
               <div className="flex items-center justify-between px-4 py-2 border-t text-xs text-muted-foreground">
-                <span>Halaman {Math.min(currentPage, Math.ceil(filteredTargets.length / pageSize))} dari {Math.ceil(filteredTargets.length / pageSize)} ({filteredTargets.length} data)</span>
+                <div className="flex items-center gap-2">
+                  <span>Baris per halaman</span>
+                  <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setCurrentPage(1); }}>
+                    <SelectTrigger className="h-7 w-[65px] text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[10, 15, 25, 50].map(s => (
+                        <SelectItem key={s} value={String(s)}>{s}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="ml-2">Halaman {Math.min(currentPage, Math.ceil(filteredTargets.length / pageSize) || 1)} dari {Math.ceil(filteredTargets.length / pageSize) || 1} ({filteredTargets.length} data)</span>
+                </div>
                 <div className="flex items-center gap-1">
                   <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage <= 1} onClick={() => setCurrentPage(1)}>«</Button>
                   <Button variant="outline" size="sm" className="h-7 text-xs px-2" disabled={currentPage <= 1} onClick={() => setCurrentPage(p => p - 1)}>‹</Button>
