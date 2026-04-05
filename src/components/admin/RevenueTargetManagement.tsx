@@ -83,6 +83,36 @@ export function RevenueTargetManagement() {
   const [editRevenue, setEditRevenue] = useState(0);
   const [editMargin, setEditMargin] = useState(0);
 
+  // Inline edit state
+  const [inlineEditKey, setInlineEditKey] = useState<string | null>(null);
+  const [inlineRevenue, setInlineRevenue] = useState(0);
+  const [inlineMargin, setInlineMargin] = useState(0);
+  const [inlineSaving, setInlineSaving] = useState(false);
+
+  const getRowKey = (row: TargetRow, idx: number) => `${row.user_id}-${row.segment}-${row.month}-${idx}`;
+
+  const startInlineEdit = (row: TargetRow, idx: number) => {
+    setInlineEditKey(getRowKey(row, idx));
+    setInlineRevenue(row.revenue_target);
+    setInlineMargin(row.margin_target);
+  };
+
+  const cancelInlineEdit = () => {
+    setInlineEditKey(null);
+  };
+
+  const saveInlineEdit = async (row: TargetRow) => {
+    if (!row.id) return;
+    setInlineSaving(true);
+    const { error } = await supabase.from('targets').update({ revenue_target: inlineRevenue, margin_target: inlineMargin }).eq('id', row.id);
+    setInlineSaving(false);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    toast({ title: 'Tersimpan' });
+    setInlineEditKey(null);
+    loadTargets();
+    loadAllYearTargets();
+  };
+
   // ─── Load profiles ─────────────────────────────────────────
   useEffect(() => {
     async function loadProfiles() {
