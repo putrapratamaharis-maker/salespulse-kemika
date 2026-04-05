@@ -882,7 +882,7 @@ export function RevenueTargetManagement() {
                       })}
                       <TableRow className="bg-muted/50 font-semibold">
                         <TableCell colSpan={3} className="text-xs py-1.5 font-bold">Total ({filteredTargets.length} entries, {new Set(filteredTargets.map(r => r.user_id)).size} sales)</TableCell>
-                        <TableCell className="text-xs font-bold text-right py-1.5">{formatIDR(filteredTargets.reduce((s, t) => s + t.revenue_target, 0))}</TableCell>
+                        <TableCell className="text-xs font-bold text-right py-1.5">{formatIDRFull(filteredTargets.reduce((s, t) => s + t.revenue_target, 0))}</TableCell>
                         <TableCell className="text-xs font-bold text-right py-1.5">
                           {filteredTargets.length > 0 ? (filteredTargets.reduce((s, t) => s + t.margin_target, 0) / filteredTargets.length).toFixed(1) : '0.0'}%
                         </TableCell>
