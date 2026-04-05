@@ -66,7 +66,7 @@ export function RevenueTargetManagement() {
   const [selUserId, setSelUserId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 15;
+  const [pageSize, setPageSize] = useState(15);
 
   const [sortCol, setSortCol] = useState<'month' | 'segment' | 'full_name' | 'revenue_target' | 'margin_target' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
