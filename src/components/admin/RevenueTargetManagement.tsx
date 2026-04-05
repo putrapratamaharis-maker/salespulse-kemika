@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
-import { Loader2, Save, Upload, Download, Plus, Trash2, DollarSign, TrendingUp, BarChart3, Users, Calendar, CalendarRange, User, FileSpreadsheet, FileDown, MoreVertical, Eye, Pencil, Search, Check, X, Info } from 'lucide-react';
+import { Loader2, Save, Upload, Download, Plus, Trash2, DollarSign, TrendingUp, BarChart3, Users, Calendar, CalendarRange, User, FileSpreadsheet, FileDown, MoreVertical, Eye, Pencil, Search, Check, X, Info, ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
@@ -65,6 +65,22 @@ export function RevenueTargetManagement() {
   const [selSegment, setSelSegment] = useState<string>('ALL');
   const [selUserId, setSelUserId] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortCol, setSortCol] = useState<'month' | 'segment' | 'full_name' | 'revenue_target' | 'margin_target' | null>(null);
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+
+  const toggleSort = (col: typeof sortCol) => {
+    if (sortCol === col) {
+      setSortDir(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortCol(col);
+      setSortDir('asc');
+    }
+  };
+
+  const SortIcon = ({ col }: { col: typeof sortCol }) => {
+    if (sortCol !== col) return <ArrowUpDown className="inline h-3 w-3 ml-0.5 text-muted-foreground/50" />;
+    return sortDir === 'asc' ? <ArrowUp className="inline h-3 w-3 ml-0.5 text-primary" /> : <ArrowDown className="inline h-3 w-3 ml-0.5 text-primary" />;
+  };
 
   // Dialogs
   const [showAddForm, setShowAddForm] = useState(false);
@@ -185,8 +201,19 @@ export function RevenueTargetManagement() {
       const q = searchQuery.toLowerCase();
       data = data.filter(t => t.full_name.toLowerCase().includes(q));
     }
+    if (sortCol) {
+      data = [...data].sort((a, b) => {
+        let cmp = 0;
+        if (sortCol === 'revenue_target' || sortCol === 'margin_target') {
+          cmp = a[sortCol] - b[sortCol];
+        } else {
+          cmp = (a[sortCol] ?? '').localeCompare(b[sortCol] ?? '');
+        }
+        return sortDir === 'desc' ? -cmp : cmp;
+      });
+    }
     return data;
-  }, [targets, allYearTargets, selSegment, viewMode, searchQuery]);
+  }, [targets, allYearTargets, selSegment, viewMode, searchQuery, sortCol, sortDir]);
 
   const individualMonthlyMatrix = useMemo(() => {
     if (viewMode !== 'individual' || !selUserId) return {};
@@ -755,13 +782,13 @@ export function RevenueTargetManagement() {
               <Table>
                <TableHeader>
                   <TableRow>
-                    <TableHead className="text-[10px]">Bulan</TableHead>
-                    <TableHead className="text-[10px]">Segment</TableHead>
-                    <TableHead className="text-[10px]">Sales Person</TableHead>
-                    <TableHead className="text-[10px] text-right">Revenue Target</TableHead>
-                    <TableHead className="text-[10px] text-right">Margin %</TableHead>
-                    <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
-                  </TableRow>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('month')}>Bulan <SortIcon col="month" /></TableHead>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('segment')}>Segment <SortIcon col="segment" /></TableHead>
+                     <TableHead className="text-[10px] cursor-pointer select-none" onClick={() => toggleSort('full_name')}>Sales Person <SortIcon col="full_name" /></TableHead>
+                     <TableHead className="text-[10px] text-right cursor-pointer select-none" onClick={() => toggleSort('revenue_target')}>Revenue Target <SortIcon col="revenue_target" /></TableHead>
+                     <TableHead className="text-[10px] text-right cursor-pointer select-none" onClick={() => toggleSort('margin_target')}>Margin % <SortIcon col="margin_target" /></TableHead>
+                     <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
+                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTargets.length === 0 ? (
