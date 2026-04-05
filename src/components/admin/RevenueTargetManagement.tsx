@@ -69,6 +69,9 @@ export function RevenueTargetManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
   const [addUserId, setAddUserId] = useState('');
   const [addSegment, setAddSegment] = useState('B2B');
+  const [addMonth, setAddMonth] = useState('');
+  const [addRevenue, setAddRevenue] = useState(0);
+  const [addMargin, setAddMargin] = useState(17);
   const [showImport, setShowImport] = useState(false);
   const [importText, setImportText] = useState('');
   const [showTemplateImport, setShowTemplateImport] = useState(false);
