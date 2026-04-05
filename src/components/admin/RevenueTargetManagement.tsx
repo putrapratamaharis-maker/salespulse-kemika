@@ -869,29 +869,55 @@ export function RevenueTargetManagement() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="text-sm">Tambah Target Baru</DialogTitle>
-            <DialogDescription className="text-xs">Periode: {monthLabel(monthStr)}</DialogDescription>
+            <DialogDescription className="text-xs">Input manual target revenue dan margin untuk sales person</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div className="space-y-1">
-              <Label className="text-xs">Segment</Label>
-              <Select value={addSegment} onValueChange={setAddSegment}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
-                <SelectContent>{SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Segment</Label>
+                <Select value={addSegment} onValueChange={setAddSegment}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>{SEGMENTS.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Bulan</Label>
+                <Select value={addMonth || monthStr} onValueChange={setAddMonth}>
+                  <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const m = `${selYear}-${String(i + 1).padStart(2, '0')}`;
+                      return <SelectItem key={m} value={m}>{monthNamesFull[i]} {selYear}</SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Sales Person</Label>
               <Select value={addUserId} onValueChange={setAddUserId}>
-                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pilih..." /></SelectTrigger>
+                <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="Pilih sales..." /></SelectTrigger>
                 <SelectContent>
-                  {availableUsers.map(p => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name} ({p.email})</SelectItem>)}
+                  {profiles.map(p => <SelectItem key={p.user_id} value={p.user_id}>{p.full_name} ({p.email})</SelectItem>)}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label className="text-xs">Revenue Target (Rp)</Label>
+                <Input type="number" className="h-8 text-xs" placeholder="0" value={addRevenue || ''} onChange={e => setAddRevenue(parseFloat(e.target.value) || 0)} />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-xs">Margin Target (%)</Label>
+                <Input type="number" className="h-8 text-xs" placeholder="17" value={addMargin || ''} onChange={e => setAddMargin(parseFloat(e.target.value) || 0)} step="0.1" />
+              </div>
             </div>
           </div>
           <DialogFooter>
             <Button size="sm" variant="outline" onClick={() => setShowAddForm(false)}>Batal</Button>
-            <Button size="sm" onClick={handleAdd}><Plus className="h-3 w-3 mr-1" /> Tambah</Button>
+            <Button size="sm" onClick={handleAdd} disabled={saving}>
+              {saving ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Plus className="h-3 w-3 mr-1" />} Tambah
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
