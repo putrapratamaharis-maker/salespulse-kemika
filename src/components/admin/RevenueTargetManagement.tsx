@@ -703,7 +703,7 @@ export function RevenueTargetManagement() {
         <Card className="border-l-4 border-l-chart-1 relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Sales Target B2C (e-Commerce)</p>
-            <p className="text-sm font-bold">{formatIDR(segmentSummaries.find(s => s.segment === 'B2C')?.revenue || 0)}</p>
+            <p className="text-sm font-bold">{formatIDRFull(segmentSummaries.find(s => s.segment === 'B2C')?.revenue || 0)}</p>
           </CardContent>
           <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh target segment B2C (e-Commerce). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target B2C.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
