@@ -858,70 +858,8 @@ export function RevenueTargetManagement() {
         </Card>
       )}
 
-      {/* ═══ MONTHLY VIEW - Editable Table ═══ */}
-      {viewMode === 'monthly' && (
-        <Card>
-          <CardHeader className="pb-2 pt-3">
-            <CardTitle className="text-sm font-semibold flex items-center gap-2">
-              <Users className="h-4 w-4" /> Target Individu — {monthLabel(monthStr)}
-              {dirtyCount > 0 && <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-300 bg-amber-50">{dirtyCount} unsaved</Badge>}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : (
-              <div className="border rounded-md overflow-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="text-[10px] w-[30px]">#</TableHead>
-                      <TableHead className="text-[10px]">Nama Sales</TableHead>
-                      <TableHead className="text-[10px] w-[70px]">Segment</TableHead>
-                      <TableHead className="text-[10px] w-[170px]">Revenue Target (Rp)</TableHead>
-                      <TableHead className="text-[10px] w-[110px]">Margin (%)</TableHead>
-                      <TableHead className="text-[10px] w-[50px] text-center">Aksi</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTargets.length === 0 ? (
-                      <TableRow><TableCell colSpan={6} className="text-center text-xs text-muted-foreground py-8">Belum ada target. Klik "Tambah" untuk mulai.</TableCell></TableRow>
-                    ) : filteredTargets.map((row, idx) => {
-                      const realIdx = targets.indexOf(row);
-                      return (
-                        <TableRow key={`${row.user_id}-${row.segment}`} className={row.dirty ? 'bg-amber-50/50 dark:bg-amber-900/10' : ''}>
-                          <TableCell className="text-[10px] text-muted-foreground py-1.5">{idx + 1}</TableCell>
-                          <TableCell className="text-xs font-medium py-1.5">{row.full_name}</TableCell>
-                          <TableCell className="py-1.5"><Badge variant="outline" className="text-[10px]">{row.segment}</Badge></TableCell>
-                          <TableCell className="py-1.5">
-                            <Input type="number" className="h-7 text-xs" value={row.revenue_target || ''} onChange={e => updateField(realIdx, 'revenue_target', parseFloat(e.target.value) || 0)} placeholder="0" />
-                          </TableCell>
-                          <TableCell className="py-1.5">
-                            <Input type="number" className="h-7 text-xs" value={row.margin_target || ''} onChange={e => updateField(realIdx, 'margin_target', parseFloat(e.target.value) || 0)} placeholder="0" step="0.1" />
-                          </TableCell>
-                          <TableCell className="py-1.5 text-center">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-6 w-6"><MoreVertical className="h-3.5 w-3.5" /></Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openDetail(row, 'view')}><Eye className="h-3.5 w-3.5 mr-2" /> Lihat Detail</DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => openDetail(row, 'edit')}><Pencil className="h-3.5 w-3.5 mr-2" /> Edit</DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(row)}><Trash2 className="h-3.5 w-3.5 mr-2" /> Hapus</DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+
+
 
       {/* ═══ ANNUAL VIEW ═══ */}
       {viewMode === 'annually' && (
