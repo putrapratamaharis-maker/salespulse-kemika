@@ -201,8 +201,19 @@ export function RevenueTargetManagement() {
       const q = searchQuery.toLowerCase();
       data = data.filter(t => t.full_name.toLowerCase().includes(q));
     }
+    if (sortCol) {
+      data = [...data].sort((a, b) => {
+        let cmp = 0;
+        if (sortCol === 'revenue_target' || sortCol === 'margin_target') {
+          cmp = a[sortCol] - b[sortCol];
+        } else {
+          cmp = (a[sortCol] ?? '').localeCompare(b[sortCol] ?? '');
+        }
+        return sortDir === 'desc' ? -cmp : cmp;
+      });
+    }
     return data;
-  }, [targets, allYearTargets, selSegment, viewMode, searchQuery]);
+  }, [targets, allYearTargets, selSegment, viewMode, searchQuery, sortCol, sortDir]);
 
   const individualMonthlyMatrix = useMemo(() => {
     if (viewMode !== 'individual' || !selUserId) return {};
