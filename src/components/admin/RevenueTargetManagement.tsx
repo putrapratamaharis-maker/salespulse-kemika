@@ -212,14 +212,27 @@ export function RevenueTargetManagement() {
     setTargets(prev => prev.map((t, i) => i === idx ? { ...t, [field]: value, dirty: true } : t));
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!addUserId) { toast({ title: 'Pilih user', variant: 'destructive' }); return; }
-    const exists = targets.find(t => t.user_id === addUserId && t.segment === addSegment);
-    if (exists) { toast({ title: 'Duplikat', description: 'Target untuk user & segment ini sudah ada', variant: 'destructive' }); return; }
-    const profile = profiles.find(p => p.user_id === addUserId);
-    setTargets(prev => [...prev, { id: null, user_id: addUserId, full_name: profile?.full_name || '', segment: addSegment, month: monthStr, revenue_target: 0, margin_target: 0, dirty: true, isNew: true }]);
+    const targetMonth = addMonth || monthStr;
+    if (!targetMonth || !/^\d{4}-\d{2}$/.test(targetMonth)) { toast({ title: 'Pilih bulan', variant: 'destructive' }); return; }
+    
+    // Check duplicate
+    const { data: existing } = await supabase.from('targets').select('id').eq('user_id', addUserId).eq('segment', addSegment).eq('month', targetMonth).maybeSingle();
+    if (existing) { toast({ title: 'Duplikat', description: 'Target untuk user, segment & bulan ini sudah ada', variant: 'destructive' }); return; }
+    
+    setSaving(true);
+    const { error } = await supabase.from('targets').insert({ user_id: addUserId, segment: addSegment, month: targetMonth, revenue_target: addRevenue, margin_target: addMargin });
+    setSaving(false);
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    
+    toast({ title: 'Target ditambahkan', description: `${profiles.find(p => p.user_id === addUserId)?.full_name} — ${addSegment} — ${targetMonth}` });
     setShowAddForm(false);
     setAddUserId('');
+    setAddRevenue(0);
+    setAddMargin(17);
+    loadTargets();
+    loadAllYearTargets();
   };
 
   const handleSave = async () => {
