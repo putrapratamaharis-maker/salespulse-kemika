@@ -409,10 +409,7 @@ export function RevenueTargetManagement() {
     <div className="space-y-4">
       {/* ═══ TOOLBAR ═══ */}
       <div className="flex flex-col gap-3">
-        {/* Row 1: Actions only */}
-        <div className="flex flex-wrap items-end gap-2">
-
-        {/* Row 2: Actions */}
+        {/* Actions */}
         <div className="flex items-center gap-2 flex-wrap">
           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => { setAddMonth(monthStr); setShowAddForm(true); }}>
             <Plus className="h-3 w-3 mr-1" /> Tambah
