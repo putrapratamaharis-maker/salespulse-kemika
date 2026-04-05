@@ -682,7 +682,7 @@ export function RevenueTargetManagement() {
         <Card className="border-l-4 border-l-primary relative">
           <CardContent className="p-3">
             <p className="text-[10px] text-muted-foreground uppercase">Total Sales Targets</p>
-            <p className="text-sm font-bold">{formatIDR(grandTotal.revenue)}</p>
+            <p className="text-sm font-bold">{formatIDRFull(grandTotal.revenue)}</p>
           </CardContent>
           <TooltipProvider delayDuration={200}><Tooltip><TooltipTrigger asChild><Info className="absolute bottom-2 right-2 h-3 w-3 text-muted-foreground/50 cursor-help hover:text-muted-foreground transition-colors" /></TooltipTrigger><TooltipContent side="top" className="max-w-[260px] text-xs z-[100]">Total jumlah seluruh sales target (semua segment & bulan). Nilai tetap, hanya berubah jika ada penambahan/pengurangan akun target.</TooltipContent></Tooltip></TooltipProvider>
         </Card>
