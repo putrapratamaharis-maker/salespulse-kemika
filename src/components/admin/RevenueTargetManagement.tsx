@@ -67,6 +67,9 @@ export function RevenueTargetManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 15;
+
+  // Reset page when filters change
+  useEffect(() => { setCurrentPage(1); }, [selSegment, searchQuery, selMonth, selYear, viewMode, sortCol, sortDir]);
   const [sortCol, setSortCol] = useState<'month' | 'segment' | 'full_name' | 'revenue_target' | 'margin_target' | null>(null);
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
