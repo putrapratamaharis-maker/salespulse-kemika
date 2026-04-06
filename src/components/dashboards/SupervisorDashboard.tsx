@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Target, DollarSign, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -144,10 +144,10 @@ export function SupervisorDashboard() {
                 <TableRow>
                   <TableHead className="text-xs w-8">#</TableHead>
                   <TableHead className="text-xs">Sales Person</TableHead>
-                  <TableHead className="text-xs">Revenue MTD</TableHead>
+                   <TableHead className="text-xs">Revenue MTD (Rp)</TableHead>
                   <TableHead className="text-xs">Achievement</TableHead>
                   <TableHead className="text-xs">Margin %</TableHead>
-                  <TableHead className="text-xs">Pipeline</TableHead>
+                  <TableHead className="text-xs">Pipeline (Rp)</TableHead>
                   <TableHead className="text-xs">Activities</TableHead>
                   <TableHead className="text-xs">Alerts</TableHead>
                 </TableRow>
@@ -166,14 +166,14 @@ export function SupervisorDashboard() {
                         <div className="text-xs text-muted-foreground">{d.region}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{formatIDRFull(d.revenue)}</TableCell>
+                    <TableCell className="text-sm font-medium">{formatNumIDR(d.revenue)}</TableCell>
                     <TableCell>
                       <StatusBadge status={getAchievementStatus(d.achievementPct)} label={formatPercent(d.achievementPct)} />
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={d.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(d.marginPct)} />
                     </TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(d.pipelineValue)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(d.pipelineValue)}</TableCell>
                     <TableCell className="text-sm">{d.activityCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">

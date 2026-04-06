@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -132,7 +132,7 @@ const ProfilePage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
                   <TableHead className="text-xs">Probability</TableHead>
                   <TableHead className="text-xs">Close Date</TableHead>
@@ -142,7 +142,7 @@ const ProfilePage = () => {
                 {deals.map(d => (
                   <TableRow key={d.id}>
                     <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(Number(d.value))}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(Number(d.value))}</TableCell>
                     <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={d.stage.replace('_', ' ')} /></TableCell>
                     <TableCell className="text-sm">{d.probability}%</TableCell>
                     <TableCell className="text-sm">{formatDate(d.expected_close_date)}</TableCell>
@@ -186,8 +186,8 @@ const ProfilePage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Invoice</TableHead>
-                  <TableHead className="text-xs">Net Sales</TableHead>
-                  <TableHead className="text-xs">GP</TableHead>
+                  <TableHead className="text-xs">Net Sales (Rp)</TableHead>
+                  <TableHead className="text-xs">GP (Rp)</TableHead>
                   <TableHead className="text-xs">Margin %</TableHead>
                   <TableHead className="text-xs">Compliant</TableHead>
                 </TableRow>
@@ -198,8 +198,8 @@ const ProfilePage = () => {
                   return (
                     <TableRow key={inv.id}>
                       <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(Number(inv.net_sales))}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(Number(inv.gross_profit))}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(Number(inv.net_sales))}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(Number(inv.gross_profit))}</TableCell>
                       <TableCell className="text-sm">{formatPercent(m)}</TableCell>
                       <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={m >= 17 ? 'Yes' : 'No'} /></TableCell>
                     </TableRow>

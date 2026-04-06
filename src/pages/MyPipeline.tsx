@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { Deal, DealStage, DealProduct, formatIDRFull, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, DealProduct, formatIDRFull, formatNumIDR, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -344,7 +344,7 @@ const MyPipeline = () => {
                 <div className="w-28 shrink-0"><StatusBadge status={s.color} label={s.label} /></div>
                 <div className="flex-1"><Progress value={(s.value / maxStageValue) * 100} className="h-2" /></div>
                 <span className="text-sm font-medium w-12 text-right">{s.count}</span>
-                <span className="text-sm text-muted-foreground w-28 text-right">{formatIDRFull(s.value)}</span>
+                <span className="text-sm text-muted-foreground w-28 text-right">{formatNumIDR(s.value)}</span>
               </div>
             ))}
           </div>
@@ -366,7 +366,7 @@ const MyPipeline = () => {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                   <TableHead className="text-xs">Prob.</TableHead>
                   <TableHead className="text-xs">Close Date</TableHead>
                 </TableRow></TableHeader>
@@ -374,7 +374,7 @@ const MyPipeline = () => {
                   {nearingClose.map(d => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={`${d.probability}%`} /></TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>
@@ -401,7 +401,7 @@ const MyPipeline = () => {
                   <TableHead className="text-xs">Deal</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
                   <TableHead className="text-xs">Days</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {staleDeals.map(d => (
@@ -409,7 +409,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
                       <TableCell className="text-sm text-status-red font-semibold">{d.daysInStage}d</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -445,7 +445,7 @@ const MyPipeline = () => {
                   <TableHead className="text-xs">Deal</TableHead>
                   <TableHead className="text-xs">Account</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value <SortIcon col="value" /></TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value (Rp) <SortIcon col="value" /></TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
                 </TableRow></TableHeader>
@@ -455,7 +455,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell className="text-sm">{d.probability}%</TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>

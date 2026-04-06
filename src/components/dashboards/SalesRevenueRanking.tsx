@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trophy, Loader2 } from 'lucide-react';
-import { formatIDRFull, formatPercent } from '@/types/sales';
+import { formatNumIDR, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SalesRanking {
@@ -28,8 +28,8 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
           <TableHead className="text-xs w-10">#</TableHead>
           <TableHead className="text-xs">Sales Person</TableHead>
           <TableHead className="text-xs">Segment</TableHead>
-          <TableHead className="text-xs text-right">Revenue</TableHead>
-          <TableHead className="text-xs text-right">Target</TableHead>
+          <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
+          <TableHead className="text-xs text-right">Target (Rp)</TableHead>
           <TableHead className="text-xs text-right">Achievement</TableHead>
           <TableHead className="text-xs text-right">Kontribusi</TableHead>
         </TableRow>
@@ -42,8 +42,8 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
               <TableCell className="text-xs"><RankMedal rank={i + 1} /></TableCell>
               <TableCell className="text-xs font-medium">{sp.name}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{sp.segment}</TableCell>
-              <TableCell className="text-xs text-right font-semibold">{formatIDRFull(sp.revenue)}</TableCell>
-              <TableCell className="text-xs text-right text-muted-foreground">{formatIDRFull(sp.target)}</TableCell>
+              <TableCell className="text-xs text-right font-semibold">{formatNumIDR(sp.revenue)}</TableCell>
+              <TableCell className="text-xs text-right text-muted-foreground">{formatNumIDR(sp.target)}</TableCell>
               <TableCell className="text-xs text-right">
                 <span className={sp.achievementPct >= 100 ? 'text-status-green font-semibold' : sp.achievementPct >= 80 ? 'text-status-yellow font-semibold' : 'text-status-red font-semibold'}>
                   {formatPercent(sp.achievementPct)}

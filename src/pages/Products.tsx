@@ -77,6 +77,8 @@ const Products = () => {
     return `Rp ${val.toLocaleString('id-ID')}`;
   };
 
+  const formatNumIDR = (val: number) => val.toLocaleString('id-ID');
+
   const stats = useMemo(() => {
     const totalRevenue = products.reduce((s, p) => s + p.totalRevenue, 0);
     const totalUnits = products.reduce((s, p) => s + p.unitsSold, 0);
@@ -285,7 +287,7 @@ const Products = () => {
                       <TableHead className="pl-6 w-[40px]">#</TableHead>
                       <TableHead>Produk</TableHead>
                       <TableHead>Kategori</TableHead>
-                      <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Revenue (Rp)</TableHead>
                       <TableHead className="text-right">Units</TableHead>
                       <TableHead className="w-[160px]">Kontribusi</TableHead>
                     </TableRow>
@@ -302,7 +304,7 @@ const Products = () => {
                             <Badge variant="secondary" className="text-[10px] font-normal">{p.category}</Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold text-sm tabular-nums">
-                            {formatIDRFull(p.totalRevenue)}
+                            {formatNumIDR(p.totalRevenue)}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
                             {p.unitsSold.toLocaleString()}

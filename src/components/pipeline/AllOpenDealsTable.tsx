@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Deal, DealStage, formatIDRFull, formatDate } from '@/types/sales';
+import { Deal, DealStage, formatNumIDR, formatDate } from '@/types/sales';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,7 +43,7 @@ const segmentOptions = [
 
 const sortColumns = [
   { key: 'sales', label: 'Sales' },
-  { key: 'value', label: 'Value' },
+  { key: 'value', label: 'Value (Rp)' },
   { key: 'stage', label: 'Stage' },
   { key: 'segment', label: 'Segment' },
   { key: 'probability', label: 'Prob.' },
@@ -259,7 +259,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
                     <div className="text-xs text-muted-foreground">{getAccountName(d.accountId)}</div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
-                  <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                  <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                   <TableCell>
                     <StatusBadge
                       status={d.daysInStage > 14 ? 'red' : d.daysInStage > 7 ? 'yellow' : 'green'}

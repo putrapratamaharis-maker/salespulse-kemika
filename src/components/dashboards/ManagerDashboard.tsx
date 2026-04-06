@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
@@ -258,7 +258,7 @@ export function ManagerDashboard() {
                     <TableHead className="text-xs w-8">#</TableHead>
                     <TableHead className="text-xs">Customer</TableHead>
                     <TableHead className="text-xs">Segment</TableHead>
-                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
                     <TableHead className="text-xs text-right">Kontribusi</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -270,7 +270,7 @@ export function ManagerDashboard() {
                         <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="text-xs font-medium">{c.name}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">{formatIDRFull(c.revenue)}</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{formatNumIDR(c.revenue)}</TableCell>
                         <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
                       </TableRow>
                     );
@@ -300,7 +300,7 @@ export function ManagerDashboard() {
                     <TableHead className="text-xs w-8">#</TableHead>
                     <TableHead className="text-xs">Produk</TableHead>
                     <TableHead className="text-xs">Kategori</TableHead>
-                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -309,7 +309,7 @@ export function ManagerDashboard() {
                       <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                       <TableCell className="text-xs font-medium">{p.name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.category}</TableCell>
-                      <TableCell className="text-xs text-right font-semibold">{formatIDRFull(p.revenue)}</TableCell>
+                      <TableCell className="text-xs text-right font-semibold">{formatNumIDR(p.revenue)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -377,7 +377,7 @@ export function ManagerDashboard() {
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDRFull(v)} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDRAxis(v)} />
                     <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
                     <Tooltip formatter={(value: number) => {
                       const pct = totalRegionRevenue > 0 ? (Number(value) / totalRegionRevenue) * 100 : 0;

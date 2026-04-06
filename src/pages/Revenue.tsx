@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDRFull, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search, Trophy } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
@@ -282,8 +282,8 @@ const Revenue = () => {
               <TableRow>
                 <TableHead className="text-xs">Invoice #</TableHead>
                 <TableHead className="text-xs">Akun</TableHead>
-                <TableHead className="text-xs">Net Sales</TableHead>
-                <TableHead className="text-xs">Gross Profit</TableHead>
+                <TableHead className="text-xs">Net Sales (Rp)</TableHead>
+                <TableHead className="text-xs">Gross Profit (Rp)</TableHead>
                 <TableHead className="text-xs">Margin %</TableHead>
                 <TableHead className="text-xs">Segment</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
@@ -304,8 +304,8 @@ const Revenue = () => {
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(inv.gross_profit)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
