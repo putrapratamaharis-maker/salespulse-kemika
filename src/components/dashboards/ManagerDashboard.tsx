@@ -244,7 +244,7 @@ export function ManagerDashboard() {
       {/* Row 1: Revenue & Targets */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`Total Revenue Target ${currentYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
+        <KPICard label={`Total Revenue Target ${selYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
         <KPICard label="Actual Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-orange" borderAccent="border-l-kpi-orange-border" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
       </div>
