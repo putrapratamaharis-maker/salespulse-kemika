@@ -85,7 +85,7 @@ const Revenue = () => {
     setAllDeals((dealsRes.data || []).map((d: any) => ({
       value: d.value || 0,
       segment: d.segment || '',
-      revenue_date: d.revenue_date || null,
+      expected_close_date: d.expected_close_date || '',
     })));
     setLoading(false);
   };
