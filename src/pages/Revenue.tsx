@@ -43,6 +43,7 @@ const Revenue = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [totalWon, setTotalWon] = useState(0);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,12 +52,19 @@ const Revenue = () => {
 
   const fetchInvoices = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('invoices')
-      .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
-      .order('issue_date', { ascending: false });
 
-    const mapped = (data || []).map((row: any) => ({
+    const [invoiceRes, dealsRes] = await Promise.all([
+      supabase
+        .from('invoices')
+        .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
+        .order('issue_date', { ascending: false }),
+      supabase
+        .from('deals')
+        .select('value')
+        .in('stage', ['po_secured', 'invoice_issued']),
+    ]);
+
+    const mapped = (invoiceRes.data || []).map((row: any) => ({
       id: row.id,
       invoice_number: row.invoice_number,
       net_sales: row.net_sales,
@@ -68,6 +76,7 @@ const Revenue = () => {
       account_name: row.accounts?.name || '',
     }));
     setAllInvoices(mapped);
+    setTotalWon((dealsRes.data || []).reduce((s: number, d: any) => s + (d.value || 0), 0));
     setLoading(false);
   };
 
