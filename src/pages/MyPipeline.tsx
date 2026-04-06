@@ -366,7 +366,7 @@ const MyPipeline = () => {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                   <TableHead className="text-xs">Prob.</TableHead>
                   <TableHead className="text-xs">Close Date</TableHead>
                 </TableRow></TableHeader>
