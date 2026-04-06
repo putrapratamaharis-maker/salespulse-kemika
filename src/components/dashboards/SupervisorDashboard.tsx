@@ -166,7 +166,7 @@ export function SupervisorDashboard() {
                         <div className="text-xs text-muted-foreground">{d.region}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{formatIDRFull(d.revenue)}</TableCell>
+                    <TableCell className="text-sm font-medium">{formatNumIDR(d.revenue)}</TableCell>
                     <TableCell>
                       <StatusBadge status={getAchievementStatus(d.achievementPct)} label={formatPercent(d.achievementPct)} />
                     </TableCell>
