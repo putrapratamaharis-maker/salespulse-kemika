@@ -123,6 +123,17 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
     setProducts(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
   };
 
+  // Recalculate gross profit when margin changes (for invoice stage)
+  const handleMarginChangeForInvoice = (val: string) => {
+    setExpectedMargin(val);
+    const pct = Number(val) || 0;
+    const gp = Math.round(totalValue * pct / 100);
+    setGrossProfit(String(gp));
+  };
+
+  // Track if stage changed to invoice_issued from a non-invoice stage
+  const isNewInvoiceTransition = stage === 'invoice_issued' && deal?.stage !== 'invoice_issued';
+
   // Auto-fill category, unit, price when selecting product from DB
   const handleProductSelect = (index: number, productId: string) => {
     const prod = dbProducts.find(p => p.id === productId);
