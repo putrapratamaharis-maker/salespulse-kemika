@@ -285,7 +285,7 @@ const Products = () => {
                       <TableHead className="pl-6 w-[40px]">#</TableHead>
                       <TableHead>Produk</TableHead>
                       <TableHead>Kategori</TableHead>
-                      <TableHead className="text-right">Revenue</TableHead>
+                      <TableHead className="text-right">Revenue (Rp)</TableHead>
                       <TableHead className="text-right">Units</TableHead>
                       <TableHead className="w-[160px]">Kontribusi</TableHead>
                     </TableRow>
