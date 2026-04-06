@@ -233,7 +233,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       value: totalValue > 0 ? totalValue : deal.value,
       probability: skipProb ? 100 : (Number(probability) || 0),
       expectedCloseDate,
-      revenueDate: isNewInvoiceTransition ? invoiceIssueDate : (stage === 'po_secured' && deal.stage !== 'po_secured' ? expectedCloseDate : deal.revenueDate),
+      
       updatedAt: new Date().toISOString().split('T')[0],
       location,
       notes,

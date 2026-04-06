@@ -240,7 +240,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       value: totalValue,
       probability: isInvoiceStage || stage === 'po_secured' ? 100 : (Number(probability) || 0),
       expectedCloseDate: poDate || expectedCloseDate,
-      revenueDate: isInvoiceStage && invoiceIssueDate ? format(invoiceIssueDate, 'yyyy-MM-dd') : (stage === 'po_secured' && poDate ? poDate : undefined),
+      
       createdAt: now,
       updatedAt: now,
       daysInStage: 0,
