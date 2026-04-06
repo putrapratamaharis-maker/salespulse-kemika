@@ -1165,6 +1165,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_executive_summary_kpis: {
+        Args: { _current_month: number; _current_year: number }
+        Returns: Json
+      }
       get_user_org_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["org_role"]
