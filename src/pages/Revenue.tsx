@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDRFull, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search, Trophy } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
