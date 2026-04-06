@@ -455,7 +455,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell className="text-sm">{d.probability}%</TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>
