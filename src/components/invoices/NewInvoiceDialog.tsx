@@ -27,6 +27,8 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [poNumber, setPoNumber] = useState('');
+  const [poDate, setPoDate] = useState<Date | undefined>();
   const [accountId, setAccountId] = useState('');
   const [segment, setSegment] = useState('B2B');
   const [netSales, setNetSales] = useState('');
@@ -45,6 +47,8 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
 
   const resetForm = () => {
     setInvoiceNumber('');
+    setPoNumber('');
+    setPoDate(undefined);
     setAccountId('');
     setSegment('B2B');
     setNetSales('');
@@ -99,11 +103,14 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
       stage: 'invoice_issued' as any,
       value: netSalesNum,
       probability: 100,
-      expected_close_date: format(issueDate, 'yyyy-MM-dd'),
+      expected_close_date: poDate ? format(poDate, 'yyyy-MM-dd') : format(issueDate, 'yyyy-MM-dd'),
       expected_margin: Math.round(marginPct * 100) / 100,
       segment,
-      po_number: invoiceNumber.trim(),
-      notes: `Auto-created from invoice ${invoiceNumber.trim()}`,
+      po_number: poNumber.trim() || invoiceNumber.trim(),
+      revenue_date: format(issueDate, 'yyyy-MM-dd'),
+      notes: poNumber.trim()
+        ? `Auto-created from invoice ${invoiceNumber.trim()} (PO: ${poNumber.trim()})`
+        : `Auto-created from invoice ${invoiceNumber.trim()}`,
     });
 
     setSaving(false);
@@ -131,6 +138,21 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
           <DialogTitle>Buat Invoice Baru</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {/* Dasar PO/SP/SPK */}
+          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dasar Pembuatan Invoice</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>No. PO/SP/SPK</Label>
+                <Input placeholder="Contoh: PO-2026-001" value={poNumber} onChange={e => setPoNumber(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>PO/Won/Closed Date</Label>
+                <DatePicker date={poDate} onSelect={setPoDate} />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label>Nomor Invoice *</Label>
             <Input placeholder="INV-2026-001" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} />
