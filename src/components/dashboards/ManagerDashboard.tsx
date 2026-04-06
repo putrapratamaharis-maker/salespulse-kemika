@@ -50,93 +50,66 @@ export function ManagerDashboard() {
     async function fetchDashboardData() {
       setLoading(true);
 
-      const [{ data: invoices }, { data: deals }, { data: targets }, { data: accounts }] = await Promise.all([
-        supabase.from('invoices').select('net_sales, gross_profit, issue_date, due_date, paid_date, segment, account_id'),
-        supabase.from('deals').select('value, probability, expected_close_date, stage'),
-        supabase.from('targets').select('revenue_target'),
+      // Use security definer RPC for company-wide data (bypasses RLS)
+      const [{ data: kpiData, error: kpiError }, { data: accounts }] = await Promise.all([
+        supabase.rpc('get_executive_summary_kpis', {
+          _current_year: currentYear,
+          _current_month: currentMonth + 1, // JS months are 0-indexed, SQL expects 1-indexed
+        }),
         supabase.from('accounts').select('id, name, segment, region'),
       ]);
 
-      const allInvoices = invoices || [];
-      const allDeals = deals || [];
-      const allTargets = targets || [];
       const allAccounts = accounts || [];
 
-      // MTD invoices
-      const mtd = allInvoices.filter(i => {
-        const d = new Date(i.issue_date);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-      });
-      const mtdRev = mtd.reduce((s, i) => s + Number(i.net_sales), 0);
-      const mtdGP = mtd.reduce((s, i) => s + Number(i.gross_profit), 0);
-      setRevenueMTD(mtdRev);
-      setGrossProfitMTD(mtdGP);
+      if (kpiData && !kpiError) {
+        const d = kpiData as any;
+        setRevenueMTD(Number(d.revenue_mtd) || 0);
+        setGrossProfitMTD(Number(d.gp_mtd) || 0);
+        setRevenueYTD(Number(d.revenue_ytd) || 0);
+        setTotalTarget(Number(d.total_target) || 0);
+        setOutstandingAR(Number(d.outstanding_ar) || 0);
+        setPipeline30(Number(d.pipeline_30) || 0);
+        setPipeline60(Number(d.pipeline_60) || 0);
+        setWeightedForecast(Number(d.weighted_forecast) || 0);
 
-      // YTD
-      const ytd = allInvoices.filter(i => new Date(i.issue_date).getFullYear() === currentYear);
-      setRevenueYTD(ytd.reduce((s, i) => s + Number(i.net_sales), 0));
+        // Segment revenue
+        const segArr = (d.segment_revenue as any[]) || [];
+        const segments = ['B2G', 'B2B', 'B2C'];
+        setSegmentRevenue(segments.map(seg => ({
+          segment: seg,
+          revenue: segArr.find((s: any) => s.segment === seg)?.revenue || 0,
+        })));
 
-      // Targets
-      setTotalTarget(allTargets.reduce((s, t) => s + Number(t.revenue_target), 0));
+        // Customer revenue - resolve account names
+        const accountMap = new Map(allAccounts.map(a => [a.id, a]));
+        const custArr = (d.customer_revenue as any[]) || [];
+        setCustomerRevenue(custArr.map((c: any) => {
+          const acc = accountMap.get(c.account_id);
+          return { name: acc?.name || c.account_id, segment: acc?.segment || '—', revenue: Number(c.revenue) };
+        }).filter(c => c.revenue > 0));
 
-      // Outstanding AR
-      setOutstandingAR(allInvoices.filter(inv => !inv.paid_date).reduce((s, inv) => s + Number(inv.net_sales), 0));
+        // Region revenue
+        const regArr = (d.region_revenue as any[]) || [];
+        setRegionData(regArr.map((r: any) => ({ region: r.region, revenue: Number(r.revenue) })).filter(r => r.region && r.region !== ''));
 
-      // Pipeline
-      const openDeals = allDeals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
-      const now30 = Date.now() + 30 * 86400000;
-      const now60 = Date.now() + 60 * 86400000;
-      setPipeline30(openDeals.filter(d => new Date(d.expected_close_date).getTime() <= now30).reduce((s, d) => s + Number(d.value), 0));
-      setPipeline60(openDeals.filter(d => { const t = new Date(d.expected_close_date).getTime(); return t > now30 && t <= now60; }).reduce((s, d) => s + Number(d.value), 0));
-      setWeightedForecast(openDeals.reduce((s, d) => s + Number(d.value) * Number(d.probability) / 100, 0));
-
-      // Segment revenue
-      const totalRev = allInvoices.reduce((s, i) => s + Number(i.net_sales), 0);
-      const segments = ['B2G', 'B2B', 'B2C'];
-      setSegmentRevenue(segments.map(seg => ({
-        segment: seg,
-        revenue: allInvoices.filter(i => i.segment === seg).reduce((s, i) => s + Number(i.net_sales), 0),
-      })));
-
-      // Top 10 Customer
-      const accountMap = new Map(allAccounts.map(a => [a.id, a]));
-      const custRevMap = new Map<string, number>();
-      allInvoices.forEach(inv => {
-        custRevMap.set(inv.account_id, (custRevMap.get(inv.account_id) || 0) + Number(inv.net_sales));
-      });
-      const custRev = Array.from(custRevMap, ([accId, rev]) => {
-        const acc = accountMap.get(accId);
-        return { name: acc?.name || accId, segment: acc?.segment || '—', revenue: rev };
-      }).filter(c => c.revenue > 0).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
-      setCustomerRevenue(custRev);
-
-      // Region distribution
-      const regMap = new Map<string, number>();
-      allInvoices.forEach(inv => {
-        const acc = accountMap.get(inv.account_id);
-        const region = acc?.region || 'Unknown';
-        if (region) regMap.set(region, (regMap.get(region) || 0) + Number(inv.net_sales));
-      });
-      setRegionData(Array.from(regMap, ([region, revenue]) => ({ region, revenue })).filter(r => r.region && r.region !== '').sort((a, b) => b.revenue - a.revenue));
-
-      // Monthly trend by segment
-      const monthMap = new Map<string, { B2G: number; B2B: number; B2C: number }>();
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      allInvoices.forEach(inv => {
-        const d = new Date(inv.issue_date);
-        if (d.getFullYear() === currentYear) {
-          const key = monthNames[d.getMonth()];
+        // Monthly trend by segment
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const trendArr = (d.monthly_trend as any[]) || [];
+        const monthMap = new Map<string, { B2G: number; B2B: number; B2C: number }>();
+        trendArr.forEach((t: any) => {
+          const key = monthNames[(t.month_num as number) - 1];
+          if (!key) return;
           const entry = monthMap.get(key) || { B2G: 0, B2B: 0, B2C: 0 };
-          const seg = inv.segment as 'B2G' | 'B2B' | 'B2C';
-          if (seg in entry) entry[seg] += Number(inv.net_sales) / 1_000_000;
+          const seg = t.segment as 'B2G' | 'B2B' | 'B2C';
+          if (seg in entry) entry[seg] += Number(t.revenue) / 1_000_000;
           monthMap.set(key, entry);
-        }
-      });
-      const trend = monthNames.slice(0, currentMonth + 1).map(m => ({
-        month: m,
-        ...(monthMap.get(m) || { B2G: 0, B2B: 0, B2C: 0 }),
-      }));
-      setMonthlyTrend(trend);
+        });
+        const trend = monthNames.slice(0, currentMonth + 1).map(m => ({
+          month: m,
+          ...(monthMap.get(m) || { B2G: 0, B2B: 0, B2C: 0 }),
+        }));
+        setMonthlyTrend(trend);
+      }
 
       setLoading(false);
     }
