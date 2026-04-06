@@ -28,6 +28,12 @@ interface InvoiceRow {
   account_name?: string;
 }
 
+interface DealRow {
+  value: number;
+  segment: string;
+  updated_at: string;
+}
+
 const MONTHS = [
   { value: '01', label: 'Januari' }, { value: '02', label: 'Februari' },
   { value: '03', label: 'Maret' }, { value: '04', label: 'April' },
