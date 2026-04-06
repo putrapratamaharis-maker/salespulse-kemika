@@ -521,11 +521,13 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             </div>
 
             {/* Margin, Probability, Date */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
-              </div>
+            <div className={`grid gap-3 ${stage === 'invoice_issued' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              {stage !== 'invoice_issued' && (
+                <div className="space-y-1.5">
+                  <Label>{stage === 'po_secured' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
+                  <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label>Probability (%)</Label>
                 <Input type="number" min={0} max={100} step="0.01" value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
@@ -545,7 +547,10 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
-              <Button type="submit">Simpan Perubahan</Button>
+              <Button type="submit" disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                {isNewInvoiceTransition ? 'Simpan & Buat Invoice' : 'Simpan Perubahan'}
+              </Button>
             </div>
           </form>
           )}
