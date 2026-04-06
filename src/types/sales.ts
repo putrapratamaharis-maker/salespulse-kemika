@@ -114,6 +114,17 @@ export function formatIDRFull(value: number): string {
   return `Rp ${value.toLocaleString('id-ID')}`;
 }
 
+export function formatNumIDR(value: number): string {
+  return value.toLocaleString('id-ID');
+}
+
+export function formatIDRAxis(value: number): string {
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(1)}M`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(0)}Jt`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(0)}Rb`;
+  return String(value);
+}
+
 export function formatIDR(value: number): string {
   if (value >= 1_000_000_000) {
     return `Rp ${(value / 1_000_000_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} M`;
