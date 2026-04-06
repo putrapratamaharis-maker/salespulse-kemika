@@ -32,11 +32,13 @@ export function ManagerDashboard() {
   const [revenueMTD, setRevenueMTD] = useState(0);
   const [revenueYTD, setRevenueYTD] = useState(0);
   const [grossProfitMTD, setGrossProfitMTD] = useState(0);
+  const [grossProfitYTD, setGrossProfitYTD] = useState(0);
   const [totalTarget, setTotalTarget] = useState(0);
+  const [totalTargetYear, setTotalTargetYear] = useState(0);
   const [outstandingAR, setOutstandingAR] = useState(0);
-  const [pipeline30, setPipeline30] = useState(0);
-  const [pipeline60, setPipeline60] = useState(0);
+  const [totalPipeline, setTotalPipeline] = useState(0);
   const [weightedForecast, setWeightedForecast] = useState(0);
+  const [cashIn, setCashIn] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
