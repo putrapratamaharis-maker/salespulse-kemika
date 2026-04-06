@@ -1165,6 +1165,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_active_sales_profiles: {
+        Args: never
+        Returns: {
+          full_name: string
+          user_id: string
+        }[]
+      }
+      get_all_deal_products_pipeline: {
+        Args: never
+        Returns: {
+          category: string
+          created_at: string
+          deal_id: string
+          id: string
+          other_cost: number
+          price_per_unit: number
+          product_name: string
+          qty: number
+          unit: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "deal_products"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_all_deals_pipeline: {
+        Args: never
+        Returns: {
+          account_id: string
+          created_at: string
+          days_in_stage: number
+          expected_close_date: string
+          expected_margin: number | null
+          id: string
+          location: string | null
+          name: string
+          notes: string | null
+          po_number: string | null
+          probability: number
+          sales_id: string
+          segment: string
+          stage: Database["public"]["Enums"]["deal_stage"]
+          updated_at: string
+          value: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "deals"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_executive_summary_kpis: {
         Args: { _current_month: number; _current_year: number }
         Returns: Json
