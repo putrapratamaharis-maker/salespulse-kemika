@@ -374,7 +374,7 @@ const MyPipeline = () => {
                   {nearingClose.map(d => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={`${d.probability}%`} /></TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>
