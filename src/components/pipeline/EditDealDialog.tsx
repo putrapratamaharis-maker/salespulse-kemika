@@ -329,77 +329,15 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               </Select>
             </div>
 
-            {/* No. PO/SP/SPK or No. Invoice - shown for final stages */}
-            {(stage === 'po_secured' || stage === 'invoice_issued') && (
+            {/* No. PO/SP/SPK - shown only for po_secured */}
+            {stage === 'po_secured' && (
               <div className="space-y-1.5">
-                <Label>{stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'} <span className="text-destructive">*</span></Label>
+                <Label>No. PO/SP/SPK <span className="text-destructive">*</span></Label>
                 <Input
                   value={poNumber}
                   onChange={e => setPoNumber(e.target.value)}
-                  placeholder={stage === 'invoice_issued' ? 'Contoh: INV-2026-001' : 'Contoh: PO-2026-001'}
+                  placeholder="Contoh: PO-2026-001"
                 />
-              </div>
-            )}
-
-            {/* Invoice Detail Fields - shown when stage is invoice_issued */}
-            {stage === 'invoice_issued' && (
-              <div className="rounded-md border border-primary/30 bg-primary/5 p-4 space-y-4">
-                <p className="text-sm font-semibold text-foreground">Detail Invoice</p>
-
-                {/* Gross Margin + Gross Profit */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Gross Margin (%)</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step="0.01"
-                      value={expectedMargin}
-                      onChange={e => handleMarginChangeForInvoice(e.target.value)}
-                      placeholder="0-100"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Gross Profit (Rp)</Label>
-                    <Input
-                      type="number"
-                      value={grossProfit}
-                      onChange={e => setGrossProfit(e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                </div>
-
-                {/* Issue Date & Due Date */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Tanggal Terbit <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="date"
-                      value={invoiceIssueDate}
-                      onChange={e => setInvoiceIssueDate(e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-xs">Jatuh Tempo <span className="text-destructive">*</span></Label>
-                    <Input
-                      type="date"
-                      value={invoiceDueDate}
-                      onChange={e => setInvoiceDueDate(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                {/* Paid Date */}
-                <div className="space-y-1.5">
-                  <Label className="text-xs">Tanggal Bayar (opsional)</Label>
-                  <Input
-                    type="date"
-                    value={invoicePaidDate}
-                    onChange={e => setInvoicePaidDate(e.target.value)}
-                  />
-                </div>
               </div>
             )}
 
