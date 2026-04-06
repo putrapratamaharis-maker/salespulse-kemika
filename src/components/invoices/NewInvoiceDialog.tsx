@@ -47,6 +47,8 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
 
   const resetForm = () => {
     setInvoiceNumber('');
+    setPoNumber('');
+    setPoDate(undefined);
     setAccountId('');
     setSegment('B2B');
     setNetSales('');
