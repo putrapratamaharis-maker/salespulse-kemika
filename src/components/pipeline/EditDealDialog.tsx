@@ -12,6 +12,8 @@ import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
+import { format } from 'date-fns';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
