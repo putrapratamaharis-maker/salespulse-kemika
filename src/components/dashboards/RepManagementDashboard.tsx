@@ -113,7 +113,7 @@ export function RepManagementDashboard() {
                   <TableRow key={c.channel}>
                     <TableCell className="text-sm font-medium">{c.channel}</TableCell>
                     <TableCell className="text-sm">{c.accountCount}</TableCell>
-                    <TableCell className="text-sm font-medium">{formatIDRFull(c.revenue)}</TableCell>
+                    <TableCell className="text-sm font-medium">{formatNumIDR(c.revenue)}</TableCell>
                     <TableCell>
                       <StatusBadge status={c.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(c.marginPct)} />
                     </TableCell>
