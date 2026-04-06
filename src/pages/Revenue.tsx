@@ -119,14 +119,14 @@ const Revenue = () => {
     return filtered;
   }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
-  // Filtered deals (same period filters as invoices, using updated_at as the date reference)
+  // Filtered deals (same period filters as invoices, using revenue_date as the date reference)
   const filteredDeals = useMemo(() => {
-    let filtered = allDeals;
+    let filtered = allDeals.filter(d => d.revenue_date);
     if (filterYear !== 'all') {
-      filtered = filtered.filter(d => d.updated_at.startsWith(filterYear));
+      filtered = filtered.filter(d => d.revenue_date!.startsWith(filterYear));
     }
     if (filterMonth !== 'all') {
-      filtered = filtered.filter(d => d.updated_at.slice(5, 7) === filterMonth);
+      filtered = filtered.filter(d => d.revenue_date!.slice(5, 7) === filterMonth);
     }
     return filtered;
   }, [allDeals, filterYear, filterMonth]);

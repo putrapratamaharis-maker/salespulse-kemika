@@ -218,7 +218,7 @@ const MyPipeline = () => {
       stage: newStage,
       days_in_stage: 0,
       ...(isFinalStage ? { probability: 100 } : {}),
-      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate } : {}),
+      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate, revenue_date: extraData.closeDate } : {}),
     };
     const { error } = await supabase.from('deals').update(updatePayload).eq('id', dealId);
     if (error) {
