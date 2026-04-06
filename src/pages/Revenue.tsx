@@ -3,7 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search, Trophy } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
 import EditInvoiceDialog from '@/components/invoices/EditInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
