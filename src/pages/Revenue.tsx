@@ -28,6 +28,12 @@ interface InvoiceRow {
   account_name?: string;
 }
 
+interface DealRow {
+  value: number;
+  segment: string;
+  updated_at: string;
+}
+
 const MONTHS = [
   { value: '01', label: 'Januari' }, { value: '02', label: 'Februari' },
   { value: '03', label: 'Maret' }, { value: '04', label: 'April' },
@@ -40,10 +46,10 @@ const MONTHS = [
 const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [allInvoices, setAllInvoices] = useState<InvoiceRow[]>([]);
+  const [allDeals, setAllDeals] = useState<DealRow[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [totalWon, setTotalWon] = useState(0);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -60,7 +66,7 @@ const Revenue = () => {
         .order('issue_date', { ascending: false }),
       supabase
         .from('deals')
-        .select('value')
+        .select('value, segment, updated_at')
         .in('stage', ['po_secured', 'invoice_issued']),
     ]);
 
@@ -76,7 +82,11 @@ const Revenue = () => {
       account_name: row.accounts?.name || '',
     }));
     setAllInvoices(mapped);
-    setTotalWon((dealsRes.data || []).reduce((s: number, d: any) => s + (d.value || 0), 0));
+    setAllDeals((dealsRes.data || []).map((d: any) => ({
+      value: d.value || 0,
+      segment: d.segment || '',
+      updated_at: d.updated_at || '',
+    })));
     setLoading(false);
   };
 
@@ -109,6 +119,19 @@ const Revenue = () => {
     return filtered;
   }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
+  // Filtered deals (same period filters as invoices, using updated_at as the date reference)
+  const filteredDeals = useMemo(() => {
+    let filtered = allDeals;
+    if (filterYear !== 'all') {
+      filtered = filtered.filter(d => d.updated_at.startsWith(filterYear));
+    }
+    if (filterMonth !== 'all') {
+      filtered = filtered.filter(d => d.updated_at.slice(5, 7) === filterMonth);
+    }
+    return filtered;
+  }, [allDeals, filterYear, filterMonth]);
+
+  const totalWon = filteredDeals.reduce((s, d) => s + d.value, 0);
   const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
   const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
   const marginPct = totalRevenue > 0 ? (totalGP / totalRevenue) * 100 : 0;
