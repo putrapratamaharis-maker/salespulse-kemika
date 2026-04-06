@@ -135,6 +135,21 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
           <DialogTitle>Buat Invoice Baru</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 pt-2">
+          {/* Dasar PO/SP/SPK */}
+          <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dasar Pembuatan Invoice</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label>No. PO/SP/SPK</Label>
+                <Input placeholder="Contoh: PO-2026-001" value={poNumber} onChange={e => setPoNumber(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label>PO/Won/Closed Date</Label>
+                <DatePicker date={poDate} onSelect={setPoDate} />
+              </div>
+            </div>
+          </div>
+
           <div className="space-y-1.5">
             <Label>Nomor Invoice *</Label>
             <Input placeholder="INV-2026-001" value={invoiceNumber} onChange={e => setInvoiceNumber(e.target.value)} />
