@@ -119,6 +119,19 @@ const Revenue = () => {
     return filtered;
   }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
+  // Filtered deals (same period filters as invoices, using updated_at as the date reference)
+  const filteredDeals = useMemo(() => {
+    let filtered = allDeals;
+    if (filterYear !== 'all') {
+      filtered = filtered.filter(d => d.updated_at.startsWith(filterYear));
+    }
+    if (filterMonth !== 'all') {
+      filtered = filtered.filter(d => d.updated_at.slice(5, 7) === filterMonth);
+    }
+    return filtered;
+  }, [allDeals, filterYear, filterMonth]);
+
+  const totalWon = filteredDeals.reduce((s, d) => s + d.value, 0);
   const totalRevenue = invoices.reduce((s, i) => s + i.net_sales, 0);
   const totalGP = invoices.reduce((s, i) => s + i.gross_profit, 0);
   const marginPct = totalRevenue > 0 ? (totalGP / totalRevenue) * 100 : 0;
