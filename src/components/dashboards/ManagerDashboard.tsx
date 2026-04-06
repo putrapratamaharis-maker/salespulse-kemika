@@ -147,7 +147,7 @@ export function ManagerDashboard() {
           if (seg in entry) entry[seg] += Number(t.revenue) / 1_000_000;
           monthMap.set(key, entry);
         });
-        const trend = monthNames.slice(0, currentMonth + 1).map(m => ({
+        const trend = monthNames.slice(0, selMonth).map(m => ({
           month: m,
           ...(monthMap.get(m) || { B2G: 0, B2B: 0, B2C: 0 }),
         }));
@@ -157,7 +157,7 @@ export function ManagerDashboard() {
       setLoading(false);
     }
     fetchDashboardData();
-  }, []);
+  }, [selYear, selMonth]);
 
   // Fetch products from database
   useEffect(() => {
