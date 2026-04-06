@@ -265,7 +265,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       <DialogTrigger asChild>
         <Button size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" />
-          New Lead
+          New Leads / Deal
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0">
