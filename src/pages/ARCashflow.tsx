@@ -110,7 +110,7 @@ const ARCashflow = () => {
             <TableHeader>
               <TableRow>
                 <TableHead className="text-xs">Invoice #</TableHead>
-                <TableHead className="text-xs">Amount</TableHead>
+                <TableHead className="text-xs">Amount (Rp)</TableHead>
                 <TableHead className="text-xs">Issue Date</TableHead>
                 <TableHead className="text-xs">Due Date</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
