@@ -258,7 +258,7 @@ export function ManagerDashboard() {
                     <TableHead className="text-xs w-8">#</TableHead>
                     <TableHead className="text-xs">Customer</TableHead>
                     <TableHead className="text-xs">Segment</TableHead>
-                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
                     <TableHead className="text-xs text-right">Kontribusi</TableHead>
                   </TableRow>
                 </TableHeader>
