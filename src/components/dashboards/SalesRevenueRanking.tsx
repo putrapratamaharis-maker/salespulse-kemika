@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Trophy, Loader2 } from 'lucide-react';
-import { formatIDRFull, formatPercent } from '@/types/sales';
+import { formatNumIDR, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 
 interface SalesRanking {
