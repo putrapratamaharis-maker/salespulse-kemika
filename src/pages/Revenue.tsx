@@ -119,14 +119,14 @@ const Revenue = () => {
     return filtered;
   }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
-  // Filtered deals (same period filters as invoices, using revenue_date as the date reference)
+  // Filtered deals (using expected_close_date / PO/Won/Closed Date)
   const filteredDeals = useMemo(() => {
-    let filtered = allDeals.filter(d => d.revenue_date);
+    let filtered = allDeals.filter(d => d.expected_close_date);
     if (filterYear !== 'all') {
-      filtered = filtered.filter(d => d.revenue_date!.startsWith(filterYear));
+      filtered = filtered.filter(d => d.expected_close_date.startsWith(filterYear));
     }
     if (filterMonth !== 'all') {
-      filtered = filtered.filter(d => d.revenue_date!.slice(5, 7) === filterMonth);
+      filtered = filtered.filter(d => d.expected_close_date.slice(5, 7) === filterMonth);
     }
     return filtered;
   }, [allDeals, filterYear, filterMonth]);
