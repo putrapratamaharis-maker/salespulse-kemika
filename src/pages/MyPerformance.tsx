@@ -8,15 +8,25 @@ import { DualKPICard } from '@/components/DualKPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   Target, DollarSign, Percent, BarChart3, TrendingUp, AlertTriangle,
   Clock, FileWarning, Activity, CheckCircle2, CalendarClock, FileText, Loader2,
-  Banknote, CreditCard
+  Banknote, CreditCard, Calendar
 } from 'lucide-react';
 import {
   ResponsiveContainer, LineChart, Line, BarChart, Bar, XAxis, YAxis,
   CartesianGrid, Tooltip, Legend
 } from 'recharts';
+
+const MONTH_OPTIONS = [
+  { value: '1', label: 'Januari' }, { value: '2', label: 'Februari' }, { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' }, { value: '5', label: 'Mei' }, { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' }, { value: '8', label: 'Agustus' }, { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' }, { value: '11', label: 'November' }, { value: '12', label: 'Desember' },
+];
+const currentDate = new Date();
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => String(currentDate.getFullYear() - 2 + i));
 
 const MARGIN_THRESHOLD = 17;
 const MIN_WEEKLY_ACTIVITIES = 5;
@@ -78,6 +88,14 @@ const MyPerformance = () => {
   const [acts, setActs] = useState<ActivityRow[]>([]);
   const [totalTargetYear, setTotalTargetYear] = useState(0);
 
+  const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
+
+  const selYear = Number(selectedYear);
+  const selMonth = Number(selectedMonth);
+  const monthStr = `${selectedYear}-${String(selMonth).padStart(2, '0')}`;
+  const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
+
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
       navigate('/my-performance/kpis', { replace: true });
@@ -85,19 +103,16 @@ const MyPerformance = () => {
   }, [currentUser.orgRole, navigate]);
 
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const monthName = now.toLocaleString('id-ID', { month: 'long' });
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       const salesId = currentUser.id;
-      const currentYear = String(now.getFullYear());
       const [invRes, dealRes, targetRes, yearTargetsRes, actRes] = await Promise.all([
         supabase.from('invoices').select('*').eq('sales_id', salesId),
         supabase.from('deals').select('*').eq('sales_id', salesId),
-        supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
-        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${currentYear}-%`),
+        supabase.from('targets').select('*').eq('user_id', salesId).eq('month', monthStr).limit(1),
+        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${selectedYear}-%`),
         supabase.from('sales_activities').select('*').eq('sales_id', salesId),
       ]);
       setInv((invRes.data || []) as InvoiceRow[]);
@@ -109,11 +124,11 @@ const MyPerformance = () => {
       setLoading(false);
     }
     fetchData();
-  }, [currentUser.id, currentMonth]);
+  }, [currentUser.id, monthStr]);
 
   // ===== KPI Calculations =====
-  const currentMonthNum = now.getMonth();
-  const currentYearNum = now.getFullYear();
+  const currentMonthNum = selMonth - 1; // 0-indexed
+  const currentYearNum = selYear;
 
   const revenueStages = ['po_secured', 'invoice_issued'];
   const wonDeals = dls.filter(d => revenueStages.includes(d.stage));
@@ -218,16 +233,41 @@ const MyPerformance = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
-        <p className="text-sm text-muted-foreground">
-          Personal Sales Control Cockpit — {currentUser.name}
-        </p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
+          <p className="text-sm text-muted-foreground">
+            Personal Sales Control Cockpit — {currentUser.name}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEAR_OPTIONS.map(y => (
+                <SelectItem key={y} value={y}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTH_OPTIONS.map(m => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="MY ACTUAL REVENUE YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`MY TOTAL REVENUE TARGET ${now.getFullYear()}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${now.getFullYear()} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
+        <KPICard label={`MY TOTAL REVENUE TARGET ${selectedYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${selectedYear} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
         <KPICard label="MY ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label={`MY REVENUE TARGET ${monthName}`} value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Revenue target Anda untuk bulan ${monthName} dari tabel targets`} />
         <KPICard label={`MY TARGET ACHIEVEMENT ${monthName}`} value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip={`Revenue MTD ÷ Revenue Target × 100% untuk bulan ${monthName}`} />
