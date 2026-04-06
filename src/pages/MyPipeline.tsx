@@ -409,7 +409,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
                       <TableCell className="text-sm text-status-red font-semibold">{d.daysInStage}d</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
