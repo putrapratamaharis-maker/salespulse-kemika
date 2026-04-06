@@ -70,7 +70,7 @@ const Products = () => {
     fetchData();
   }, []);
 
-  const formatIDR = (val: number) => {
+  const formatIDRFull = (val: number) => {
     if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}B`;
     if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(0)}M`;
     if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)}K`;

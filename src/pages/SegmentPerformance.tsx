@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
-import { formatIDRFull, formatIDR, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
