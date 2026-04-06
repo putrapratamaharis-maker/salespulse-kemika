@@ -91,15 +91,19 @@ const MyPerformance = () => {
     async function fetchData() {
       setLoading(true);
       const salesId = currentUser.id;
-      const [invRes, dealRes, targetRes, actRes] = await Promise.all([
+      const currentYear = String(now.getFullYear());
+      const [invRes, dealRes, targetRes, yearTargetsRes, actRes] = await Promise.all([
         supabase.from('invoices').select('*').eq('sales_id', salesId),
         supabase.from('deals').select('*').eq('sales_id', salesId),
         supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
+        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${currentYear}-%`),
         supabase.from('sales_activities').select('*').eq('sales_id', salesId),
       ]);
       setInv((invRes.data || []) as InvoiceRow[]);
       setDls((dealRes.data || []) as DealRow[]);
       setTgt((targetRes.data?.[0] as TargetRow) || null);
+      const yearTotal = (yearTargetsRes.data || []).reduce((s: number, t: any) => s + (t.revenue_target || 0), 0);
+      setTotalTargetYear(yearTotal);
       setActs((actRes.data || []) as ActivityRow[]);
       setLoading(false);
     }
