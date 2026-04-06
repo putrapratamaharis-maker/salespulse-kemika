@@ -344,7 +344,7 @@ const MyPipeline = () => {
                 <div className="w-28 shrink-0"><StatusBadge status={s.color} label={s.label} /></div>
                 <div className="flex-1"><Progress value={(s.value / maxStageValue) * 100} className="h-2" /></div>
                 <span className="text-sm font-medium w-12 text-right">{s.count}</span>
-                <span className="text-sm text-muted-foreground w-28 text-right">{formatIDRFull(s.value)}</span>
+                <span className="text-sm text-muted-foreground w-28 text-right">{formatNumIDR(s.value)}</span>
               </div>
             ))}
           </div>
