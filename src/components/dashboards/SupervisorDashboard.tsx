@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Target, DollarSign, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

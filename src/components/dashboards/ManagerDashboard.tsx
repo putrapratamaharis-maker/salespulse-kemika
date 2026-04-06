@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
