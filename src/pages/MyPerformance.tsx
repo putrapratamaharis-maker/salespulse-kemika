@@ -228,7 +228,7 @@ const MyPerformance = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText className="bg-kpi-indigo " borderAccent="border-l-kpi-indigo-border" tooltip="Total gross_profit dari invoice Anda di bulan berjalan" />
+        <KPICard label="GP Contribution" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText className="bg-kpi-indigo " borderAccent="border-l-kpi-indigo-border" tooltip="Total gross_profit dari invoice Anda di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label="Total Pipeline Value" value={formatIDRFull(pipelineValue)} changeLabel={`${openDeals.length} open deals`} icon={BarChart3} autoFitText className="bg-kpi-orange " borderAccent="border-l-kpi-orange-border" tooltip="Total nilai deal aktif Anda (Prospect, Quotation, Negotiation)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-cyan " borderAccent="border-l-kpi-cyan-border" tooltip="Σ (value × probability / 100) dari deal aktif Anda, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
         <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice Anda yang sudah dibayar (memiliki paid_date)" />
