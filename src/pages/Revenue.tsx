@@ -304,8 +304,8 @@ const Revenue = () => {
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(inv.gross_profit)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>

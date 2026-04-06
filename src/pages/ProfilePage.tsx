@@ -198,8 +198,8 @@ const ProfilePage = () => {
                   return (
                     <TableRow key={inv.id}>
                       <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(Number(inv.net_sales))}</TableCell>
-                      <TableCell className="text-sm">{formatIDRFull(Number(inv.gross_profit))}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(Number(inv.net_sales))}</TableCell>
+                      <TableCell className="text-sm">{formatNumIDR(Number(inv.gross_profit))}</TableCell>
                       <TableCell className="text-sm">{formatPercent(m)}</TableCell>
                       <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={m >= 17 ? 'Yes' : 'No'} /></TableCell>
                     </TableRow>

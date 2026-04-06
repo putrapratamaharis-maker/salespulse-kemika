@@ -173,7 +173,7 @@ export function SupervisorDashboard() {
                     <TableCell>
                       <StatusBadge status={d.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(d.marginPct)} />
                     </TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(d.pipelineValue)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(d.pipelineValue)}</TableCell>
                     <TableCell className="text-sm">{d.activityCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">

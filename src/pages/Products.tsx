@@ -302,7 +302,7 @@ const Products = () => {
                             <Badge variant="secondary" className="text-[10px] font-normal">{p.category}</Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold text-sm tabular-nums">
-                            {formatIDRFull(p.totalRevenue)}
+                            {formatNumIDR(p.totalRevenue)}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
                             {p.unitsSold.toLocaleString()}

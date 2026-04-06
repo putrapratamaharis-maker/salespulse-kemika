@@ -117,8 +117,8 @@ export function RepManagementDashboard() {
                     <TableCell>
                       <StatusBadge status={c.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(c.marginPct)} />
                     </TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(c.outstanding)}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(c.pipeline)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(c.outstanding)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(c.pipeline)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

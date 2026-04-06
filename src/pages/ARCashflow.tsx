@@ -122,7 +122,7 @@ const ARCashflow = () => {
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.issue_date)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.due_date)}</TableCell>
                     <TableCell>
