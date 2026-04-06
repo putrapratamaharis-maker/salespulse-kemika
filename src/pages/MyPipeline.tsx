@@ -327,8 +327,8 @@ const MyPipeline = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDR(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Deal yang expected close date-nya dalam bulan depan" />
-        <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDR(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Deal yang sudah > 14 hari tanpa perubahan stage" />
+        <KPICard label="Next Month Closing" value={String(nextMonthClose.length)} changeLabel={nextMonthClose.length > 0 ? formatIDRFull(nextMonthClose.reduce((s, d) => s + d.value, 0)) : 'No deals'} icon={CalendarClock} status={nextMonthClose.length > 0 ? 'green' : 'yellow'} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Deal yang expected close date-nya dalam bulan depan" />
+        <KPICard label="Deals Stuck (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDRFull(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Deal yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
@@ -344,7 +344,7 @@ const MyPipeline = () => {
                 <div className="w-28 shrink-0"><StatusBadge status={s.color} label={s.label} /></div>
                 <div className="flex-1"><Progress value={(s.value / maxStageValue) * 100} className="h-2" /></div>
                 <span className="text-sm font-medium w-12 text-right">{s.count}</span>
-                <span className="text-sm text-muted-foreground w-28 text-right">{formatIDR(s.value)}</span>
+                <span className="text-sm text-muted-foreground w-28 text-right">{formatIDRFull(s.value)}</span>
               </div>
             ))}
           </div>
@@ -374,7 +374,7 @@ const MyPipeline = () => {
                   {nearingClose.map(d => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={`${d.probability}%`} /></TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>
@@ -409,7 +409,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
                       <TableCell className="text-sm text-status-red font-semibold">{d.daysInStage}d</TableCell>
-                      <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -455,7 +455,7 @@ const MyPipeline = () => {
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
                       <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
-                      <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
                       <TableCell className="text-sm">{d.probability}%</TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
                     </TableRow>

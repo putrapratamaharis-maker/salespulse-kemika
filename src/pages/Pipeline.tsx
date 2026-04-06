@@ -194,7 +194,7 @@ const Pipeline = () => {
             <BarChart data={salesComparisonData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
               <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-              <YAxis tickFormatter={(v: number) => formatIDR(v)} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={90} />
+              <YAxis tickFormatter={(v: number) => formatIDRFull(v)} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={90} />
               <Tooltip content={({ active, payload, label }) => {
                 if (!active || !payload?.length) return null;
                 const data = payload[0]?.payload;
@@ -202,7 +202,7 @@ const Pipeline = () => {
                   <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs space-y-1">
                     <p className="font-semibold text-foreground">{label}</p>
                     {payload.map((entry: any, i: number) => (
-                      <p key={i} style={{ color: entry.color }}>{entry.name}: {formatIDR(entry.value as number)}</p>
+                      <p key={i} style={{ color: entry.color }}>{entry.name}: {formatIDRFull(entry.value as number)}</p>
                     ))}
                     <p className="text-muted-foreground">Jumlah Deals: {data?.deals}</p>
                   </div>
@@ -237,7 +237,7 @@ const Pipeline = () => {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip formatter={(val: number) => formatIDR(val)} />
+              <Tooltip formatter={(val: number) => formatIDRFull(val)} />
             </PieChart>
           </ResponsiveContainer>
         </CardContent>

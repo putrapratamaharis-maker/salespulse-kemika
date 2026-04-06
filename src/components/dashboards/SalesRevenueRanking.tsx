@@ -42,8 +42,8 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
               <TableCell className="text-xs"><RankMedal rank={i + 1} /></TableCell>
               <TableCell className="text-xs font-medium">{sp.name}</TableCell>
               <TableCell className="text-xs text-muted-foreground">{sp.segment}</TableCell>
-              <TableCell className="text-xs text-right font-semibold">{formatIDR(sp.revenue)}</TableCell>
-              <TableCell className="text-xs text-right text-muted-foreground">{formatIDR(sp.target)}</TableCell>
+              <TableCell className="text-xs text-right font-semibold">{formatIDRFull(sp.revenue)}</TableCell>
+              <TableCell className="text-xs text-right text-muted-foreground">{formatIDRFull(sp.target)}</TableCell>
               <TableCell className="text-xs text-right">
                 <span className={sp.achievementPct >= 100 ? 'text-status-green font-semibold' : sp.achievementPct >= 80 ? 'text-status-yellow font-semibold' : 'text-status-red font-semibold'}>
                   {formatPercent(sp.achievementPct)}

@@ -120,7 +120,7 @@ export function SalesPersonDashboard() {
                   {nearingDeals.map((d: any) => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={d.stage.replace('_', ' ')} /></TableCell>
                       <TableCell className="text-sm">{formatDate(d.expected_close_date)}</TableCell>
                     </TableRow>
@@ -154,7 +154,7 @@ export function SalesPersonDashboard() {
                   {overdueInvoices.map((inv: any) => (
                     <TableRow key={inv.id}>
                       <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
                       <TableCell className="text-sm text-status-red">{formatDate(inv.due_date)}</TableCell>
                     </TableRow>
                   ))}

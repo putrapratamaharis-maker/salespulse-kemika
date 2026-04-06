@@ -77,7 +77,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-green">Current (Not Due)</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(current.reduce((s, i) => s + i.net_sales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDRFull(current.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{current.length} invoices</div>
           </CardContent>
         </Card>
@@ -86,7 +86,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-yellow">1-30 Days Overdue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(overdue30.reduce((s, i) => s + i.net_sales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDRFull(overdue30.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{overdue30.length} invoices</div>
           </CardContent>
         </Card>
@@ -95,7 +95,7 @@ const ARCashflow = () => {
             <CardTitle className="text-sm font-semibold text-status-red">31-60 Days Overdue</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatIDR(overdue60.reduce((s, i) => s + i.net_sales, 0))}</div>
+            <div className="text-2xl font-bold">{formatIDRFull(overdue60.reduce((s, i) => s + i.net_sales, 0))}</div>
             <div className="text-xs text-muted-foreground">{overdue60.length} invoices</div>
           </CardContent>
         </Card>
@@ -122,7 +122,7 @@ const ARCashflow = () => {
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.issue_date)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.due_date)}</TableCell>
                     <TableCell>

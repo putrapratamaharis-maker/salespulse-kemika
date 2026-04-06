@@ -56,11 +56,11 @@ function RevenueMovementChart({ data }: { data: MonthlyMovement[] }) {
           <div className="flex items-center gap-4 text-xs">
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">YTD Realisasi:</span>
-              <span className="font-bold text-foreground">{formatIDR(totalRealisasi)}</span>
+              <span className="font-bold text-foreground">{formatIDRFull(totalRealisasi)}</span>
             </div>
             <div className="flex items-center gap-3">
               <span className="text-muted-foreground">YTD Target:</span>
-              <span className="font-bold text-foreground">{formatIDR(totalTarget)}</span>
+              <span className="font-bold text-foreground">{formatIDRFull(totalTarget)}</span>
             </div>
             <div className={`px-2 py-0.5 rounded-full font-bold ${
               achievementPct >= 100 ? 'bg-emerald-500/15 text-emerald-600' :

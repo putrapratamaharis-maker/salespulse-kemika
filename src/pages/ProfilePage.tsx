@@ -118,7 +118,7 @@ const ProfilePage = () => {
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <KPICard label="Revenue MTD" value={formatIDR(revenue)} icon={DollarSign} className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
+            <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
             <KPICard label="Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
             <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
           </div>
@@ -142,7 +142,7 @@ const ProfilePage = () => {
                 {deals.map(d => (
                   <TableRow key={d.id}>
                     <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(Number(d.value))}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(Number(d.value))}</TableCell>
                     <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={d.stage.replace('_', ' ')} /></TableCell>
                     <TableCell className="text-sm">{d.probability}%</TableCell>
                     <TableCell className="text-sm">{formatDate(d.expected_close_date)}</TableCell>
@@ -198,8 +198,8 @@ const ProfilePage = () => {
                   return (
                     <TableRow key={inv.id}>
                       <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(Number(inv.net_sales))}</TableCell>
-                      <TableCell className="text-sm">{formatIDR(Number(inv.gross_profit))}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(Number(inv.net_sales))}</TableCell>
+                      <TableCell className="text-sm">{formatIDRFull(Number(inv.gross_profit))}</TableCell>
                       <TableCell className="text-sm">{formatPercent(m)}</TableCell>
                       <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={m >= 17 ? 'Yes' : 'No'} /></TableCell>
                     </TableRow>

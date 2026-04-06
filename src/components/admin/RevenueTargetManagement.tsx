@@ -979,9 +979,9 @@ export function RevenueTargetManagement() {
                         {Array.from({ length: 12 }, (_, i) => {
                           const m = `${selYear}-${String(i + 1).padStart(2, '0')}`;
                           const val = months[m];
-                          return <TableCell key={i} className="text-[10px] text-center px-1 py-1.5">{val && val.revenue > 0 ? formatIDR(val.revenue) : <span className="text-muted-foreground">-</span>}</TableCell>;
+                          return <TableCell key={i} className="text-[10px] text-center px-1 py-1.5">{val && val.revenue > 0 ? formatIDRFull(val.revenue) : <span className="text-muted-foreground">-</span>}</TableCell>;
                         })}
-                        <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDR(segTotal)}</TableCell>
+                        <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDRFull(segTotal)}</TableCell>
                       </TableRow>
                     );
                   })}
@@ -991,9 +991,9 @@ export function RevenueTargetManagement() {
                       {Array.from({ length: 12 }, (_, i) => {
                         const m = `${selYear}-${String(i + 1).padStart(2, '0')}`;
                         const total = Object.values(individualMonthlyMatrix).reduce((s, months) => s + (months[m]?.revenue || 0), 0);
-                        return <TableCell key={i} className="text-[10px] text-center font-bold px-1 py-1.5">{total > 0 ? formatIDR(total) : '-'}</TableCell>;
+                        return <TableCell key={i} className="text-[10px] text-center font-bold px-1 py-1.5">{total > 0 ? formatIDRFull(total) : '-'}</TableCell>;
                       })}
-                      <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDR(individualTotals.revenue)}</TableCell>
+                      <TableCell className="text-[10px] text-center font-bold px-1 py-1.5">{formatIDRFull(individualTotals.revenue)}</TableCell>
                     </TableRow>
                   )}
                 </TableBody>
@@ -1056,7 +1056,7 @@ export function RevenueTargetManagement() {
               <div className="space-y-1">
                 <Label className="text-xs">Revenue Target (Rp)</Label>
                 {detailMode === 'view' ? (
-                  <p className="text-sm font-bold">{formatIDR(detailRow.revenue_target)}</p>
+                  <p className="text-sm font-bold">{formatIDRFull(detailRow.revenue_target)}</p>
                 ) : (
                   <Input type="number" className="h-8 text-xs" value={editRevenue || ''} onChange={e => setEditRevenue(parseFloat(e.target.value) || 0)} />
                 )}
