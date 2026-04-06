@@ -86,6 +86,11 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
   const [poNumber, setPoNumber] = useState('');
+  // Invoice-specific fields
+  const [invoiceIssueDate, setInvoiceIssueDate] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [invoicePaidDate, setInvoicePaidDate] = useState('');
+  const [grossProfit, setGrossProfit] = useState('');
 
   useEffect(() => {
     if (deal && open && mastersLoaded) {
@@ -99,6 +104,13 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
+      // Reset invoice fields
+      setInvoiceIssueDate(new Date().toISOString().split('T')[0]);
+      setInvoiceDueDate('');
+      setInvoicePaidDate('');
+      const margin = deal.expectedMargin || 0;
+      const gp = Math.round(deal.value * margin / 100);
+      setGrossProfit(gp > 0 ? String(gp) : '');
     }
   }, [deal, open, mastersLoaded]);
 
