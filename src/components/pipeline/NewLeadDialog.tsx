@@ -247,7 +247,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
-      poNumber: isInvoiceStage ? invoiceNumber.trim() : undefined,
+      poNumber: isInvoiceStage ? (poNumber.trim() || invoiceNumber.trim()) : (stage === 'po_secured' ? poNumber.trim() : undefined),
     };
 
     onAdd(newDeal);
