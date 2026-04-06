@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDRFull, formatDate } from '@/types/sales';
+import { formatIDRFull, formatNumIDR, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { CreditCard, AlertTriangle, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
