@@ -48,18 +48,43 @@ export function ManagerDashboard() {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  const monthName = now.toLocaleString('id-ID', { month: 'long' });
+
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
 
+      const currentYearStr = String(currentYear);
+
       // Use security definer RPC for company-wide data (bypasses RLS)
-      const [{ data: kpiData, error: kpiError }, { data: accounts }] = await Promise.all([
+      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: yearTargetsRes }, { data: invoicesYTD }, { data: pipelineDeals }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
           _current_year: currentYear,
-          _current_month: currentMonth + 1, // JS months are 0-indexed, SQL expects 1-indexed
+          _current_month: currentMonth + 1,
         }),
         supabase.from('accounts').select('id, name, segment, region'),
+        supabase.from('targets').select('revenue_target').like('month', `${currentYearStr}-%`),
+        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${currentYearStr}-01-01`).lte('issue_date', `${currentYearStr}-12-31`),
+        supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
       ]);
+
+      // Total Target Year
+      const yearTotal = (yearTargetsRes || []).reduce((s, t) => s + (t.revenue_target || 0), 0);
+      setTotalTargetYear(yearTotal);
+
+      // Gross Profit YTD & Cash-In from invoices
+      let gpYTD = 0;
+      let cashInTotal = 0;
+      (invoicesYTD || []).forEach(inv => {
+        gpYTD += Number(inv.gross_profit) || 0;
+        if (inv.paid_date) cashInTotal += Number(inv.net_sales) || 0;
+      });
+      setGrossProfitYTD(gpYTD);
+      setCashIn(cashInTotal);
+
+      // Total Pipeline
+      const pipelineTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0), 0);
+      setTotalPipeline(pipelineTotal);
 
       const allAccounts = accounts || [];
 
@@ -70,8 +95,6 @@ export function ManagerDashboard() {
         setRevenueYTD(Number(d.revenue_ytd) || 0);
         setTotalTarget(Number(d.total_target) || 0);
         setOutstandingAR(Number(d.outstanding_ar) || 0);
-        setPipeline30(Number(d.pipeline_30) || 0);
-        setPipeline60(Number(d.pipeline_60) || 0);
         setWeightedForecast(Number(d.weighted_forecast) || 0);
 
         // Segment revenue
