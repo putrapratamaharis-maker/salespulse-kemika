@@ -144,10 +144,10 @@ export function SupervisorDashboard() {
                 <TableRow>
                   <TableHead className="text-xs w-8">#</TableHead>
                   <TableHead className="text-xs">Sales Person</TableHead>
-                  <TableHead className="text-xs">Revenue MTD</TableHead>
+                   <TableHead className="text-xs">Revenue MTD (Rp)</TableHead>
                   <TableHead className="text-xs">Achievement</TableHead>
                   <TableHead className="text-xs">Margin %</TableHead>
-                  <TableHead className="text-xs">Pipeline</TableHead>
+                  <TableHead className="text-xs">Pipeline (Rp)</TableHead>
                   <TableHead className="text-xs">Activities</TableHead>
                   <TableHead className="text-xs">Alerts</TableHead>
                 </TableRow>
