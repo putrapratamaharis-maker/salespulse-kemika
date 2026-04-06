@@ -282,8 +282,8 @@ const Revenue = () => {
               <TableRow>
                 <TableHead className="text-xs">Invoice #</TableHead>
                 <TableHead className="text-xs">Akun</TableHead>
-                <TableHead className="text-xs">Net Sales</TableHead>
-                <TableHead className="text-xs">Gross Profit</TableHead>
+                <TableHead className="text-xs">Net Sales (Rp)</TableHead>
+                <TableHead className="text-xs">Gross Profit (Rp)</TableHead>
                 <TableHead className="text-xs">Margin %</TableHead>
                 <TableHead className="text-xs">Segment</TableHead>
                 <TableHead className="text-xs">Status</TableHead>
