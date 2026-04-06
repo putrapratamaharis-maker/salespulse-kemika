@@ -270,7 +270,7 @@ export function ManagerDashboard() {
                         <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="text-xs font-medium">{c.name}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">{formatIDRFull(c.revenue)}</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{formatNumIDR(c.revenue)}</TableCell>
                         <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
                       </TableRow>
                     );
