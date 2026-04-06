@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
-import { Deal, DealStage, Segment, formatIDR, formatDate } from '@/types/sales';
+import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
 import { CalendarClock, Percent } from 'lucide-react';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -273,7 +273,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                       <StatusBadge status={col.color} label={col.label} />
                       <span className="text-xs font-semibold text-muted-foreground">{col.deals.length}</span>
                     </div>
-                    <p className="text-xs font-bold text-foreground">{formatIDR(col.totalValue)}</p>
+                    <p className="text-xs font-bold text-foreground">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
                   {/* Deal Cards */}
@@ -340,7 +340,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
 
                         {/* Value row */}
                         <div className="flex items-center justify-between pt-1">
-                          <span className="text-xs font-bold text-foreground">{formatIDR(d.value)}</span>
+                          <span className="text-xs font-bold text-foreground">{formatIDRFull(d.value)}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded font-normal border-solid text-destructive bg-[sidebar-primary-foreground] bg-orange-100">{d.segment}</span>
                         </div>
 
