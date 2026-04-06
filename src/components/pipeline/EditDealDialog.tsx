@@ -93,6 +93,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoicePaidDate, setInvoicePaidDate] = useState('');
   const [grossProfit, setGrossProfit] = useState('');
+  // Original PO info (read-only, preserved across stage transitions)
+  const [originalPoNumber, setOriginalPoNumber] = useState('');
+  const [originalPoDate, setOriginalPoDate] = useState('');
 
   useEffect(() => {
     if (deal && open && mastersLoaded) {
