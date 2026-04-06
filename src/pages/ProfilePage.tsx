@@ -142,7 +142,7 @@ const ProfilePage = () => {
                 {deals.map(d => (
                   <TableRow key={d.id}>
                     <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                    <TableCell className="text-sm">{formatIDRFull(Number(d.value))}</TableCell>
+                    <TableCell className="text-sm">{formatNumIDR(Number(d.value))}</TableCell>
                     <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={d.stage.replace('_', ' ')} /></TableCell>
                     <TableCell className="text-sm">{d.probability}%</TableCell>
                     <TableCell className="text-sm">{formatDate(d.expected_close_date)}</TableCell>
