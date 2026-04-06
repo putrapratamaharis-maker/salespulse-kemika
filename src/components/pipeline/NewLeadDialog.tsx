@@ -491,6 +491,19 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             {stage === 'invoice_issued' && (
               <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                {/* PO info - read-only display */}
+                {(poNumber || poDate) && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">No. PO/SP/SPK</p>
+                      <p className="text-sm font-medium text-foreground">{poNumber || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">PO/Won/Closed Date</p>
+                      <p className="text-sm font-medium text-foreground">{poDate || '-'}</p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label>No. Invoice <span className="text-destructive">*</span></Label>
                   <Input
