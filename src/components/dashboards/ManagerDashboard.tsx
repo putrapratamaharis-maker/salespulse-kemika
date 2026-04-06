@@ -89,6 +89,7 @@ export function ManagerDashboard() {
         setGrossProfitMTD(Number(d.gp_mtd) || 0);
         setRevenueYTD(Number(d.revenue_ytd) || 0);
         setTotalTarget(Number(d.total_target) || 0);
+        setTotalTargetYear(Number(d.yearly_target) || 0);
         setOutstandingAR(Number(d.outstanding_ar) || 0);
         setWeightedForecast(Number(d.weighted_forecast) || 0);
 
