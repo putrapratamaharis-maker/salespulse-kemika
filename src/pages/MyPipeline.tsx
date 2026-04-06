@@ -86,7 +86,7 @@ const MyPipeline = () => {
       stage: d.stage as DealStage,
       probability: d.probability,
       expectedCloseDate: d.expected_close_date,
-      revenueDate: d.revenue_date || undefined,
+      
       createdAt: d.created_at,
       daysInStage: d.days_in_stage,
       updatedAt: d.updated_at,
@@ -161,7 +161,7 @@ const MyPipeline = () => {
       value: updatedDeal.value,
       probability: updatedDeal.probability,
       expected_close_date: updatedDeal.expectedCloseDate,
-      revenue_date: updatedDeal.revenueDate || null,
+      
       po_number: updatedDeal.poNumber || '',
       expected_margin: updatedDeal.expectedMargin || 0,
       location: updatedDeal.location || '',
@@ -220,7 +220,7 @@ const MyPipeline = () => {
       stage: newStage,
       days_in_stage: 0,
       ...(isFinalStage ? { probability: 100 } : {}),
-      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate, revenue_date: extraData.closeDate } : {}),
+      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate } : {}),
     };
     const { error } = await supabase.from('deals').update(updatePayload).eq('id', dealId);
     if (error) {

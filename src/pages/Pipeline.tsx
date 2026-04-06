@@ -65,7 +65,7 @@ const Pipeline = () => {
         value: Number(d.value),
         probability: d.probability,
         expectedCloseDate: d.expected_close_date,
-        revenueDate: (d as any).revenue_date || undefined,
+        
         createdAt: d.created_at,
         updatedAt: d.updated_at,
         daysInStage: d.days_in_stage,

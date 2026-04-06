@@ -107,7 +107,7 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
       expected_margin: Math.round(marginPct * 100) / 100,
       segment,
       po_number: poNumber.trim() || invoiceNumber.trim(),
-      revenue_date: format(issueDate, 'yyyy-MM-dd'),
+      
       notes: poNumber.trim()
         ? `Auto-created from invoice ${invoiceNumber.trim()} (PO: ${poNumber.trim()})`
         : `Auto-created from invoice ${invoiceNumber.trim()}`,

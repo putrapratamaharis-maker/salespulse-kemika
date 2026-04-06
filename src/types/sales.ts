@@ -48,7 +48,7 @@ export interface Deal {
   value: number;
   probability: number;
   expectedCloseDate: string;
-  revenueDate?: string;
+  
   createdAt: string;
   updatedAt: string;
   daysInStage: number;
