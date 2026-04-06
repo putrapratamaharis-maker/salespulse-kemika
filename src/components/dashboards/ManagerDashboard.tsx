@@ -204,8 +204,8 @@ export function ManagerDashboard() {
 
       {/* Row 2: Achievement & Profitability */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Target Achievement YTD" value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Revenue YTD ÷ Total Revenue Target Year × 100%" />
-        <KPICard label={`Target Achievement ${monthName}`} value={formatPercent(achievementPctMTD)} status={getAchievementStatus(achievementPctMTD)} icon={Target} autoFitText className="bg-kpi-indigo" borderAccent="border-l-kpi-indigo-border" tooltip="Revenue MTD ÷ Revenue Target bulan berjalan × 100%" />
+        <KPICard label="% REVENUE VS TARGET ACHIEVED YTD" value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Revenue YTD ÷ Total Revenue Target Year × 100%" />
+        <KPICard label={`% REVENUE VS TARGET ACHIEVED ${monthName}`} value={formatPercent(achievementPctMTD)} status={getAchievementStatus(achievementPctMTD)} icon={Target} autoFitText className="bg-kpi-indigo" borderAccent="border-l-kpi-indigo-border" tooltip="Revenue MTD ÷ Revenue Target bulan berjalan × 100%" />
         <KPICard label="Gross Margin YTD" value={formatPercent(marginPctYTD)} status={marginPctYTD >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Gross Profit YTD ÷ Revenue YTD × 100%. Threshold hijau ≥ 17%" />
         <KPICard label="Gross Profit YTD" value={formatIDRFull(grossProfitYTD)} icon={Banknote} autoFitText className="bg-kpi-cyan" borderAccent="border-l-kpi-cyan-border" tooltip="Total gross profit dari seluruh invoice di tahun berjalan" />
       </div>
