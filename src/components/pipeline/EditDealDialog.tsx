@@ -340,18 +340,39 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               </Select>
             </div>
 
-            {/* No. PO/SP/SPK - shown only for po_secured */}
+            {/* No. PO/SP/SPK - read-only for po_secured (already set via transition) */}
             {stage === 'po_secured' && (
-              <div className="space-y-1.5">
-                <Label>No. PO/SP/SPK <span className="text-destructive">*</span></Label>
-                <Input
-                  value={poNumber}
-                  onChange={e => setPoNumber(e.target.value)}
-                  placeholder="Contoh: PO-2026-001"
-                />
+              <div className="rounded-md border border-border bg-muted/50 p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Data PO / Won</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>No. PO/SP/SPK</Label>
+                    <Input value={poNumber} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>PO/Won/Closed Date</Label>
+                    <Input type="date" value={expectedCloseDate} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* Original PO info - read-only display when at invoice_issued and originally from po_secured */}
+            {stage === 'invoice_issued' && originalPoNumber && (
+              <div className="rounded-md border border-border bg-muted/50 p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Data PO / Won (Sebelumnya)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>No. PO/SP/SPK</Label>
+                    <Input value={originalPoNumber} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>PO/Won/Closed Date</Label>
+                    <Input type="date" value={originalPoDate} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Product / Item</Label>
