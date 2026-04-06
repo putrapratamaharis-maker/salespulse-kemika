@@ -49,15 +49,24 @@ export function SalesPersonDashboard() {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  // Revenue from deals at po_secured AND invoice_issued
+  const revenueStages = ['po_secured', 'invoice_issued'];
+  const wonDeals = deals.filter(d => revenueStages.includes(d.stage));
+
+  const mtdWon = wonDeals.filter(d => {
+    const dt = new Date(d.updated_at);
+    return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+  });
+  const revenueMTD = mtdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
+
+  const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYear);
+  const revenueYTD = ytdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
+
   const mtdInvoices = invoices.filter(i => {
     const d = new Date(i.issue_date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
-  const revenueMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
   const grossProfitMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
-
-  const ytdInvoices = invoices.filter(i => new Date(i.issue_date).getFullYear() === currentYear);
-  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
 
   const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetVal = target?.revenue_target || 1;
@@ -83,8 +92,8 @@ export function SalesPersonDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured atau Invoice Issued di tahun berjalan" />
-        <KPICard label="ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured atau Invoice Issued di bulan berjalan" />
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan" />
+        <KPICard label="ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan" />
         <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip="Revenue MTD ÷ Revenue Target × 100%" />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip="Gross Profit ÷ Net Sales × 100% dari invoice Anda. Threshold hijau ≥ 17%" />
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice Anda yang belum dibayar (paid_date kosong)" />
