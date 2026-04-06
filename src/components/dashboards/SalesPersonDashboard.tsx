@@ -71,8 +71,9 @@ export function SalesPersonDashboard() {
     );
   }
 
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const currentMonth = selMonth - 1; // 0-indexed for Date comparison
+  const currentYear = selYear;
+  const now = new Date();
 
   // Revenue from deals at po_secured AND invoice_issued
   const revenueStages = ['po_secured', 'invoice_issued'];
