@@ -24,10 +24,10 @@ const Pipeline = () => {
     async function fetchData() {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
-        supabase.from('deals').select('*'),
+        supabase.rpc('get_all_deals_pipeline'),
         supabase.from('accounts').select('id, name, pic_name, pic_contact, pic_email'),
-        supabase.from('profiles').select('user_id, full_name').eq('is_active', true),
-        supabase.from('deal_products').select('*'),
+        supabase.rpc('get_active_sales_profiles'),
+        supabase.rpc('get_all_deal_products_pipeline'),
       ]);
 
       // Map deal products
