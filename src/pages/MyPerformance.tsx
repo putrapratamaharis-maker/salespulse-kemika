@@ -76,6 +76,7 @@ const MyPerformance = () => {
   const [dls, setDls] = useState<DealRow[]>([]);
   const [tgt, setTgt] = useState<TargetRow | null>(null);
   const [acts, setActs] = useState<ActivityRow[]>([]);
+  const [totalTargetYear, setTotalTargetYear] = useState(0);
 
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
@@ -91,15 +92,19 @@ const MyPerformance = () => {
     async function fetchData() {
       setLoading(true);
       const salesId = currentUser.id;
-      const [invRes, dealRes, targetRes, actRes] = await Promise.all([
+      const currentYear = String(now.getFullYear());
+      const [invRes, dealRes, targetRes, yearTargetsRes, actRes] = await Promise.all([
         supabase.from('invoices').select('*').eq('sales_id', salesId),
         supabase.from('deals').select('*').eq('sales_id', salesId),
         supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
+        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${currentYear}-%`),
         supabase.from('sales_activities').select('*').eq('sales_id', salesId),
       ]);
       setInv((invRes.data || []) as InvoiceRow[]);
       setDls((dealRes.data || []) as DealRow[]);
       setTgt((targetRes.data?.[0] as TargetRow) || null);
+      const yearTotal = (yearTargetsRes.data || []).reduce((s: number, t: any) => s + (t.revenue_target || 0), 0);
+      setTotalTargetYear(yearTotal);
       setActs((actRes.data || []) as ActivityRow[]);
       setLoading(false);
     }
@@ -220,8 +225,9 @@ const MyPerformance = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Total Target ${now.getFullYear()}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${now.getFullYear()} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
         <KPICard label="ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Revenue target Anda untuk bulan ${monthName} dari tabel targets`} />
         <KPICard label={`Target Achievement ${monthName}`} value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip={`Revenue MTD ÷ Revenue Target × 100% untuk bulan ${monthName}`} />
