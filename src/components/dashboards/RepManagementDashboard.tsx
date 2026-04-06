@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, MapPin, TrendingDown, CreditCard, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -113,12 +113,12 @@ export function RepManagementDashboard() {
                   <TableRow key={c.channel}>
                     <TableCell className="text-sm font-medium">{c.channel}</TableCell>
                     <TableCell className="text-sm">{c.accountCount}</TableCell>
-                    <TableCell className="text-sm font-medium">{formatIDR(c.revenue)}</TableCell>
+                    <TableCell className="text-sm font-medium">{formatIDRFull(c.revenue)}</TableCell>
                     <TableCell>
                       <StatusBadge status={c.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(c.marginPct)} />
                     </TableCell>
-                    <TableCell className="text-sm">{formatIDR(c.outstanding)}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(c.pipeline)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(c.outstanding)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(c.pipeline)}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

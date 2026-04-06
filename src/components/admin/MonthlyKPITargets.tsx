@@ -60,7 +60,7 @@ const monthNames = [
   'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember',
 ];
 
-function formatIDR(val: number | null): string {
+function formatIDRFull(val: number | null): string {
   if (val == null) return '—';
   return 'Rp ' + val.toLocaleString('id-ID');
 }
@@ -473,13 +473,13 @@ export function MonthlyKPITargets() {
 
   function getPrevTarget(row: TargetRow) {
     if (row.unit_type === '%') return row.prev_target_pct != null ? `${row.prev_target_pct}%` : '—';
-    if (row.unit_type === 'IDR') return formatIDR(row.prev_target_value);
+    if (row.unit_type === 'IDR') return formatIDRFull(row.prev_target_value);
     return row.prev_target_value != null ? row.prev_target_value.toLocaleString('id-ID') : '—';
   }
 
   function getBaselineDisplay(row: TargetRow) {
     if (row.unit_type === '%') return row.baseline_annual_target_pct != null ? `${row.baseline_annual_target_pct}%` : '—';
-    if (row.unit_type === 'IDR') return formatIDR(row.baseline_annual_target_value);
+    if (row.unit_type === 'IDR') return formatIDRFull(row.baseline_annual_target_value);
     return row.baseline_annual_target_value != null ? row.baseline_annual_target_value.toLocaleString('id-ID') : '—';
   }
 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Target, DollarSign, TrendingUp, AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -166,14 +166,14 @@ export function SupervisorDashboard() {
                         <div className="text-xs text-muted-foreground">{d.region}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="text-sm font-medium">{formatIDR(d.revenue)}</TableCell>
+                    <TableCell className="text-sm font-medium">{formatIDRFull(d.revenue)}</TableCell>
                     <TableCell>
                       <StatusBadge status={getAchievementStatus(d.achievementPct)} label={formatPercent(d.achievementPct)} />
                     </TableCell>
                     <TableCell>
                       <StatusBadge status={d.marginPct >= 17 ? 'green' : 'red'} label={formatPercent(d.marginPct)} />
                     </TableCell>
-                    <TableCell className="text-sm">{formatIDR(d.pipelineValue)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(d.pipelineValue)}</TableCell>
                     <TableCell className="text-sm">{d.activityCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">

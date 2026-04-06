@@ -70,7 +70,7 @@ const Products = () => {
     fetchData();
   }, []);
 
-  const formatIDR = (val: number) => {
+  const formatIDRFull = (val: number) => {
     if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}B`;
     if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(0)}M`;
     if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)}K`;
@@ -136,7 +136,7 @@ const Products = () => {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-wider text-kpi-blue-fg/70">Total Revenue</p>
-              <p className="text-lg font-bold tracking-tight text-kpi-blue-fg">{formatIDR(stats.totalRevenue)}</p>
+              <p className="text-lg font-bold tracking-tight text-kpi-blue-fg">{formatIDRFull(stats.totalRevenue)}</p>
             </div>
           </CardContent>
         </Card>
@@ -219,7 +219,7 @@ const Products = () => {
                     </div>
                   </div>
                   <div className="w-[90px] text-right text-sm font-semibold tabular-nums">
-                    {formatIDR(p.totalRevenue)}
+                    {formatIDRFull(p.totalRevenue)}
                   </div>
                   <div className="w-[50px] text-right">
                     <Badge variant="secondary" className="text-[10px] font-normal">
@@ -302,7 +302,7 @@ const Products = () => {
                             <Badge variant="secondary" className="text-[10px] font-normal">{p.category}</Badge>
                           </TableCell>
                           <TableCell className="text-right font-semibold text-sm tabular-nums">
-                            {formatIDR(p.totalRevenue)}
+                            {formatIDRFull(p.totalRevenue)}
                           </TableCell>
                           <TableCell className="text-right text-sm tabular-nums">
                             {p.unitsSold.toLocaleString()}

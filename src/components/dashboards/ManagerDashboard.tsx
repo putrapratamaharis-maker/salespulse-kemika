@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
-import { formatIDR, formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
+import { formatIDRFull, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
@@ -203,7 +203,7 @@ export function ManagerDashboard() {
                   <div key={s.segment}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{s.segment}</span>
-                      <span className="text-muted-foreground">{formatIDR(s.revenue)} ({formatPercent(pct)})</span>
+                      <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pct)})</span>
                     </div>
                     <div className="h-2 bg-secondary rounded-full overflow-hidden">
                       <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
@@ -270,7 +270,7 @@ export function ManagerDashboard() {
                         <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                         <TableCell className="text-xs font-medium">{c.name}</TableCell>
                         <TableCell className="text-xs text-muted-foreground">{c.segment}</TableCell>
-                        <TableCell className="text-xs text-right font-semibold">{formatIDR(c.revenue)}</TableCell>
+                        <TableCell className="text-xs text-right font-semibold">{formatIDRFull(c.revenue)}</TableCell>
                         <TableCell className="text-xs text-right text-muted-foreground">{formatPercent(pct)}</TableCell>
                       </TableRow>
                     );
@@ -309,7 +309,7 @@ export function ManagerDashboard() {
                       <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                       <TableCell className="text-xs font-medium">{p.name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.category}</TableCell>
-                      <TableCell className="text-xs text-right font-semibold">{formatIDR(p.revenue)}</TableCell>
+                      <TableCell className="text-xs text-right font-semibold">{formatIDRFull(p.revenue)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -342,7 +342,7 @@ export function ManagerDashboard() {
                         <Cell key={idx} fill={CATEGORY_COLORS[idx % CATEGORY_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value: number) => formatIDR(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                    <Tooltip formatter={(value: number) => formatIDRFull(value)} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
                   </PieChart>
                 </ResponsiveContainer>
                 <div className="grid grid-cols-2 gap-x-6 gap-y-2 mt-2 w-full">
@@ -377,11 +377,11 @@ export function ManagerDashboard() {
                 <ResponsiveContainer width="100%" height={240}>
                   <BarChart data={regionData} layout="vertical" margin={{ left: 10, right: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDR(v)} />
+                    <XAxis type="number" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" tickFormatter={(v) => formatIDRFull(v)} />
                     <YAxis type="category" dataKey="region" tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" width={100} />
                     <Tooltip formatter={(value: number) => {
                       const pct = totalRegionRevenue > 0 ? (Number(value) / totalRegionRevenue) * 100 : 0;
-                      return [`${formatIDR(Number(value))} (${formatPercent(pct)})`, 'Revenue'];
+                      return [`${formatIDRFull(Number(value))} (${formatPercent(pct)})`, 'Revenue'];
                     }} contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
                     <Bar dataKey="revenue" radius={[0, 4, 4, 0]}>
                       {regionData.map((_, idx) => (

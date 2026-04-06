@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
-import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
+import { formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search, Trophy } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
@@ -304,8 +304,8 @@ const Revenue = () => {
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.net_sales)}</TableCell>
-                    <TableCell className="text-sm">{formatIDR(inv.gross_profit)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm">{formatIDRFull(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
