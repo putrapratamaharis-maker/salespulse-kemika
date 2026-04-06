@@ -102,10 +102,10 @@ export function RepManagementDashboard() {
                 <TableRow>
                   <TableHead className="text-xs">Channel</TableHead>
                   <TableHead className="text-xs">Accounts</TableHead>
-                  <TableHead className="text-xs">Revenue MTD</TableHead>
+                  <TableHead className="text-xs">Revenue MTD (Rp)</TableHead>
                   <TableHead className="text-xs">Margin %</TableHead>
-                  <TableHead className="text-xs">Outstanding AR</TableHead>
-                  <TableHead className="text-xs">Pipeline</TableHead>
+                  <TableHead className="text-xs">Outstanding AR (Rp)</TableHead>
+                  <TableHead className="text-xs">Pipeline (Rp)</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
