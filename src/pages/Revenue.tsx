@@ -46,10 +46,10 @@ const MONTHS = [
 const Revenue = () => {
   const [loading, setLoading] = useState(true);
   const [allInvoices, setAllInvoices] = useState<InvoiceRow[]>([]);
+  const [allDeals, setAllDeals] = useState<DealRow[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
   const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [totalWon, setTotalWon] = useState(0);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
