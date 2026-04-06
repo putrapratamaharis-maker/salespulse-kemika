@@ -41,6 +41,7 @@ interface DealRow {
   stage: string;
   probability: number;
   expected_close_date: string;
+  revenue_date: string | null;
   days_in_stage: number;
   updated_at: string;
   segment: string;
