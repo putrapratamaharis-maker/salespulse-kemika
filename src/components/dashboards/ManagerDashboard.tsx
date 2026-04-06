@@ -300,7 +300,7 @@ export function ManagerDashboard() {
                     <TableHead className="text-xs w-8">#</TableHead>
                     <TableHead className="text-xs">Produk</TableHead>
                     <TableHead className="text-xs">Kategori</TableHead>
-                    <TableHead className="text-xs text-right">Revenue</TableHead>
+                    <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
