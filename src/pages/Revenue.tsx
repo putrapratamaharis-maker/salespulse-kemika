@@ -66,7 +66,7 @@ const Revenue = () => {
         .order('issue_date', { ascending: false }),
       supabase
         .from('deals')
-        .select('value')
+        .select('value, segment, updated_at')
         .in('stage', ['po_secured', 'invoice_issued']),
     ]);
 
@@ -82,7 +82,11 @@ const Revenue = () => {
       account_name: row.accounts?.name || '',
     }));
     setAllInvoices(mapped);
-    setTotalWon((dealsRes.data || []).reduce((s: number, d: any) => s + (d.value || 0), 0));
+    setAllDeals((dealsRes.data || []).map((d: any) => ({
+      value: d.value || 0,
+      segment: d.segment || '',
+      updated_at: d.updated_at || '',
+    })));
     setLoading(false);
   };
 
