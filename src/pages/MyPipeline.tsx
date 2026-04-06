@@ -161,6 +161,7 @@ const MyPipeline = () => {
       value: updatedDeal.value,
       probability: updatedDeal.probability,
       expected_close_date: updatedDeal.expectedCloseDate,
+      revenue_date: updatedDeal.revenueDate || null,
       po_number: updatedDeal.poNumber || '',
       expected_margin: updatedDeal.expectedMargin || 0,
       location: updatedDeal.location || '',

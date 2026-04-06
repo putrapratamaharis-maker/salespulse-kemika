@@ -12,6 +12,8 @@ import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
+import { toast as sonnerToast } from 'sonner';
+import { format } from 'date-fns';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -86,6 +88,11 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
   const [poNumber, setPoNumber] = useState('');
+  // Invoice-specific fields
+  const [invoiceIssueDate, setInvoiceIssueDate] = useState('');
+  const [invoiceDueDate, setInvoiceDueDate] = useState('');
+  const [invoicePaidDate, setInvoicePaidDate] = useState('');
+  const [grossProfit, setGrossProfit] = useState('');
 
   useEffect(() => {
     if (deal && open && mastersLoaded) {
@@ -99,6 +106,13 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
+      // Reset invoice fields
+      setInvoiceIssueDate(new Date().toISOString().split('T')[0]);
+      setInvoiceDueDate('');
+      setInvoicePaidDate('');
+      const margin = deal.expectedMargin || 0;
+      const gp = Math.round(deal.value * margin / 100);
+      setGrossProfit(gp > 0 ? String(gp) : '');
     }
   }, [deal, open, mastersLoaded]);
 
@@ -108,6 +122,17 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const updateProduct = (index: number, field: keyof DealProduct, value: string | number) => {
     setProducts(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
   };
+
+  // Recalculate gross profit when margin changes (for invoice stage)
+  const handleMarginChangeForInvoice = (val: string) => {
+    setExpectedMargin(val);
+    const pct = Number(val) || 0;
+    const gp = Math.round(totalValue * pct / 100);
+    setGrossProfit(String(gp));
+  };
+
+  // Track if stage changed to invoice_issued from a non-invoice stage
+  const isNewInvoiceTransition = stage === 'invoice_issued' && deal?.stage !== 'invoice_issued';
 
   // Auto-fill category, unit, price when selecting product from DB
   const handleProductSelect = (index: number, productId: string) => {
@@ -133,7 +158,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
 
   const formatRp = (val: number) => val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deal || !accountId || !expectedCloseDate) {
       toast({ title: 'Lengkapi semua field yang diperlukan', variant: 'destructive' });
@@ -157,6 +184,42 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       return;
     }
 
+    // Validate invoice fields when transitioning to invoice_issued
+    if (isNewInvoiceTransition) {
+      if (!poNumber.trim()) { sonnerToast.error('No. Invoice wajib diisi'); return; }
+      if (!invoiceIssueDate) { sonnerToast.error('Tanggal Terbit wajib diisi'); return; }
+      if (!invoiceDueDate) { sonnerToast.error('Jatuh Tempo wajib diisi'); return; }
+    }
+
+    setSaving(true);
+
+    // Create invoice record when transitioning to invoice_issued
+    if (isNewInvoiceTransition && poNumber.trim()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { sonnerToast.error('Anda harus login'); setSaving(false); return; }
+
+      const { error } = await supabase.from('invoices').insert({
+        invoice_number: poNumber.trim(),
+        account_id: accountId,
+        sales_id: user.id,
+        segment: segment,
+        net_sales: totalValue > 0 ? totalValue : deal.value,
+        gross_profit: Number(grossProfit) || 0,
+        issue_date: invoiceIssueDate,
+        due_date: invoiceDueDate,
+        paid_date: invoicePaidDate || null,
+      });
+
+      if (error) {
+        const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal membuat invoice: ' + error.message;
+        sonnerToast.error(msg);
+        setSaving(false);
+        return;
+      }
+
+      sonnerToast.success('Invoice berhasil dibuat dari deal');
+    }
+
     const dealName = products.length === 1
       ? (products[0].productName || deal.name)
       : `${products[0].productName || deal.name} (+${products.length - 1} item)`;
@@ -168,8 +231,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       segment: segment as Segment,
       stage,
       value: totalValue > 0 ? totalValue : deal.value,
-      probability: Number(probability) || 0,
+      probability: skipProb ? 100 : (Number(probability) || 0),
       expectedCloseDate,
+      revenueDate: isNewInvoiceTransition ? invoiceIssueDate : (stage === 'po_secured' && deal.stage !== 'po_secured' ? expectedCloseDate : deal.revenueDate),
       updatedAt: new Date().toISOString().split('T')[0],
       location,
       notes,
@@ -180,6 +244,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
 
     onSave(updated);
     toast({ title: 'Deal berhasil diperbarui' });
+    setSaving(false);
     onOpenChange(false);
   };
 
@@ -267,12 +332,74 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             {/* No. PO/SP/SPK or No. Invoice - shown for final stages */}
             {(stage === 'po_secured' || stage === 'invoice_issued') && (
               <div className="space-y-1.5">
-                <Label>{stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'}</Label>
+                <Label>{stage === 'invoice_issued' ? 'No. Invoice' : 'No. PO/SP/SPK'} <span className="text-destructive">*</span></Label>
                 <Input
                   value={poNumber}
                   onChange={e => setPoNumber(e.target.value)}
                   placeholder={stage === 'invoice_issued' ? 'Contoh: INV-2026-001' : 'Contoh: PO-2026-001'}
                 />
+              </div>
+            )}
+
+            {/* Invoice Detail Fields - shown when stage is invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="rounded-md border border-primary/30 bg-primary/5 p-4 space-y-4">
+                <p className="text-sm font-semibold text-foreground">Detail Invoice</p>
+
+                {/* Gross Margin + Gross Profit */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Gross Margin (%)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step="0.01"
+                      value={expectedMargin}
+                      onChange={e => handleMarginChangeForInvoice(e.target.value)}
+                      placeholder="0-100"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Gross Profit (Rp)</Label>
+                    <Input
+                      type="number"
+                      value={grossProfit}
+                      onChange={e => setGrossProfit(e.target.value)}
+                      placeholder="0"
+                    />
+                  </div>
+                </div>
+
+                {/* Issue Date & Due Date */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Tanggal Terbit <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="date"
+                      value={invoiceIssueDate}
+                      onChange={e => setInvoiceIssueDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs">Jatuh Tempo <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="date"
+                      value={invoiceDueDate}
+                      onChange={e => setInvoiceDueDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                {/* Paid Date */}
+                <div className="space-y-1.5">
+                  <Label className="text-xs">Tanggal Bayar (opsional)</Label>
+                  <Input
+                    type="date"
+                    value={invoicePaidDate}
+                    onChange={e => setInvoicePaidDate(e.target.value)}
+                  />
+                </div>
               </div>
             )}
 
@@ -394,11 +521,13 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             </div>
 
             {/* Margin, Probability, Date */}
-            <div className="grid grid-cols-3 gap-3">
-              <div className="space-y-1.5">
-                <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
-              </div>
+            <div className={`grid gap-3 ${stage === 'invoice_issued' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              {stage !== 'invoice_issued' && (
+                <div className="space-y-1.5">
+                  <Label>{stage === 'po_secured' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
+                  <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label>Probability (%)</Label>
                 <Input type="number" min={0} max={100} step="0.01" value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
@@ -418,7 +547,10 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             {/* Actions */}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Batal</Button>
-              <Button type="submit">Simpan Perubahan</Button>
+              <Button type="submit" disabled={saving}>
+                {saving && <Loader2 className="h-4 w-4 animate-spin mr-1" />}
+                {isNewInvoiceTransition ? 'Simpan & Buat Invoice' : 'Simpan Perubahan'}
+              </Button>
             </div>
           </form>
           )}
