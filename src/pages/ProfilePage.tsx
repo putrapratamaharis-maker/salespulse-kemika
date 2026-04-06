@@ -132,7 +132,7 @@ const ProfilePage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
                   <TableHead className="text-xs">Probability</TableHead>
                   <TableHead className="text-xs">Close Date</TableHead>
