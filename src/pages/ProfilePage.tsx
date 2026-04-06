@@ -186,8 +186,8 @@ const ProfilePage = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead className="text-xs">Invoice</TableHead>
-                  <TableHead className="text-xs">Net Sales</TableHead>
-                  <TableHead className="text-xs">GP</TableHead>
+                  <TableHead className="text-xs">Net Sales (Rp)</TableHead>
+                  <TableHead className="text-xs">GP (Rp)</TableHead>
                   <TableHead className="text-xs">Margin %</TableHead>
                   <TableHead className="text-xs">Compliant</TableHead>
                 </TableRow>
