@@ -84,6 +84,10 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // PO fields (for po_secured and invoice_issued)
+  const [poNumber, setPoNumber] = useState('');
+  const [poDate, setPoDate] = useState('');
+
   // Invoice-specific fields (when stage === 'invoice_issued')
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceIssueDate, setInvoiceIssueDate] = useState<Date | undefined>(new Date());
@@ -104,6 +108,8 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     setProbability('');
     setExpectedCloseDate('');
     setNotes('');
+    setPoNumber('');
+    setPoDate('');
     setInvoiceNumber('');
     setInvoiceIssueDate(new Date());
     setInvoiceDueDate(undefined);
@@ -232,8 +238,9 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       segment: (segment === 'B2C/e-Commerce' ? 'B2C' : segment) as Segment,
       stage,
       value: totalValue,
-      probability: isInvoiceStage ? 100 : (Number(probability) || 0),
-      expectedCloseDate,
+      probability: isInvoiceStage || stage === 'po_secured' ? 100 : (Number(probability) || 0),
+      expectedCloseDate: poDate || expectedCloseDate,
+      revenueDate: isInvoiceStage && invoiceIssueDate ? format(invoiceIssueDate, 'yyyy-MM-dd') : (stage === 'po_secured' && poDate ? poDate : undefined),
       createdAt: now,
       updatedAt: now,
       daysInStage: 0,
@@ -241,7 +248,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       notes,
       expectedMargin: Number(expectedMargin) || 0,
       products,
-      poNumber: isInvoiceStage ? invoiceNumber.trim() : undefined,
+      poNumber: isInvoiceStage ? (poNumber.trim() || invoiceNumber.trim()) : (stage === 'po_secured' ? poNumber.trim() : undefined),
     };
 
     onAdd(newDeal);
@@ -323,6 +330,28 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
                 </SelectContent>
               </Select>
             </div>
+
+            {/* PO/SP/SPK fields - for po_secured and invoice_issued */}
+            {(stage === 'po_secured' || stage === 'invoice_issued') && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>No. PO/SP/SPK {stage === 'po_secured' && <span className="text-destructive">*</span>}</Label>
+                  <Input
+                    value={poNumber}
+                    onChange={e => setPoNumber(e.target.value)}
+                    placeholder="Contoh: PO-2026-001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>PO/Won/Closed Date {stage === 'po_secured' && <span className="text-destructive">*</span>}</Label>
+                  <Input
+                    type="date"
+                    value={poDate}
+                    onChange={e => setPoDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Products */}
             <div className="space-y-3">
@@ -463,6 +492,19 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
             {stage === 'invoice_issued' && (
               <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                {/* PO info - read-only display */}
+                {(poNumber || poDate) && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">No. PO/SP/SPK</p>
+                      <p className="text-sm font-medium text-foreground">{poNumber || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">PO/Won/Closed Date</p>
+                      <p className="text-sm font-medium text-foreground">{poDate || '-'}</p>
+                    </div>
+                  </div>
+                )}
                 <div className="space-y-1.5">
                   <Label>No. Invoice <span className="text-destructive">*</span></Label>
                   <Input

@@ -491,6 +491,21 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             {stage === 'invoice_issued' && (
               <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
                 <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                
+                {/* PO/SP/SPK info - read-only from deal */}
+                {(deal?.poNumber || deal?.expectedCloseDate) && (
+                  <div className="grid grid-cols-2 gap-3 rounded-md border border-border bg-muted/50 p-2">
+                    <div>
+                      <p className="text-xs text-muted-foreground">No. PO/SP/SPK</p>
+                      <p className="text-sm font-medium text-foreground">{deal.poNumber || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">PO/Won/Closed Date</p>
+                      <p className="text-sm font-medium text-foreground">{deal.expectedCloseDate || '-'}</p>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-1.5">
                   <Label>No. Invoice <span className="text-destructive">*</span></Label>
                   <Input
