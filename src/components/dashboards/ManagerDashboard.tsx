@@ -3,12 +3,13 @@ import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet } from 'lucide-react';
+import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet, Calendar } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
 import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductWithCategory {
   name: string;
@@ -22,11 +23,33 @@ interface CategoryRevenue {
   revenue: number;
 }
 
+const MONTH_OPTIONS = [
+  { value: '1', label: 'Januari' },
+  { value: '2', label: 'Februari' },
+  { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'Mei' },
+  { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' },
+  { value: '8', label: 'Agustus' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+];
+
+const currentDate = new Date();
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => String(currentDate.getFullYear() - 2 + i));
+
 export function ManagerDashboard() {
   const [topProducts, setTopProducts] = useState<ProductWithCategory[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryRevenue[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // Year/Month filter state
+  const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
 
   // Real DB state
   const [revenueMTD, setRevenueMTD] = useState(0);
@@ -44,26 +67,25 @@ export function ManagerDashboard() {
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const selYear = Number(selectedYear);
+  const selMonth = Number(selectedMonth);
 
-  const monthName = now.toLocaleString('id-ID', { month: 'long' });
+  const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
 
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
 
-      const currentYearStr = String(currentYear);
+      const yearStr = String(selYear);
 
       // Use security definer RPC for company-wide data (bypasses RLS)
       const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
-          _current_year: currentYear,
-          _current_month: currentMonth + 1,
+          _current_year: selYear,
+          _current_month: selMonth,
         }),
         supabase.from('accounts').select('id, name, segment, region'),
-        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${currentYearStr}-01-01`).lte('issue_date', `${currentYearStr}-12-31`),
+        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
         supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
       ]);
 
@@ -125,7 +147,7 @@ export function ManagerDashboard() {
           if (seg in entry) entry[seg] += Number(t.revenue) / 1_000_000;
           monthMap.set(key, entry);
         });
-        const trend = monthNames.slice(0, currentMonth + 1).map(m => ({
+        const trend = monthNames.slice(0, selMonth).map(m => ({
           month: m,
           ...(monthMap.get(m) || { B2G: 0, B2B: 0, B2C: 0 }),
         }));
@@ -135,7 +157,7 @@ export function ManagerDashboard() {
       setLoading(false);
     }
     fetchDashboardData();
-  }, []);
+  }, [selYear, selMonth]);
 
   // Fetch products from database
   useEffect(() => {
@@ -189,15 +211,40 @@ export function ManagerDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
-        <p className="text-sm text-muted-foreground">Company-wide sales performance overview</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Executive Summary</h2>
+          <p className="text-sm text-muted-foreground">Company-wide sales performance overview</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEAR_OPTIONS.map(y => (
+                <SelectItem key={y} value={y}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTH_OPTIONS.map(m => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {/* Row 1: Revenue & Targets */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`Total Revenue Target ${currentYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
+        <KPICard label={`Total Revenue Target ${selYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
         <KPICard label="Actual Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-orange" borderAccent="border-l-kpi-orange-border" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
       </div>

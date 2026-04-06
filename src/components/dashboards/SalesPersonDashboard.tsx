@@ -4,9 +4,28 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatPercent, getAchievementStatus, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle, CreditCard, Banknote, Loader2 } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Percent, BarChart3, Clock, AlertTriangle, CreditCard, Banknote, Loader2, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+const MONTH_OPTIONS = [
+  { value: '1', label: 'Januari' },
+  { value: '2', label: 'Februari' },
+  { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'Mei' },
+  { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' },
+  { value: '8', label: 'Agustus' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+];
+
+const currentDate = new Date();
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => String(currentDate.getFullYear() - 2 + i));
 
 export function SalesPersonDashboard() {
   const { currentUser } = useAppContext();
@@ -16,8 +35,14 @@ export function SalesPersonDashboard() {
   const [target, setTarget] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
 
-  const now = new Date();
-  const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+  // Year/Month filter state
+  const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
+
+  const selYear = Number(selectedYear);
+  const selMonth = Number(selectedMonth);
+  const monthStr = `${selectedYear}-${String(selMonth).padStart(2, '0')}`;
+  const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
 
   useEffect(() => {
     const fetchData = async () => {
@@ -26,7 +51,7 @@ export function SalesPersonDashboard() {
       const [invRes, dealRes, tgtRes, actRes] = await Promise.all([
         supabase.from('invoices').select('*').eq('sales_id', sid),
         supabase.from('deals').select('*').eq('sales_id', sid),
-        supabase.from('targets').select('*').eq('user_id', sid).eq('month', currentMonthStr).limit(1),
+        supabase.from('targets').select('*').eq('user_id', sid).eq('month', monthStr).limit(1),
         supabase.from('sales_activities').select('*').eq('sales_id', sid).order('activity_date', { ascending: false }).limit(10),
       ]);
       setInvoices(invRes.data || []);
@@ -36,7 +61,7 @@ export function SalesPersonDashboard() {
       setLoading(false);
     };
     fetchData();
-  }, [currentUser.id, currentMonthStr]);
+  }, [currentUser.id, monthStr]);
 
   if (loading) {
     return (
@@ -46,8 +71,9 @@ export function SalesPersonDashboard() {
     );
   }
 
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const currentMonth = selMonth - 1; // 0-indexed for Date comparison
+  const currentYear = selYear;
+  const now = new Date();
 
   // Revenue from deals at po_secured AND invoice_issued
   const revenueStages = ['po_secured', 'invoice_issued'];
@@ -86,9 +112,34 @@ export function SalesPersonDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
-        <p className="text-sm text-muted-foreground">Personal sales dashboard — {currentUser.name}</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">My Sales Overview</h2>
+          <p className="text-sm text-muted-foreground">Personal sales dashboard — {currentUser.name}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-muted-foreground" />
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {YEAR_OPTIONS.map(y => (
+                <SelectItem key={y} value={y}>{y}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger className="w-[130px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {MONTH_OPTIONS.map(m => (
+                <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
