@@ -43,7 +43,7 @@ const segmentOptions = [
 
 const sortColumns = [
   { key: 'sales', label: 'Sales' },
-  { key: 'value', label: 'Value' },
+  { key: 'value', label: 'Value (Rp)' },
   { key: 'stage', label: 'Stage' },
   { key: 'segment', label: 'Segment' },
   { key: 'probability', label: 'Prob.' },
