@@ -309,7 +309,7 @@ export function ManagerDashboard() {
                       <TableCell className="text-xs font-bold text-muted-foreground">{i + 1}</TableCell>
                       <TableCell className="text-xs font-medium">{p.name}</TableCell>
                       <TableCell className="text-xs text-muted-foreground">{p.category}</TableCell>
-                      <TableCell className="text-xs text-right font-semibold">{formatIDRFull(p.revenue)}</TableCell>
+                      <TableCell className="text-xs text-right font-semibold">{formatNumIDR(p.revenue)}</TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
