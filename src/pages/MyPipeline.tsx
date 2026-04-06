@@ -401,7 +401,7 @@ const MyPipeline = () => {
                   <TableHead className="text-xs">Deal</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
                   <TableHead className="text-xs">Days</TableHead>
-                  <TableHead className="text-xs">Value</TableHead>
+                  <TableHead className="text-xs">Value (Rp)</TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {staleDeals.map(d => (
