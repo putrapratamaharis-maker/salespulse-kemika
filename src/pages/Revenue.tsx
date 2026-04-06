@@ -31,7 +31,7 @@ interface InvoiceRow {
 interface DealRow {
   value: number;
   segment: string;
-  updated_at: string;
+  revenue_date: string | null;
 }
 
 const MONTHS = [
