@@ -93,6 +93,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const [invoiceDueDate, setInvoiceDueDate] = useState('');
   const [invoicePaidDate, setInvoicePaidDate] = useState('');
   const [grossProfit, setGrossProfit] = useState('');
+  // Original PO info (read-only, preserved across stage transitions)
+  const [originalPoNumber, setOriginalPoNumber] = useState('');
+  const [originalPoDate, setOriginalPoDate] = useState('');
 
   useEffect(() => {
     if (deal && open && mastersLoaded) {
@@ -106,6 +109,14 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
+      // Preserve original PO info for po_secured and invoice_issued deals
+      if (deal.stage === 'po_secured' || deal.stage === 'invoice_issued') {
+        setOriginalPoNumber(deal.poNumber || '');
+        setOriginalPoDate(deal.revenueDate || deal.expectedCloseDate || '');
+      } else {
+        setOriginalPoNumber('');
+        setOriginalPoDate('');
+      }
       // Reset invoice fields
       setInvoiceIssueDate(new Date().toISOString().split('T')[0]);
       setInvoiceDueDate('');
@@ -329,18 +340,39 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
               </Select>
             </div>
 
-            {/* No. PO/SP/SPK - shown only for po_secured */}
+            {/* No. PO/SP/SPK - read-only for po_secured (already set via transition) */}
             {stage === 'po_secured' && (
-              <div className="space-y-1.5">
-                <Label>No. PO/SP/SPK <span className="text-destructive">*</span></Label>
-                <Input
-                  value={poNumber}
-                  onChange={e => setPoNumber(e.target.value)}
-                  placeholder="Contoh: PO-2026-001"
-                />
+              <div className="rounded-md border border-border bg-muted/50 p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Data PO / Won</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>No. PO/SP/SPK</Label>
+                    <Input value={poNumber} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>PO/Won/Closed Date</Label>
+                    <Input type="date" value={expectedCloseDate} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                </div>
               </div>
             )}
 
+            {/* Original PO info - read-only display when at invoice_issued and originally from po_secured */}
+            {stage === 'invoice_issued' && originalPoNumber && (
+              <div className="rounded-md border border-border bg-muted/50 p-3 space-y-2">
+                <p className="text-xs font-semibold text-muted-foreground">Data PO / Won (Sebelumnya)</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>No. PO/SP/SPK</Label>
+                    <Input value={originalPoNumber} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>PO/Won/Closed Date</Label>
+                    <Input type="date" value={originalPoDate} disabled className="bg-muted cursor-not-allowed" />
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold">Product / Item</Label>
@@ -459,7 +491,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             </div>
 
             {/* Margin, Probability, Date */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className={`grid gap-3 ${stage === 'po_secured' ? 'grid-cols-2' : 'grid-cols-3'}`}>
               <div className="space-y-1.5">
                 <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
                 <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => handleMarginChangeForInvoice(e.target.value)} placeholder="0-100" />
@@ -468,10 +500,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                 <Label>Probability (%)</Label>
                 <Input type="number" min={0} max={100} step="0.01" value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
               </div>
-              <div className="space-y-1.5">
-                <Label>{stage === 'invoice_issued' ? 'Invoice Issued Date' : stage === 'po_secured' ? 'PO/Won/Closed Date' : 'Expected Deal/Close'}</Label>
-                <Input type="date" value={expectedCloseDate} onChange={e => setExpectedCloseDate(e.target.value)} />
-              </div>
+              {stage !== 'po_secured' && (
+                <div className="space-y-1.5">
+                  <Label>{stage === 'invoice_issued' ? 'Invoice Issued Date' : 'Expected Deal/Close'}</Label>
+                  <Input type="date" value={expectedCloseDate} onChange={e => setExpectedCloseDate(e.target.value)} />
+                </div>
+              )}
             </div>
 
             {/* Gross Profit - only for invoice_issued */}
