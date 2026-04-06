@@ -273,7 +273,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                       <StatusBadge status={col.color} label={col.label} />
                       <span className="text-xs font-semibold text-muted-foreground">{col.deals.length}</span>
                     </div>
-                    <p className="text-xs font-bold text-foreground">{formatIDR(col.totalValue)}</p>
+                    <p className="text-xs font-bold text-foreground">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
                   {/* Deal Cards */}
