@@ -420,22 +420,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                       <Label className="text-xs">Biaya Lainnya (Rp)</Label>
                       <Input
                         className="h-9 text-sm"
-                        type="text"
-                        inputMode="numeric"
-                        value={product.otherCost ? `Rp ${product.otherCost.toLocaleString('id-ID')}` : ''}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9]/g, '');
-                          updateProduct(idx, 'otherCost', Number(raw) || 0);
-                        }}
-                        onFocus={e => {
-                          const raw = String(product.otherCost || '');
-                          e.target.value = raw;
-                          e.target.type = 'number';
-                        }}
-                        onBlur={e => {
-                          e.target.type = 'text';
-                        }}
-                        placeholder="Rp 0"
+                        type="number"
+                        step="0.01"
+                        min={0}
+                        value={product.otherCost || ''}
+                        onChange={e => updateProduct(idx, 'otherCost', Number(e.target.value) || 0)}
+                        placeholder="0"
                       />
                     </div>
                   </div>
