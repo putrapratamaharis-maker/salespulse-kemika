@@ -76,16 +76,16 @@ export function ManagerDashboard() {
     async function fetchDashboardData() {
       setLoading(true);
 
-      const currentYearStr = String(currentYear);
+      const yearStr = String(selYear);
 
       // Use security definer RPC for company-wide data (bypasses RLS)
       const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
-          _current_year: currentYear,
-          _current_month: currentMonth + 1,
+          _current_year: selYear,
+          _current_month: selMonth,
         }),
         supabase.from('accounts').select('id, name, segment, region'),
-        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${currentYearStr}-01-01`).lte('issue_date', `${currentYearStr}-12-31`),
+        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
         supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
       ]);
 
