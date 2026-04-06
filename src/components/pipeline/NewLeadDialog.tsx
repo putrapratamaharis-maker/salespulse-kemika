@@ -330,6 +330,28 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
               </Select>
             </div>
 
+            {/* PO/SP/SPK fields - for po_secured and invoice_issued */}
+            {(stage === 'po_secured' || stage === 'invoice_issued') && (
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>No. PO/SP/SPK {stage === 'po_secured' && <span className="text-destructive">*</span>}</Label>
+                  <Input
+                    value={poNumber}
+                    onChange={e => setPoNumber(e.target.value)}
+                    placeholder="Contoh: PO-2026-001"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>PO/Won/Closed Date {stage === 'po_secured' && <span className="text-destructive">*</span>}</Label>
+                  <Input
+                    type="date"
+                    value={poDate}
+                    onChange={e => setPoDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Products */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
