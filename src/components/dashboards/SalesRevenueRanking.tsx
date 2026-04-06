@@ -28,8 +28,8 @@ function RankingTable({ data, totalRevenue }: { data: SalesRanking[]; totalReven
           <TableHead className="text-xs w-10">#</TableHead>
           <TableHead className="text-xs">Sales Person</TableHead>
           <TableHead className="text-xs">Segment</TableHead>
-          <TableHead className="text-xs text-right">Revenue</TableHead>
-          <TableHead className="text-xs text-right">Target</TableHead>
+          <TableHead className="text-xs text-right">Revenue (Rp)</TableHead>
+          <TableHead className="text-xs text-right">Target (Rp)</TableHead>
           <TableHead className="text-xs text-right">Achievement</TableHead>
           <TableHead className="text-xs text-right">Kontribusi</TableHead>
         </TableRow>
