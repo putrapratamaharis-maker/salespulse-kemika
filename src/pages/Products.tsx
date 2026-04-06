@@ -77,6 +77,8 @@ const Products = () => {
     return `Rp ${val.toLocaleString('id-ID')}`;
   };
 
+  const formatNumIDR = (val: number) => val.toLocaleString('id-ID');
+
   const stats = useMemo(() => {
     const totalRevenue = products.reduce((s, p) => s + p.totalRevenue, 0);
     const totalUnits = products.reduce((s, p) => s + p.unitsSold, 0);
