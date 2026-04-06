@@ -225,8 +225,9 @@ const MyPerformance = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Total Target ${now.getFullYear()}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${now.getFullYear()} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
         <KPICard label="ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
         <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Revenue target Anda untuk bulan ${monthName} dari tabel targets`} />
         <KPICard label={`Target Achievement ${monthName}`} value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip={`Revenue MTD ÷ Revenue Target × 100% untuk bulan ${monthName}`} />
