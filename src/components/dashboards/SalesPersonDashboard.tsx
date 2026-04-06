@@ -54,12 +54,12 @@ export function SalesPersonDashboard() {
   const wonDeals = deals.filter(d => revenueStages.includes(d.stage));
 
   const mtdWon = wonDeals.filter(d => {
-    const dt = new Date(d.updated_at);
+    const dt = new Date(d.expected_close_date);
     return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
   });
   const revenueMTD = mtdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
 
-  const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYear);
+  const ytdWon = wonDeals.filter(d => new Date(d.expected_close_date).getFullYear() === currentYear);
   const revenueYTD = ytdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
 
   const mtdInvoices = invoices.filter(i => {
