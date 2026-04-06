@@ -340,7 +340,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
 
                         {/* Value row */}
                         <div className="flex items-center justify-between pt-1">
-                          <span className="text-xs font-bold text-foreground">{formatIDR(d.value)}</span>
+                          <span className="text-xs font-bold text-foreground">{formatIDRFull(d.value)}</span>
                           <span className="text-[10px] px-1.5 py-0.5 rounded font-normal border-solid text-destructive bg-[sidebar-primary-foreground] bg-orange-100">{d.segment}</span>
                         </div>
 

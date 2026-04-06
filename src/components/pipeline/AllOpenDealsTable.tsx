@@ -259,7 +259,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
                     <div className="text-xs text-muted-foreground">{getAccountName(d.accountId)}</div>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{getSalesName(d.salesId)}</TableCell>
-                  <TableCell className="text-sm">{formatIDR(d.value)}</TableCell>
+                  <TableCell className="text-sm">{formatIDRFull(d.value)}</TableCell>
                   <TableCell>
                     <StatusBadge
                       status={d.daysInStage > 14 ? 'red' : d.daysInStage > 7 ? 'yellow' : 'green'}
