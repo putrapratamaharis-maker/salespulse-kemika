@@ -3,7 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDR, formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search } from 'lucide-react';
+import { DollarSign, Percent, TrendingUp, CreditCard, Loader2, MoreVertical, Pencil, Trash2, Download, Search, Trophy } from 'lucide-react';
 import NewInvoiceDialog from '@/components/invoices/NewInvoiceDialog';
 import EditInvoiceDialog from '@/components/invoices/EditInvoiceDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -43,6 +43,7 @@ const Revenue = () => {
   const [refreshKey, setRefreshKey] = useState(0);
   const [editInvoice, setEditInvoice] = useState<InvoiceRow | null>(null);
   const [editOpen, setEditOpen] = useState(false);
+  const [totalWon, setTotalWon] = useState(0);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
@@ -51,12 +52,19 @@ const Revenue = () => {
 
   const fetchInvoices = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('invoices')
-      .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
-      .order('issue_date', { ascending: false });
 
-    const mapped = (data || []).map((row: any) => ({
+    const [invoiceRes, dealsRes] = await Promise.all([
+      supabase
+        .from('invoices')
+        .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
+        .order('issue_date', { ascending: false }),
+      supabase
+        .from('deals')
+        .select('value')
+        .in('stage', ['po_secured', 'invoice_issued']),
+    ]);
+
+    const mapped = (invoiceRes.data || []).map((row: any) => ({
       id: row.id,
       invoice_number: row.invoice_number,
       net_sales: row.net_sales,
@@ -68,6 +76,7 @@ const Revenue = () => {
       account_name: row.accounts?.name || '',
     }));
     setAllInvoices(mapped);
+    setTotalWon((dealsRes.data || []).reduce((s: number, d: any) => s + (d.value || 0), 0));
     setLoading(false);
   };
 
@@ -197,8 +206,9 @@ const Revenue = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Total Revenue by Invoice" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total net_sales dari seluruh invoice berdasarkan filter periode dan segment" />
+        <KPICard label="Total Won (PO + Invoice)" value={formatIDRFull(totalWon)} icon={Trophy} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Gabungan nilai deals pada tahap PO Secured dan Invoice Issued dari pipeline" />
         <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Total gross_profit dari seluruh invoice berdasarkan filter" />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip="Gross Profit ÷ Total Revenue × 100%. Threshold hijau ≥ 17%" />
         <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip="Persentase invoice yang memiliki margin ≥ 17% dari total invoice" />
