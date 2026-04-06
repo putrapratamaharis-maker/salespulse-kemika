@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { Deal, DealStage, formatIDRFull, formatDate } from '@/types/sales';
+import { Deal, DealStage, formatNumIDR, formatDate } from '@/types/sales';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
