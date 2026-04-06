@@ -445,7 +445,7 @@ const MyPipeline = () => {
                   <TableHead className="text-xs">Deal</TableHead>
                   <TableHead className="text-xs">Account</TableHead>
                   <TableHead className="text-xs">Stage</TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value <SortIcon col="value" /></TableHead>
+                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value (Rp) <SortIcon col="value" /></TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
                   <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
                 </TableRow></TableHeader>
