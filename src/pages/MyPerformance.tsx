@@ -112,12 +112,12 @@ const MyPerformance = () => {
   const wonDeals = dls.filter(d => revenueStages.includes(d.stage));
 
   const mtdWon = wonDeals.filter(d => {
-    const dt = new Date(d.updated_at);
+    const dt = new Date(d.expected_close_date);
     return dt.getMonth() === currentMonthNum && dt.getFullYear() === currentYearNum;
   });
   const revenueMTD = mtdWon.reduce((s, d) => s + d.value, 0);
 
-  const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYearNum);
+  const ytdWon = wonDeals.filter(d => new Date(d.expected_close_date).getFullYear() === currentYearNum);
   const revenueYTD = ytdWon.reduce((s, d) => s + d.value, 0);
 
   const mtdInv = inv.filter(i => {
