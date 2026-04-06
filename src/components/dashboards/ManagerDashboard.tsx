@@ -3,12 +3,13 @@ import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet } from 'lucide-react';
+import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet, Calendar } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
 import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface ProductWithCategory {
   name: string;
@@ -22,11 +23,33 @@ interface CategoryRevenue {
   revenue: number;
 }
 
+const MONTH_OPTIONS = [
+  { value: '1', label: 'Januari' },
+  { value: '2', label: 'Februari' },
+  { value: '3', label: 'Maret' },
+  { value: '4', label: 'April' },
+  { value: '5', label: 'Mei' },
+  { value: '6', label: 'Juni' },
+  { value: '7', label: 'Juli' },
+  { value: '8', label: 'Agustus' },
+  { value: '9', label: 'September' },
+  { value: '10', label: 'Oktober' },
+  { value: '11', label: 'November' },
+  { value: '12', label: 'Desember' },
+];
+
+const currentDate = new Date();
+const YEAR_OPTIONS = Array.from({ length: 5 }, (_, i) => String(currentDate.getFullYear() - 2 + i));
+
 export function ManagerDashboard() {
   const [topProducts, setTopProducts] = useState<ProductWithCategory[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryRevenue[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
   const [loading, setLoading] = useState(true);
+
+  // Year/Month filter state
+  const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
 
   // Real DB state
   const [revenueMTD, setRevenueMTD] = useState(0);
@@ -44,11 +67,10 @@ export function ManagerDashboard() {
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
 
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const selYear = Number(selectedYear);
+  const selMonth = Number(selectedMonth);
 
-  const monthName = now.toLocaleString('id-ID', { month: 'long' });
+  const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
 
   useEffect(() => {
     async function fetchDashboardData() {
