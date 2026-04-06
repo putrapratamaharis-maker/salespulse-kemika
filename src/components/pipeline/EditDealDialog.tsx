@@ -459,13 +459,11 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
             </div>
 
             {/* Margin, Probability, Date */}
-            <div className={`grid gap-3 ${stage === 'invoice_issued' ? 'grid-cols-2' : 'grid-cols-3'}`}>
-              {stage !== 'invoice_issued' && (
-                <div className="space-y-1.5">
-                  <Label>{stage === 'po_secured' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
-                  <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => setExpectedMargin(e.target.value)} placeholder="0-100" />
-                </div>
-              )}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label>{stage === 'po_secured' || stage === 'invoice_issued' ? 'Gross Margin (%)' : 'Expected Margin (%)'}</Label>
+                <Input type="number" min={0} max={100} step="0.01" value={expectedMargin} onChange={e => handleMarginChangeForInvoice(e.target.value)} placeholder="0-100" />
+              </div>
               <div className="space-y-1.5">
                 <Label>Probability (%)</Label>
                 <Input type="number" min={0} max={100} step="0.01" value={stage === 'po_secured' || stage === 'invoice_issued' ? '100' : probability} onChange={e => { if (stage !== 'po_secured' && stage !== 'invoice_issued') setProbability(e.target.value); }} disabled={stage === 'po_secured' || stage === 'invoice_issued'} placeholder="0-100" />
@@ -475,6 +473,60 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                 <Input type="date" value={expectedCloseDate} onChange={e => setExpectedCloseDate(e.target.value)} />
               </div>
             </div>
+
+            {/* Gross Profit - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="space-y-1.5">
+                <Label>Gross Profit (Rp)</Label>
+                <Input
+                  type="number"
+                  value={grossProfit}
+                  onChange={e => setGrossProfit(e.target.value)}
+                  placeholder="0"
+                />
+              </div>
+            )}
+
+            {/* Invoice Detail section - only for invoice_issued */}
+            {stage === 'invoice_issued' && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 space-y-3">
+                <p className="text-xs font-semibold text-muted-foreground">Detail Invoice</p>
+                <div className="space-y-1.5">
+                  <Label>No. Invoice <span className="text-destructive">*</span></Label>
+                  <Input
+                    value={poNumber}
+                    onChange={e => setPoNumber(e.target.value)}
+                    placeholder="Contoh: INV-2026-001"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label>Tanggal Terbit <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="date"
+                      value={invoiceIssueDate}
+                      onChange={e => setInvoiceIssueDate(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>Jatuh Tempo <span className="text-destructive">*</span></Label>
+                    <Input
+                      type="date"
+                      value={invoiceDueDate}
+                      onChange={e => setInvoiceDueDate(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Tanggal Bayar (opsional)</Label>
+                  <Input
+                    type="date"
+                    value={invoicePaidDate}
+                    onChange={e => setInvoicePaidDate(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Notes */}
             <div className="space-y-1.5">
