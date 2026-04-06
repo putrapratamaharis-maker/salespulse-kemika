@@ -76,6 +76,7 @@ const MyPerformance = () => {
   const [dls, setDls] = useState<DealRow[]>([]);
   const [tgt, setTgt] = useState<TargetRow | null>(null);
   const [acts, setActs] = useState<ActivityRow[]>([]);
+  const [totalTargetYear, setTotalTargetYear] = useState(0);
 
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
