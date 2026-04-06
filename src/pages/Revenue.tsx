@@ -31,7 +31,7 @@ interface InvoiceRow {
 interface DealRow {
   value: number;
   segment: string;
-  updated_at: string;
+  revenue_date: string | null;
 }
 
 const MONTHS = [
@@ -66,7 +66,7 @@ const Revenue = () => {
         .order('issue_date', { ascending: false }),
       supabase
         .from('deals')
-        .select('value, segment, updated_at')
+        .select('value, segment, revenue_date')
         .in('stage', ['po_secured', 'invoice_issued']),
     ]);
 
@@ -85,7 +85,7 @@ const Revenue = () => {
     setAllDeals((dealsRes.data || []).map((d: any) => ({
       value: d.value || 0,
       segment: d.segment || '',
-      updated_at: d.updated_at || '',
+      revenue_date: d.revenue_date || null,
     })));
     setLoading(false);
   };
@@ -119,14 +119,14 @@ const Revenue = () => {
     return filtered;
   }, [allInvoices, filterYear, filterMonth, searchQuery]);
 
-  // Filtered deals (same period filters as invoices, using updated_at as the date reference)
+  // Filtered deals (same period filters as invoices, using revenue_date as the date reference)
   const filteredDeals = useMemo(() => {
-    let filtered = allDeals;
+    let filtered = allDeals.filter(d => d.revenue_date);
     if (filterYear !== 'all') {
-      filtered = filtered.filter(d => d.updated_at.startsWith(filterYear));
+      filtered = filtered.filter(d => d.revenue_date!.startsWith(filterYear));
     }
     if (filterMonth !== 'all') {
-      filtered = filtered.filter(d => d.updated_at.slice(5, 7) === filterMonth);
+      filtered = filtered.filter(d => d.revenue_date!.slice(5, 7) === filterMonth);
     }
     return filtered;
   }, [allDeals, filterYear, filterMonth]);

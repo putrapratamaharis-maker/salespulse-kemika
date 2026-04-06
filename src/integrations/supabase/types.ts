@@ -208,6 +208,7 @@ export type Database = {
           notes: string | null
           po_number: string | null
           probability: number
+          revenue_date: string | null
           sales_id: string
           segment: string
           stage: Database["public"]["Enums"]["deal_stage"]
@@ -226,6 +227,7 @@ export type Database = {
           notes?: string | null
           po_number?: string | null
           probability?: number
+          revenue_date?: string | null
           sales_id: string
           segment?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -244,6 +246,7 @@ export type Database = {
           notes?: string | null
           po_number?: string | null
           probability?: number
+          revenue_date?: string | null
           sales_id?: string
           segment?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
@@ -1206,6 +1209,7 @@ export type Database = {
           notes: string | null
           po_number: string | null
           probability: number
+          revenue_date: string | null
           sales_id: string
           segment: string
           stage: Database["public"]["Enums"]["deal_stage"]
