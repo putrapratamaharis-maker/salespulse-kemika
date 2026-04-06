@@ -103,11 +103,14 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
       stage: 'invoice_issued' as any,
       value: netSalesNum,
       probability: 100,
-      expected_close_date: format(issueDate, 'yyyy-MM-dd'),
+      expected_close_date: poDate ? format(poDate, 'yyyy-MM-dd') : format(issueDate, 'yyyy-MM-dd'),
       expected_margin: Math.round(marginPct * 100) / 100,
       segment,
-      po_number: invoiceNumber.trim(),
-      notes: `Auto-created from invoice ${invoiceNumber.trim()}`,
+      po_number: poNumber.trim() || invoiceNumber.trim(),
+      revenue_date: format(issueDate, 'yyyy-MM-dd'),
+      notes: poNumber.trim()
+        ? `Auto-created from invoice ${invoiceNumber.trim()} (PO: ${poNumber.trim()})`
+        : `Auto-created from invoice ${invoiceNumber.trim()}`,
     });
 
     setSaving(false);
