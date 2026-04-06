@@ -84,6 +84,10 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
   const [expectedCloseDate, setExpectedCloseDate] = useState('');
   const [notes, setNotes] = useState('');
 
+  // PO fields (for po_secured and invoice_issued)
+  const [poNumber, setPoNumber] = useState('');
+  const [poDate, setPoDate] = useState('');
+
   // Invoice-specific fields (when stage === 'invoice_issued')
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [invoiceIssueDate, setInvoiceIssueDate] = useState<Date | undefined>(new Date());

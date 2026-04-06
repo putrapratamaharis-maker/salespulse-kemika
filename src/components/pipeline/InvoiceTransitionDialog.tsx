@@ -133,6 +133,19 @@ export function InvoiceTransitionDialog({ open, onOpenChange, deal, getAccountNa
               <p className="text-xs text-muted-foreground">Net Sales (dari Deal Value)</p>
               <p className="text-sm font-bold text-foreground">{formatRpDisplay(deal.value)}</p>
             </div>
+            {/* PO/SP/SPK info - read-only from previous stage */}
+            {(deal.poNumber || deal.expectedCloseDate) && (
+              <div className="grid grid-cols-2 gap-3 pt-1 border-t border-border mt-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">No. PO/SP/SPK</p>
+                  <p className="text-sm font-medium text-foreground">{deal.poNumber || '-'}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">PO/Won/Closed Date</p>
+                  <p className="text-sm font-medium text-foreground">{deal.expectedCloseDate || '-'}</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Invoice Number */}
