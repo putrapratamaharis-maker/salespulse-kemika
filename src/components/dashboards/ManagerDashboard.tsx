@@ -173,8 +173,10 @@ export function ManagerDashboard() {
   }, []);
 
   const totalRevenue = segmentRevenue.reduce((s, sr) => s + sr.revenue, 0);
-  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
-  const achievementPct = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
+  const marginPctMTD = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
+  const marginPctYTD = revenueYTD > 0 ? (grossProfitYTD / revenueYTD) * 100 : 0;
+  const achievementPctMTD = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
+  const achievementPctYTD = totalTargetYear > 0 ? (revenueYTD / totalTargetYear) * 100 : 0;
 
   const CATEGORY_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
   const totalCategoryRevenue = categoryData.reduce((s, c) => s + c.revenue, 0);
