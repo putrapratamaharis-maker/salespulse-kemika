@@ -66,7 +66,7 @@ const Revenue = () => {
         .order('issue_date', { ascending: false }),
       supabase
         .from('deals')
-        .select('value, segment, updated_at')
+        .select('value, segment, revenue_date')
         .in('stage', ['po_secured', 'invoice_issued']),
     ]);
 
