@@ -158,7 +158,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
 
   const formatRp = (val: number) => val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!deal || !accountId || !expectedCloseDate) {
       toast({ title: 'Lengkapi semua field yang diperlukan', variant: 'destructive' });
@@ -182,6 +184,42 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       return;
     }
 
+    // Validate invoice fields when transitioning to invoice_issued
+    if (isNewInvoiceTransition) {
+      if (!poNumber.trim()) { sonnerToast.error('No. Invoice wajib diisi'); return; }
+      if (!invoiceIssueDate) { sonnerToast.error('Tanggal Terbit wajib diisi'); return; }
+      if (!invoiceDueDate) { sonnerToast.error('Jatuh Tempo wajib diisi'); return; }
+    }
+
+    setSaving(true);
+
+    // Create invoice record when transitioning to invoice_issued
+    if (isNewInvoiceTransition && poNumber.trim()) {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { sonnerToast.error('Anda harus login'); setSaving(false); return; }
+
+      const { error } = await supabase.from('invoices').insert({
+        invoice_number: poNumber.trim(),
+        account_id: accountId,
+        sales_id: user.id,
+        segment: segment,
+        net_sales: totalValue > 0 ? totalValue : deal.value,
+        gross_profit: Number(grossProfit) || 0,
+        issue_date: invoiceIssueDate,
+        due_date: invoiceDueDate,
+        paid_date: invoicePaidDate || null,
+      });
+
+      if (error) {
+        const msg = error.code === '23505' ? 'Nomor invoice sudah digunakan, gunakan nomor lain' : 'Gagal membuat invoice: ' + error.message;
+        sonnerToast.error(msg);
+        setSaving(false);
+        return;
+      }
+
+      sonnerToast.success('Invoice berhasil dibuat dari deal');
+    }
+
     const dealName = products.length === 1
       ? (products[0].productName || deal.name)
       : `${products[0].productName || deal.name} (+${products.length - 1} item)`;
@@ -193,8 +231,9 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       segment: segment as Segment,
       stage,
       value: totalValue > 0 ? totalValue : deal.value,
-      probability: Number(probability) || 0,
+      probability: skipProb ? 100 : (Number(probability) || 0),
       expectedCloseDate,
+      revenueDate: isNewInvoiceTransition ? invoiceIssueDate : (stage === 'po_secured' && deal.stage !== 'po_secured' ? expectedCloseDate : deal.revenueDate),
       updatedAt: new Date().toISOString().split('T')[0],
       location,
       notes,
@@ -205,6 +244,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
 
     onSave(updated);
     toast({ title: 'Deal berhasil diperbarui' });
+    setSaving(false);
     onOpenChange(false);
   };
 
