@@ -88,6 +88,14 @@ const MyPerformance = () => {
   const [acts, setActs] = useState<ActivityRow[]>([]);
   const [totalTargetYear, setTotalTargetYear] = useState(0);
 
+  const [selectedYear, setSelectedYear] = useState(String(currentDate.getFullYear()));
+  const [selectedMonth, setSelectedMonth] = useState(String(currentDate.getMonth() + 1));
+
+  const selYear = Number(selectedYear);
+  const selMonth = Number(selectedMonth);
+  const monthStr = `${selectedYear}-${String(selMonth).padStart(2, '0')}`;
+  const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
+
   useEffect(() => {
     if (!['sales_person', 'staff_operational'].includes(currentUser.orgRole)) {
       navigate('/my-performance/kpis', { replace: true });
@@ -95,19 +103,16 @@ const MyPerformance = () => {
   }, [currentUser.orgRole, navigate]);
 
   const now = new Date();
-  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const monthName = now.toLocaleString('id-ID', { month: 'long' });
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       const salesId = currentUser.id;
-      const currentYear = String(now.getFullYear());
       const [invRes, dealRes, targetRes, yearTargetsRes, actRes] = await Promise.all([
         supabase.from('invoices').select('*').eq('sales_id', salesId),
         supabase.from('deals').select('*').eq('sales_id', salesId),
-        supabase.from('targets').select('*').eq('user_id', salesId).eq('month', currentMonth).limit(1),
-        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${currentYear}-%`),
+        supabase.from('targets').select('*').eq('user_id', salesId).eq('month', monthStr).limit(1),
+        supabase.from('targets').select('revenue_target').eq('user_id', salesId).like('month', `${selectedYear}-%`),
         supabase.from('sales_activities').select('*').eq('sales_id', salesId),
       ]);
       setInv((invRes.data || []) as InvoiceRow[]);
@@ -119,11 +124,11 @@ const MyPerformance = () => {
       setLoading(false);
     }
     fetchData();
-  }, [currentUser.id, currentMonth]);
+  }, [currentUser.id, monthStr]);
 
   // ===== KPI Calculations =====
-  const currentMonthNum = now.getMonth();
-  const currentYearNum = now.getFullYear();
+  const currentMonthNum = selMonth - 1; // 0-indexed
+  const currentYearNum = selYear;
 
   const revenueStages = ['po_secured', 'invoice_issued'];
   const wonDeals = dls.filter(d => revenueStages.includes(d.stage));
