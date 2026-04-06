@@ -1,5 +1,5 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
-import { Deal, DealStage, Segment, formatIDR, formatDate } from '@/types/sales';
+import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
 import { CalendarClock, Percent } from 'lucide-react';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
