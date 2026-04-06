@@ -3,7 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin } from 'lucide-react';
+import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
 import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,11 +32,13 @@ export function ManagerDashboard() {
   const [revenueMTD, setRevenueMTD] = useState(0);
   const [revenueYTD, setRevenueYTD] = useState(0);
   const [grossProfitMTD, setGrossProfitMTD] = useState(0);
+  const [grossProfitYTD, setGrossProfitYTD] = useState(0);
   const [totalTarget, setTotalTarget] = useState(0);
+  const [totalTargetYear, setTotalTargetYear] = useState(0);
   const [outstandingAR, setOutstandingAR] = useState(0);
-  const [pipeline30, setPipeline30] = useState(0);
-  const [pipeline60, setPipeline60] = useState(0);
+  const [totalPipeline, setTotalPipeline] = useState(0);
   const [weightedForecast, setWeightedForecast] = useState(0);
+  const [cashIn, setCashIn] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
@@ -46,18 +48,43 @@ export function ManagerDashboard() {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  const monthName = now.toLocaleString('id-ID', { month: 'long' });
+
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
 
+      const currentYearStr = String(currentYear);
+
       // Use security definer RPC for company-wide data (bypasses RLS)
-      const [{ data: kpiData, error: kpiError }, { data: accounts }] = await Promise.all([
+      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: yearTargetsRes }, { data: invoicesYTD }, { data: pipelineDeals }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
           _current_year: currentYear,
-          _current_month: currentMonth + 1, // JS months are 0-indexed, SQL expects 1-indexed
+          _current_month: currentMonth + 1,
         }),
         supabase.from('accounts').select('id, name, segment, region'),
+        supabase.from('targets').select('revenue_target').like('month', `${currentYearStr}-%`),
+        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${currentYearStr}-01-01`).lte('issue_date', `${currentYearStr}-12-31`),
+        supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
       ]);
+
+      // Total Target Year
+      const yearTotal = (yearTargetsRes || []).reduce((s, t) => s + (t.revenue_target || 0), 0);
+      setTotalTargetYear(yearTotal);
+
+      // Gross Profit YTD & Cash-In from invoices
+      let gpYTD = 0;
+      let cashInTotal = 0;
+      (invoicesYTD || []).forEach(inv => {
+        gpYTD += Number(inv.gross_profit) || 0;
+        if (inv.paid_date) cashInTotal += Number(inv.net_sales) || 0;
+      });
+      setGrossProfitYTD(gpYTD);
+      setCashIn(cashInTotal);
+
+      // Total Pipeline
+      const pipelineTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0), 0);
+      setTotalPipeline(pipelineTotal);
 
       const allAccounts = accounts || [];
 
@@ -68,8 +95,6 @@ export function ManagerDashboard() {
         setRevenueYTD(Number(d.revenue_ytd) || 0);
         setTotalTarget(Number(d.total_target) || 0);
         setOutstandingAR(Number(d.outstanding_ar) || 0);
-        setPipeline30(Number(d.pipeline_30) || 0);
-        setPipeline60(Number(d.pipeline_60) || 0);
         setWeightedForecast(Number(d.weighted_forecast) || 0);
 
         // Segment revenue
@@ -148,8 +173,10 @@ export function ManagerDashboard() {
   }, []);
 
   const totalRevenue = segmentRevenue.reduce((s, sr) => s + sr.revenue, 0);
-  const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
-  const achievementPct = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
+  const marginPctMTD = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
+  const marginPctYTD = revenueYTD > 0 ? (grossProfitYTD / revenueYTD) * 100 : 0;
+  const achievementPctMTD = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
+  const achievementPctYTD = totalTargetYear > 0 ? (revenueYTD / totalTargetYear) * 100 : 0;
 
   const CATEGORY_COLORS = ['hsl(var(--chart-1))', 'hsl(var(--chart-2))', 'hsl(var(--chart-3))', 'hsl(var(--chart-4))'];
   const totalCategoryRevenue = categoryData.reduce((s, c) => s + c.revenue, 0);
@@ -171,19 +198,28 @@ export function ManagerDashboard() {
         <p className="text-sm text-muted-foreground">Company-wide sales performance overview</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label="ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label="Total Target" value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
-        <KPICard label="Target Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip="Revenue MTD ÷ Total Target × 100%" />
-        <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Total Gross Profit ÷ Revenue MTD × 100%. Threshold hijau ≥ 17%" />
+      {/* Row 1: Revenue & Targets */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Total Revenue Target ${currentYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
+        <KPICard label="Actual Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-orange" borderAccent="border-l-kpi-orange-border" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
       </div>
 
+      {/* Row 2: Achievement & Profitability */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Pipeline 30 Days" value={formatIDRFull(pipeline30)} icon={TrendingUp} autoFitText className="bg-kpi-indigo " borderAccent="border-l-kpi-indigo-border" tooltip="Total nilai deal aktif yang expected close date dalam 30 hari ke depan" />
-        <KPICard label="Pipeline 60 Days" value={formatIDRFull(pipeline60)} icon={TrendingUp} autoFitText className="bg-kpi-orange " borderAccent="border-l-kpi-orange-border" tooltip="Total nilai deal aktif yang expected close date dalam 60 hari ke depan" />
-        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText className="bg-kpi-cyan " borderAccent="border-l-kpi-cyan-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
+        <KPICard label="Target Achievement YTD" value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Revenue YTD ÷ Total Revenue Target Year × 100%" />
+        <KPICard label={`Target Achievement ${monthName}`} value={formatPercent(achievementPctMTD)} status={getAchievementStatus(achievementPctMTD)} icon={Target} autoFitText className="bg-kpi-indigo" borderAccent="border-l-kpi-indigo-border" tooltip="Revenue MTD ÷ Revenue Target bulan berjalan × 100%" />
+        <KPICard label="Gross Margin YTD" value={formatPercent(marginPctYTD)} status={marginPctYTD >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Gross Profit YTD ÷ Revenue YTD × 100%. Threshold hijau ≥ 17%" />
+        <KPICard label="Gross Profit YTD" value={formatIDRFull(grossProfitYTD)} icon={Banknote} autoFitText className="bg-kpi-cyan" borderAccent="border-l-kpi-cyan-border" tooltip="Total gross profit dari seluruh invoice di tahun berjalan" />
+      </div>
+
+      {/* Row 3: Pipeline & AR */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Qualification, Proposal, Negotiation, Quotation)" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={BarChart3} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
+        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashIn)} icon={Wallet} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice yang sudah dibayar (paid_date terisi) di tahun berjalan" />
       </div>
 
       {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
