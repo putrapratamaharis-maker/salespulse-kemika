@@ -27,6 +27,8 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
 
   const [invoiceNumber, setInvoiceNumber] = useState('');
+  const [poNumber, setPoNumber] = useState('');
+  const [poDate, setPoDate] = useState<Date | undefined>();
   const [accountId, setAccountId] = useState('');
   const [segment, setSegment] = useState('B2B');
   const [netSales, setNetSales] = useState('');
