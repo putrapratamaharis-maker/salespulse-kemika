@@ -109,6 +109,14 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       setExpectedCloseDate(deal.expectedCloseDate);
       setNotes(deal.notes || '');
       setPoNumber(deal.poNumber || '');
+      // Preserve original PO info for po_secured and invoice_issued deals
+      if (deal.stage === 'po_secured' || deal.stage === 'invoice_issued') {
+        setOriginalPoNumber(deal.poNumber || '');
+        setOriginalPoDate(deal.revenueDate || deal.expectedCloseDate || '');
+      } else {
+        setOriginalPoNumber('');
+        setOriginalPoDate('');
+      }
       // Reset invoice fields
       setInvoiceIssueDate(new Date().toISOString().split('T')[0]);
       setInvoiceDueDate('');
