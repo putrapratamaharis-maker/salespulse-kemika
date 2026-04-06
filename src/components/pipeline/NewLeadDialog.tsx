@@ -270,7 +270,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       </DialogTrigger>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-0">
-          <DialogTitle>Tambah Lead / Forecast Baru</DialogTitle>
+          <DialogTitle>Tambah Leads / Forecast Baru</DialogTitle>
         </DialogHeader>
         <ScrollArea className="max-h-[calc(90vh-80px)] px-6 pb-6">
           <form onSubmit={handleSubmit} className="space-y-4 mt-3">
