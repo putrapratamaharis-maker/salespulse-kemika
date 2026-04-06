@@ -108,6 +108,8 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     setProbability('');
     setExpectedCloseDate('');
     setNotes('');
+    setPoNumber('');
+    setPoDate('');
     setInvoiceNumber('');
     setInvoiceIssueDate(new Date());
     setInvoiceDueDate(undefined);
