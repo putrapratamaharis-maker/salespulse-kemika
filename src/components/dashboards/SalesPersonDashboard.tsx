@@ -49,15 +49,24 @@ export function SalesPersonDashboard() {
   const currentMonth = now.getMonth();
   const currentYear = now.getFullYear();
 
+  // Revenue from deals at po_secured AND invoice_issued
+  const revenueStages = ['po_secured', 'invoice_issued'];
+  const wonDeals = deals.filter(d => revenueStages.includes(d.stage));
+
+  const mtdWon = wonDeals.filter(d => {
+    const dt = new Date(d.updated_at);
+    return dt.getMonth() === currentMonth && dt.getFullYear() === currentYear;
+  });
+  const revenueMTD = mtdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
+
+  const ytdWon = wonDeals.filter(d => new Date(d.updated_at).getFullYear() === currentYear);
+  const revenueYTD = ytdWon.reduce((s: number, d: any) => s + (d.value || 0), 0);
+
   const mtdInvoices = invoices.filter(i => {
     const d = new Date(i.issue_date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
-  const revenueMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
   const grossProfitMTD = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
-
-  const ytdInvoices = invoices.filter(i => new Date(i.issue_date).getFullYear() === currentYear);
-  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
 
   const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetVal = target?.revenue_target || 1;
