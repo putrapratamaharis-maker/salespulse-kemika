@@ -321,12 +321,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         <div
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          className={`rounded-lg shadow-sm p-2.5 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
-                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 180, minHeight: 180, maxHeight: 180, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
+                          className={`rounded-lg shadow-sm p-2 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
+                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 160, minHeight: 160, maxHeight: 160, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
-                        <div className="flex-1 space-y-1 min-h-0 overflow-hidden">
+                        <div className="flex-1 space-y-0.5 min-h-0 overflow-hidden">
                           {/* 1. Header - Account Name */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
                             <p className="text-[13px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
@@ -378,7 +378,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
-                        <div className="shrink-0 space-y-1 pt-1 border-t border-border/50 overflow-hidden">
+                        <div className="shrink-0 space-y-0.5 pt-0.5 border-t border-border/50 overflow-hidden">
                           <div className="flex items-center justify-between overflow-hidden">
                             <div className="flex items-center gap-1 text-destructive truncate">
                               <CalendarClock className="h-3 w-3 shrink-0" />
