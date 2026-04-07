@@ -35,7 +35,7 @@ interface EditDealDialogProps {
   deal: Deal | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (deal: Deal) => void;
+  onSave: (deal: Deal) => Promise<boolean>;
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
