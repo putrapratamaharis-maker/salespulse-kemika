@@ -152,6 +152,7 @@ const MyPerformance = () => {
 
   const marginPct = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
   const targetRevenue = tgt?.revenue_target || 0;
+  const achievementPctYTD = totalTargetYear > 0 ? (revenueYTD / totalTargetYear) * 100 : 0;
   const achievementPct = targetRevenue > 0 ? (revenueMTD / targetRevenue) * 100 : 0;
 
   const finalStages = ['po_secured', 'invoice_issued', 'canceled', 'lost'];
