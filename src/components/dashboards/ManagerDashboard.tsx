@@ -263,6 +263,12 @@ export function ManagerDashboard() {
         <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
       </div>
 
+      {/* Row 4: Pipeline */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Qualification, Proposal, Negotiation, Quotation)" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif pada tahap terbuka" />
+      </div>
+
       {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
       <LiveStatusRow />
 
