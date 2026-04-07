@@ -177,71 +177,77 @@
 
 @layer components {
   .kpi-card {
-    @apply bg-card rounded-lg border p-5 shadow-sm transition-all duration-300 ease-out hover:shadow-lg hover:scale-[1.03] hover:-translate-y-1 cursor-default;
+    @apply rounded-xl border-2 border-white/30 p-5 shadow-sm transition-all duration-300 ease-out hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 cursor-default;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+  }
+
+  .dark .kpi-card {
+    @apply border-white/10;
   }
 
   /* KPI gradient backgrounds - light mode */
   .bg-kpi-blue {
-    background: linear-gradient(135deg, hsl(var(--kpi-blue)) 0%, hsl(210, 70%, 82%) 100%) !important;
+    background: linear-gradient(135deg, hsl(210 65% 88% / 0.7) 0%, hsl(210, 70%, 82% / 0.5) 100%) !important;
   }
   .bg-kpi-teal {
-    background: linear-gradient(135deg, hsl(var(--kpi-teal)) 0%, hsl(174, 55%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(174 50% 85% / 0.7) 0%, hsl(174, 55%, 78% / 0.5) 100%) !important;
   }
   .bg-kpi-amber {
-    background: linear-gradient(135deg, hsl(var(--kpi-amber)) 0%, hsl(45, 80%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(40 75% 85% / 0.7) 0%, hsl(45, 80%, 78% / 0.5) 100%) !important;
   }
   .bg-kpi-purple {
-    background: linear-gradient(135deg, hsl(var(--kpi-purple)) 0%, hsl(275, 55%, 82%) 100%) !important;
+    background: linear-gradient(135deg, hsl(270 50% 88% / 0.7) 0%, hsl(275, 55%, 82% / 0.5) 100%) !important;
   }
   .bg-kpi-rose {
-    background: linear-gradient(135deg, hsl(var(--kpi-rose)) 0%, hsl(345, 65%, 82%) 100%) !important;
+    background: linear-gradient(135deg, hsl(350 60% 88% / 0.7) 0%, hsl(345, 65%, 82% / 0.5) 100%) !important;
   }
   .bg-kpi-emerald {
-    background: linear-gradient(135deg, hsl(var(--kpi-emerald)) 0%, hsl(158, 55%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(152 50% 85% / 0.7) 0%, hsl(158, 55%, 78% / 0.5) 100%) !important;
   }
   .bg-kpi-indigo {
-    background: linear-gradient(135deg, hsl(var(--kpi-indigo)) 0%, hsl(235, 60%, 82%) 100%) !important;
+    background: linear-gradient(135deg, hsl(230 55% 88% / 0.7) 0%, hsl(235, 60%, 82% / 0.5) 100%) !important;
   }
   .bg-kpi-orange {
-    background: linear-gradient(135deg, hsl(var(--kpi-orange)) 0%, hsl(30, 80%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(25 75% 85% / 0.7) 0%, hsl(30, 80%, 78% / 0.5) 100%) !important;
   }
   .bg-kpi-cyan {
-    background: linear-gradient(135deg, hsl(var(--kpi-cyan)) 0%, hsl(195, 60%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(190 55% 85% / 0.7) 0%, hsl(195, 60%, 78% / 0.5) 100%) !important;
   }
   .bg-kpi-slate {
-    background: linear-gradient(135deg, hsl(var(--kpi-slate)) 0%, hsl(220, 28%, 78%) 100%) !important;
+    background: linear-gradient(135deg, hsl(215 25% 85% / 0.7) 0%, hsl(220, 28%, 78% / 0.5) 100%) !important;
   }
 
   /* KPI gradient backgrounds - dark mode */
   .dark .bg-kpi-blue {
-    background: linear-gradient(135deg, hsl(var(--kpi-blue)) 0%, hsl(210, 55%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(210 50% 18% / 0.6) 0%, hsl(210, 55%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-teal {
-    background: linear-gradient(135deg, hsl(var(--kpi-teal)) 0%, hsl(174, 45%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(174 40% 16% / 0.6) 0%, hsl(174, 45%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-amber {
-    background: linear-gradient(135deg, hsl(var(--kpi-amber)) 0%, hsl(45, 55%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(40 50% 16% / 0.6) 0%, hsl(45, 55%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-purple {
-    background: linear-gradient(135deg, hsl(var(--kpi-purple)) 0%, hsl(275, 45%, 26%) 100%) !important;
+    background: linear-gradient(135deg, hsl(270 40% 19% / 0.6) 0%, hsl(275, 45%, 26% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-rose {
-    background: linear-gradient(135deg, hsl(var(--kpi-rose)) 0%, hsl(345, 50%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(350 45% 18% / 0.6) 0%, hsl(345, 50%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-emerald {
-    background: linear-gradient(135deg, hsl(var(--kpi-emerald)) 0%, hsl(158, 45%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(152 40% 16% / 0.6) 0%, hsl(158, 45%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-indigo {
-    background: linear-gradient(135deg, hsl(var(--kpi-indigo)) 0%, hsl(235, 50%, 26%) 100%) !important;
+    background: linear-gradient(135deg, hsl(230 45% 19% / 0.6) 0%, hsl(235, 50%, 26% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-orange {
-    background: linear-gradient(135deg, hsl(var(--kpi-orange)) 0%, hsl(30, 55%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(25 50% 18% / 0.6) 0%, hsl(30, 55%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-cyan {
-    background: linear-gradient(135deg, hsl(var(--kpi-cyan)) 0%, hsl(195, 50%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(190 45% 16% / 0.6) 0%, hsl(195, 50%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-slate {
-    background: linear-gradient(135deg, hsl(var(--kpi-slate)) 0%, hsl(220, 28%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(215 25% 18% / 0.6) 0%, hsl(220, 28%, 24% / 0.4) 100%) !important;
   }
 
   .status-green {
