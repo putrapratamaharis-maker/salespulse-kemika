@@ -220,34 +220,34 @@
 
   /* KPI gradient backgrounds - dark mode */
   .dark .bg-kpi-blue {
-    background: linear-gradient(135deg, hsl(var(--kpi-blue)) 0%, hsl(210, 55%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(210 50% 18% / 0.6) 0%, hsl(210, 55%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-teal {
-    background: linear-gradient(135deg, hsl(var(--kpi-teal)) 0%, hsl(174, 45%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(174 40% 16% / 0.6) 0%, hsl(174, 45%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-amber {
-    background: linear-gradient(135deg, hsl(var(--kpi-amber)) 0%, hsl(45, 55%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(40 50% 16% / 0.6) 0%, hsl(45, 55%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-purple {
-    background: linear-gradient(135deg, hsl(var(--kpi-purple)) 0%, hsl(275, 45%, 26%) 100%) !important;
+    background: linear-gradient(135deg, hsl(270 40% 19% / 0.6) 0%, hsl(275, 45%, 26% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-rose {
-    background: linear-gradient(135deg, hsl(var(--kpi-rose)) 0%, hsl(345, 50%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(350 45% 18% / 0.6) 0%, hsl(345, 50%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-emerald {
-    background: linear-gradient(135deg, hsl(var(--kpi-emerald)) 0%, hsl(158, 45%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(152 40% 16% / 0.6) 0%, hsl(158, 45%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-indigo {
-    background: linear-gradient(135deg, hsl(var(--kpi-indigo)) 0%, hsl(235, 50%, 26%) 100%) !important;
+    background: linear-gradient(135deg, hsl(230 45% 19% / 0.6) 0%, hsl(235, 50%, 26% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-orange {
-    background: linear-gradient(135deg, hsl(var(--kpi-orange)) 0%, hsl(30, 55%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(25 50% 18% / 0.6) 0%, hsl(30, 55%, 24% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-cyan {
-    background: linear-gradient(135deg, hsl(var(--kpi-cyan)) 0%, hsl(195, 50%, 22%) 100%) !important;
+    background: linear-gradient(135deg, hsl(190 45% 16% / 0.6) 0%, hsl(195, 50%, 22% / 0.4) 100%) !important;
   }
   .dark .bg-kpi-slate {
-    background: linear-gradient(135deg, hsl(var(--kpi-slate)) 0%, hsl(220, 28%, 24%) 100%) !important;
+    background: linear-gradient(135deg, hsl(215 25% 18% / 0.6) 0%, hsl(220, 28%, 24% / 0.4) 100%) !important;
   }
 
   .status-green {
