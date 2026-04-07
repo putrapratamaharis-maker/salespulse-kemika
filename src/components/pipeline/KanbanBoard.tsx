@@ -321,8 +321,8 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         <div
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          className={`rounded-lg border-l-[3px] border border-border shadow-sm p-2.5 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
-                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 200, minHeight: 200, maxHeight: 200, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', borderLeftColor: salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))' }}
+                          className={`rounded-lg shadow-sm p-2.5 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
+                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 200, minHeight: 200, maxHeight: 200, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
