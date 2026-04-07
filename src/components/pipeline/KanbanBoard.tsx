@@ -404,7 +404,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             {getSalesName ? (
                               <div className="flex items-center gap-1 overflow-hidden min-w-0">
                                 <User className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                                <p className="text-[10px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
+                                <p className="text-[10px] font-light text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
                               </div>
                             ) : <div />}
                             {d.segment && (
