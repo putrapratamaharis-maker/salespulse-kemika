@@ -268,17 +268,16 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   onDrop={(e) => handleDrop(e, col.stage)}
                 >
                   {/* Column Header */}
-                  <div className="p-3 border-b border-inherit">
-                    <div className="flex items-center justify-between mb-1">
+                  <div className="px-2.5 py-2 border-b border-inherit">
+                    <div className="flex items-center justify-between mb-0.5">
                       <StatusBadge status={col.color} label={col.label} />
                       <span className="text-xs font-semibold text-muted-foreground">{col.deals.length}</span>
                     </div>
-                    <p className="text-xs font-bold text-foreground">{formatIDRFull(col.totalValue)}</p>
+                    <p className="text-[11px] font-bold text-foreground">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
-                  {/* Deal Cards */}
                   <ScrollArea className="max-h-[calc(100vh-320px)]">
-                  <div className="p-2 space-y-2">
+                  <div className="p-1.5 space-y-1.5">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
                     ) : (
