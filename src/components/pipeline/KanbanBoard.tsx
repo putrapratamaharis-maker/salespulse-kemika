@@ -1,6 +1,8 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
 import { CalendarClock, MapPin, Percent, Building2, Package, User } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
