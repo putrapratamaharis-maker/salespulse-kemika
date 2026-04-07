@@ -379,6 +379,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                       ))
                     )}
                   </div>
+                  </ScrollArea>
                 </div>
               ))}
             </div>
