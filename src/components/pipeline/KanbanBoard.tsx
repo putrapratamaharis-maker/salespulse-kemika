@@ -324,6 +324,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           <p className="text-[10px] break-words font-normal text-primary">{getSalesName(d.salesId)}</p>
                         )}
 
+                        {/* Location */}
+                        {d.location && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-normal truncate" title={`Letak: ${d.location}`}>
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            {d.location}
+                          </p>
+                        )}
+
                         {/* Products list - max 3 items */}
                         {d.products && d.products.length > 0 && (
                           <div className="space-y-0.5 pt-0.5 overflow-hidden">
