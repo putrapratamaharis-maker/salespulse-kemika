@@ -112,7 +112,7 @@ const MyPipeline = () => {
   const getAccountName = (accountId: string) =>
     localAccounts.find(a => a.id === accountId)?.name || accountId;
 
-  const handleAddDeal = async (deal: Deal) => {
+  const handleAddDeal = async (deal: Deal): Promise<boolean> => {
     const { data, error } = await supabase.from('deals').insert({
       name: deal.name,
       account_id: deal.accountId,
@@ -130,7 +130,7 @@ const MyPipeline = () => {
     }).select('id').single();
     if (error) {
       toast({ title: 'Gagal menyimpan lead', description: error.message, variant: 'destructive' });
-      return;
+      return false;
     }
     // Save deal products
     if (deal.products && deal.products.length > 0 && data?.id) {
@@ -148,6 +148,7 @@ const MyPipeline = () => {
     }
     toast({ title: 'Lead berhasil ditambahkan & tersimpan' });
     fetchDeals();
+    return true;
   };
 
   const handleEditDeal = (deal: Deal) => { setEditingDeal(deal); setEditDialogOpen(true); };
