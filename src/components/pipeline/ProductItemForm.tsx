@@ -6,16 +6,6 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { Check, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { DealProduct } from '@/types/sales';
-
-interface ProductItemFormProps {
-  product: DealProduct;
-  index: number;
-  dbCategories: { id: string; name: string }[];
-  dbProducts: { id: string; name: string; category_id: string | null; unit: string | null; price: number; selling_price: number | null }[];
-  onUpdateProduct: (index: number, field: keyof DealProduct, value: string | number) => void;
-  onProductSelect: (index: number, productId: string) => void;
-  getFilteredProducts: (categoryName: string) => typeof dbProducts;
 }
 
 export function ProductCategoryCombobox({
