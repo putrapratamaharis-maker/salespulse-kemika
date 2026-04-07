@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
-import { CalendarClock, MapPin, Percent } from 'lucide-react';
+import { CalendarClock, MapPin, Percent, Building2, Package, User } from 'lucide-react';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -44,13 +44,23 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 };
 
 const stageBgColors: Record<string, string> = {
-  prospect: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
-  quotation: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800',
-  negotiation: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
-  po_secured: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',
-  invoice_issued: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
-  canceled: 'bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800',
-  lost: 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
+  prospect: 'bg-background border-border',
+  quotation: 'bg-background border-border',
+  negotiation: 'bg-background border-border',
+  po_secured: 'bg-background border-border',
+  invoice_issued: 'bg-background border-border',
+  canceled: 'bg-background border-border',
+  lost: 'bg-background border-border',
+};
+
+const stageHeaderColors: Record<string, string> = {
+  prospect: 'bg-red-500',
+  quotation: 'bg-yellow-500',
+  negotiation: 'bg-orange-500',
+  po_secured: 'bg-blue-500',
+  invoice_issued: 'bg-emerald-500',
+  canceled: 'bg-gray-500',
+  lost: 'bg-rose-600',
 };
 
 import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
@@ -258,29 +268,29 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
-            <div className="flex gap-2 px-4 pb-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-3 px-4 pb-2" style={{ width: 'max-content' }}>
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  style={{ width: 210, minWidth: 210, maxWidth: 210 }}
-                  className={`flex flex-col shrink-0 rounded-lg border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  style={{ width: 280, minWidth: 280, maxWidth: 280 }}
+                  className={`flex flex-col shrink-0 rounded-xl border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
                 >
-                  {/* Column Header */}
-                  <div className="px-2 py-1.5 border-b border-inherit">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <StatusBadge status={col.color} label={col.label} />
-                      <span className="text-xs font-semibold text-muted-foreground">{col.deals.length}</span>
+                  {/* Column Header - colored bar */}
+                  <div className={`px-3 py-2.5 ${stageHeaderColors[col.stage]} rounded-t-xl`}>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-bold text-white truncate">{col.label}</span>
+                      <span className="text-xs font-bold text-white bg-white/20 rounded-full px-2 py-0.5 shrink-0">{col.deals.length}</span>
                     </div>
-                    <p className="text-[11px] font-bold text-foreground truncate">{formatIDRFull(col.totalValue)}</p>
+                    <p className="text-[11px] font-medium text-white/80 truncate mt-0.5">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
-                  <ScrollArea className="max-h-[calc(100vh-320px)] w-full [&>div>div]:!overflow-x-hidden">
-                  <div className="p-1 space-y-1">
+                  <ScrollArea className="max-h-[calc(100vh-340px)] w-full [&>div>div]:!overflow-x-hidden">
+                  <div className="p-2 space-y-2">
                     {col.deals.length === 0 ? (
-                      <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
+                      <p className="text-xs text-muted-foreground text-center py-6">No deals</p>
                     ) : (
                       col.deals.map(d => (
                         <div
@@ -288,85 +298,86 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           style={{ width: '100%', maxWidth: '100%' }}
-                          className={`bg-card rounded-md border shadow-sm p-1.5 space-y-0.5 overflow-hidden box-border ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group font-normal`}
+                          className={`bg-card rounded-lg border shadow-sm p-3 space-y-2 overflow-hidden box-border ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
-                        {/* Account name - bold on top */}
+                        {/* Header: Deal name + action buttons */}
                         <div className="flex items-start justify-between gap-1 overflow-hidden">
-                          <p className="text-xs text-foreground leading-tight truncate flex-1 min-w-0 text-left font-medium" title={getAccountName(d.accountId)}>
-                            <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity inline mr-0.5 align-text-bottom" />
-                            {getAccountName(d.accountId)}
+                          <p className="text-[13px] text-primary font-bold leading-tight truncate flex-1 min-w-0" title={d.name}>
+                            {d.name}
                           </p>
                           <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                             {onDuplicate && (
-                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
-                                <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
+                                <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                               </Button>
                             )}
                             {onEdit && (
-                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
-                                <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
+                                <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
                               </Button>
                             )}
                             {onDelete && (
-                              <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
-                                <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
+                                <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
                               </Button>
                             )}
                           </div>
                         </div>
 
-                        {/* Deal name - only show if no products */}
-                        {(!d.products || d.products.length === 0) && (
-                          <p className="text-[11px] font-medium text-foreground/80 truncate" title={d.name}>{d.name}</p>
-                        )}
+                        {/* Account name with icon */}
+                        <div className="flex items-center gap-1.5 overflow-hidden">
+                          <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                          <p className="text-xs font-semibold text-foreground truncate" title={getAccountName(d.accountId)}>
+                            {getAccountName(d.accountId)}
+                          </p>
+                        </div>
 
-                        {/* Sales name (for global pipeline) */}
-                        {getSalesName && (
-                          <p className="text-[10px] truncate font-normal text-primary" title={getSalesName(d.salesId)}>{getSalesName(d.salesId)}</p>
-                        )}
-
-                        {/* Location */}
-                        {d.location && (
-                          <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-normal truncate" title={`Letak: ${d.location}`}>
-                            <MapPin className="h-2.5 w-2.5 shrink-0" />
-                            <span className="truncate">{d.location}</span>
+                        {/* Location + Segment */}
+                        {(d.location || d.segment) && (
+                          <p className="text-[11px] text-muted-foreground truncate" title={[d.location, d.segment].filter(Boolean).join(' • ')}>
+                            {d.location && <span>{d.location}</span>}
+                            {d.location && d.segment && <span> • </span>}
+                            {d.segment && <span>{d.segment}</span>}
                           </p>
                         )}
 
-                        {/* Products list - max 3 items */}
+                        {/* Products list with icon - max 2 items */}
                         {d.products && d.products.length > 0 && (
-                          <div className="space-y-0.5 pt-0.5 overflow-hidden">
-                            {d.products.slice(0, 3).map((p, i) => (
-                              <p key={i} className="text-[10px] text-muted-foreground truncate font-normal" title={`${p.productName} (${p.qty} ${p.unit})`}>
-                                • {p.productName} ({p.qty} {p.unit})
-                              </p>
+                          <div className="space-y-1 overflow-hidden">
+                            {d.products.slice(0, 2).map((p, i) => (
+                              <div key={i} className="flex items-center gap-1.5 overflow-hidden">
+                                <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                                <p className="text-[11px] text-muted-foreground truncate" title={`${p.productName} × ${p.qty}`}>
+                                  {p.productName} × {p.qty}
+                                </p>
+                              </div>
                             ))}
-                            {d.products.length > 3 && (
-                              <p className="text-[10px] text-muted-foreground italic truncate">+{d.products.length - 3} item lainnya</p>
+                            {d.products.length > 2 && (
+                              <p className="text-[10px] text-muted-foreground/70 italic pl-5 truncate">+{d.products.length - 2} item lainnya</p>
                             )}
                           </div>
                         )}
 
-                        {/* Value row */}
-                        <div className="flex items-center justify-between pt-1 overflow-hidden">
-                          <span className="text-xs font-bold text-foreground truncate">{formatIDRFull(d.value)}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-normal border-solid text-destructive bg-orange-100 shrink-0">{d.segment}</span>
-                        </div>
+                        {/* Value */}
+                        <p className="text-sm font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
 
-                        {/* Meta row: expected close, margin, probability */}
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50 gap-1 overflow-hidden">
-                          <span className="flex items-center gap-0.5 text-accent font-normal truncate" title="Expected Close">
-                            <CalendarClock className="h-3 w-3 shrink-0" />
-                            <span className="truncate">{formatDate(d.expectedCloseDate)}</span>
-                          </span>
-                          <div className="flex items-center gap-1.5 shrink-0">
+                        {/* Footer: Expected close + margin/probability + sales */}
+                        <div className="flex items-center justify-between pt-1.5 border-t border-border/50 overflow-hidden">
+                          <div className="flex items-center gap-1 text-destructive truncate" title="Expected Close">
+                            <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+                            <div className="truncate">
+                              <p className="text-[10px] font-medium leading-none">Expected Close</p>
+                              <p className="text-xs font-bold leading-tight">{formatDate(d.expectedCloseDate)}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 shrink-0 text-[11px]">
                             {d.expectedMargin != null && d.expectedMargin > 0 && (
-                              <span className="truncate" title="Expected Margin">M:{d.expectedMargin}%</span>
+                              <span className="text-muted-foreground" title="Margin">M:{d.expectedMargin}%</span>
                             )}
                             <span
                               title="Probability"
-                              className={`font-semibold ${
+                              className={`font-bold ${
                                 d.probability === 100 ? 'text-emerald-600 dark:text-emerald-400'
                                 : d.probability >= 80 ? 'text-blue-600 dark:text-blue-400'
                                 : d.probability >= 50 ? 'text-yellow-600 dark:text-yellow-400'
@@ -376,6 +387,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             >{d.probability}%</span>
                           </div>
                         </div>
+
+                        {/* Sales name */}
+                        {getSalesName && (
+                          <div className="flex items-center gap-1 overflow-hidden pt-0.5">
+                            <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <p className="text-[11px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
+                          </div>
+                        )}
                         </div>
                       ))
                     )}
