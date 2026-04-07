@@ -333,13 +333,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           </p>
                         </div>
 
-                        {/* Location + Segment */}
-                        {(d.location || d.segment) && (
-                          <p className="text-[11px] text-muted-foreground truncate" title={[d.location, d.segment].filter(Boolean).join(' • ')}>
-                            {d.location && <span>{d.location}</span>}
-                            {d.location && d.segment && <span> • </span>}
-                            {d.segment && <span>{d.segment}</span>}
-                          </p>
+                        {/* Location with MapPin icon */}
+                        {d.location && (
+                          <div className="flex items-center gap-1.5 overflow-hidden">
+                            <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                            <p className="text-[11px] text-muted-foreground truncate" title={d.location}>
+                              {d.location}
+                            </p>
+                          </div>
                         )}
 
                         {/* Products list with icon - max 2 items */}
