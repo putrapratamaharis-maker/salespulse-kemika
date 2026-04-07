@@ -322,7 +322,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           className={`rounded-lg shadow-sm p-2 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
-                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 160, minHeight: 160, maxHeight: 160, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
+                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 140, minHeight: 140, maxHeight: 140, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
