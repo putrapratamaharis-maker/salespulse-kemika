@@ -355,7 +355,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           {d.location && (
                             <div className="flex items-center gap-1 overflow-hidden">
                               <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                              <p className="text-[11px] text-muted-foreground truncate">{d.location}</p>
+                              <p className="text-[10px] text-muted-foreground truncate">{d.location}</p>
                             </div>
                           )}
 
