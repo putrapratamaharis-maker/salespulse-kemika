@@ -262,7 +262,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col w-[220px] shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`flex flex-col w-[260px] shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
