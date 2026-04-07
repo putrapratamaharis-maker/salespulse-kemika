@@ -17,6 +17,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Qualified Prospect' },
