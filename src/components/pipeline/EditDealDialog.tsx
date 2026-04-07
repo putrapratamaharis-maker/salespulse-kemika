@@ -35,7 +35,7 @@ interface EditDealDialogProps {
   deal: Deal | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (deal: Deal) => void;
+  onSave: (deal: Deal) => Promise<boolean>;
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
@@ -242,10 +242,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       poNumber,
     };
 
-    onSave(updated);
-    toast({ title: 'Deal berhasil diperbarui' });
+    const success = await onSave(updated);
     setSaving(false);
-    onOpenChange(false);
+    if (success) {
+      toast({ title: 'Deal berhasil diperbarui' });
+      onOpenChange(false);
+    }
   };
 
   if (!deal) {

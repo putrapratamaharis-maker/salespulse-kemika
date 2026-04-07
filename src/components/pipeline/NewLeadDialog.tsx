@@ -35,7 +35,7 @@ const segmentOptions: { value: Segment | 'B2C/e-Commerce'; label: string }[] = [
 ];
 
 interface NewLeadDialogProps {
-  onAdd: (deal: Deal) => void;
+  onAdd: (deal: Deal) => Promise<boolean>;
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
@@ -251,10 +251,12 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       poNumber: isInvoiceStage ? (poNumber.trim() || invoiceNumber.trim()) : (stage === 'po_secured' ? poNumber.trim() : undefined),
     };
 
-    onAdd(newDeal);
-    if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
-    resetForm();
-    setOpen(false);
+    const success = await onAdd(newDeal);
+    if (success) {
+      if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
+      resetForm();
+      setOpen(false);
+    }
   };
 
   const formatRp = (val: number) =>
