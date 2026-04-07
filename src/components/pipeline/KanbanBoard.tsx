@@ -56,13 +56,13 @@ const stageBgColors: Record<string, string> = {
 };
 
 const stageHeaderColors: Record<string, string> = {
-  prospect: 'bg-red-500',
-  quotation: 'bg-yellow-500',
-  negotiation: 'bg-orange-500',
-  po_secured: 'bg-blue-500',
-  invoice_issued: 'bg-emerald-500',
-  canceled: 'bg-gray-500',
-  lost: 'bg-rose-600',
+  prospect: 'bg-indigo-600',
+  quotation: 'bg-amber-500',
+  negotiation: 'bg-orange-600',
+  po_secured: 'bg-sky-600',
+  invoice_issued: 'bg-emerald-600',
+  canceled: 'bg-slate-500',
+  lost: 'bg-rose-700',
 };
 
 import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
