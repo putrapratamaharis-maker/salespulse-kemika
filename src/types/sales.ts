@@ -112,11 +112,11 @@ export interface CoachingNote {
 }
 
 export function formatIDRFull(value: number): string {
-  return `Rp ${value.toLocaleString('id-ID')}`;
+  return `Rp ${value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export function formatNumIDR(value: number): string {
-  return value.toLocaleString('id-ID');
+  return value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
 
 export function formatIDRAxis(value: number): string {
@@ -136,7 +136,7 @@ export function formatIDR(value: number): string {
   if (value >= 1_000) {
     return `Rp ${(value / 1_000).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Rb`;
   }
-  return `Rp ${value.toLocaleString('id-ID')}`;
+  return `Rp ${value.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 }
 
 export function formatPercent(value: number): string {
