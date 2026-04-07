@@ -298,7 +298,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           style={{ width: '100%', maxWidth: '100%' }}
-                          className={`bg-card rounded-lg border shadow-sm p-3 space-y-2 overflow-hidden box-border ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
+                          className={`bg-card rounded-lg border shadow-sm p-3 space-y-2 overflow-hidden box-border min-h-[200px] ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Header: Deal name + action buttons */}
