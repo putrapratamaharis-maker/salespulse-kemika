@@ -359,18 +359,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           )}
 
-                          {/* 3. Products - up to 2 lines */}
+                          {/* 3. Products - inline */}
                           {d.products && d.products.length > 0 && (
-                            <div className="flex items-start gap-1 overflow-hidden">
-                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0 mt-0.5" />
-                              <div className="min-w-0 overflow-hidden">
-                                {d.products.slice(0, 1).map((p, i) => (
-                                  <p key={i} className="text-[8px] font-light text-muted-foreground truncate leading-tight">{p.productName} ×{p.qty}</p>
-                                ))}
-                                {d.products.length > 1 && (
-                                  <p className="text-[8px] font-light text-muted-foreground leading-tight">+{d.products.length - 1} lainnya</p>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-1 overflow-hidden">
+                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                              <p className="text-[10px] font-light text-muted-foreground truncate leading-tight">
+                                {d.products.slice(0, 1).map(p => `${p.productName} ×${p.qty}`).join(', ')}
+                                {d.products.length > 1 && ` +${d.products.length - 1}`}
+                              </p>
                             </div>
                           )}
 
