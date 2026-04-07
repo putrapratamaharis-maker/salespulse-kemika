@@ -44,13 +44,23 @@ const stageColors: Record<string, 'green' | 'yellow' | 'red'> = {
 };
 
 const stageBgColors: Record<string, string> = {
-  prospect: 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800',
-  quotation: 'bg-yellow-50 dark:bg-yellow-950/30 border-yellow-200 dark:border-yellow-800',
-  negotiation: 'bg-orange-50 dark:bg-orange-950/30 border-orange-200 dark:border-orange-800',
-  po_secured: 'bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800',
-  invoice_issued: 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800',
-  canceled: 'bg-gray-50 dark:bg-gray-950/30 border-gray-200 dark:border-gray-800',
-  lost: 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800',
+  prospect: 'bg-background border-border',
+  quotation: 'bg-background border-border',
+  negotiation: 'bg-background border-border',
+  po_secured: 'bg-background border-border',
+  invoice_issued: 'bg-background border-border',
+  canceled: 'bg-background border-border',
+  lost: 'bg-background border-border',
+};
+
+const stageHeaderColors: Record<string, string> = {
+  prospect: 'bg-red-500',
+  quotation: 'bg-yellow-500',
+  negotiation: 'bg-orange-500',
+  po_secured: 'bg-blue-500',
+  invoice_issued: 'bg-emerald-500',
+  canceled: 'bg-gray-500',
+  lost: 'bg-rose-600',
 };
 
 import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
