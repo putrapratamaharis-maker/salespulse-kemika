@@ -266,19 +266,26 @@ const MyPerformance = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <KPICard label="MY ACTUAL REVENUE YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPct >= 100 ? 'green' : achievementPct >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`MY TOTAL REVENUE TARGET ${selectedYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${selectedYear} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
-        <KPICard label="MY ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`MY REVENUE TARGET ${monthName}`} value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip={`Revenue target Anda untuk bulan ${monthName} dari tabel targets`} />
-        <KPICard label={`MY TARGET ACHIEVEMENT ${monthName}`} value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple " borderAccent="border-l-kpi-purple-border" tooltip={`Revenue MTD ÷ Revenue Target × 100% untuk bulan ${monthName}`} />
+      {/* Row 1: YTD */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPICard label="MY ACTUAL REVENUE YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`MY TOTAL REVENUE TARGET ${selectedYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip={`Jumlah seluruh revenue_target Anda di tahun ${selectedYear} dari Admin Panel Sales Targets (semua bulan & segmen)`} />
+        <KPICard label={`MY TARGET ACHIEVEMENT ${selectedYear}`} value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip={`Revenue YTD ÷ Total Revenue Target ${selectedYear} × 100%`} />
       </div>
 
+      {/* Row 2: MTD */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <KPICard label="MY ACTUAL REVENUE MTD" value={formatIDRFull(revenueMTD)} change={lastMonthChange} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal Anda pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`MY REVENUE TARGET ${monthName}`} value={formatIDRFull(targetRevenue)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip={`Revenue target Anda untuk bulan ${monthName} dari tabel targets`} />
+        <KPICard label={`MY TARGET ACHIEVEMENT ${monthName}`} value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip={`Revenue MTD ÷ Revenue Target × 100% untuk bulan ${monthName}`} />
+      </div>
+
+      {/* Row 3: Margin & AR */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="MY GROSS MARGIN" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Gross Profit ÷ Net Sales × 100% dari invoice Anda. Threshold hijau ≥ 17%" />
-        <KPICard label="MY GP CONTRIBUTION" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText className="bg-kpi-indigo " borderAccent="border-l-kpi-indigo-border" tooltip="Total gross_profit dari invoice Anda di bulan berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label="MY CASH-IN (PAID)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice Anda yang sudah dibayar (memiliki paid_date)" />
-        <KPICard label="MY OUTSTANDING AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} status={outstandingAR > 0 ? 'red' : 'green'} changeLabel={`${inv.filter(i => !i.paid_date).length} unpaid`} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice Anda yang belum dibayar (paid_date kosong)" />
+        <KPICard label="MY GROSS MARGIN" value={formatPercent(marginPct)} status={marginPct >= MARGIN_THRESHOLD ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Gross Profit ÷ Net Sales × 100% dari invoice Anda. Threshold hijau ≥ 17%" />
+        <KPICard label="MY GP CONTRIBUTION" value={formatIDRFull(grossProfitMTD)} icon={TrendingUp} autoFitText className="bg-kpi-indigo" borderAccent="border-l-kpi-indigo-border" tooltip="Total gross_profit dari invoice Anda di bulan berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label="MY CASH-IN (PAID)" value={formatIDRFull(cashInValue)} icon={Banknote} status={cashInValue > 0 ? 'green' : 'yellow'} changeLabel={`${paidInvoices.length} invoices`} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice Anda yang sudah dibayar (memiliki paid_date)" />
+        <KPICard label="MY OUTSTANDING AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} status={outstandingAR > 0 ? 'red' : 'green'} changeLabel={`${inv.filter(i => !i.paid_date).length} unpaid`} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice Anda yang belum dibayar (paid_date kosong)" />
       </div>
 
       <Card className={alerts.length > 0 ? 'border-status-red/30 bg-status-red-bg/20' : ''}>
