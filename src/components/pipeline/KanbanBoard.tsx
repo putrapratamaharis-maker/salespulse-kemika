@@ -277,6 +277,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   </div>
 
                   {/* Deal Cards */}
+                  <ScrollArea className="max-h-[calc(100vh-320px)]">
                   <div className="p-2 space-y-2">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
@@ -378,6 +379,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                       ))
                     )}
                   </div>
+                  </ScrollArea>
                 </div>
               ))}
             </div>
