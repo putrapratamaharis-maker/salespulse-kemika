@@ -322,14 +322,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           className={`rounded-lg shadow-sm p-2 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
-                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 140, minHeight: 140, maxHeight: 140, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
+                          style={{ width: 264, minWidth: 264, maxWidth: 264, height: 120, minHeight: 120, maxHeight: 120, backgroundColor: salesColorMap.get(d.salesId)?.bg || 'hsl(var(--card))', border: `1.5px solid ${salesColorMap.get(d.salesId)?.border || 'hsl(var(--border))'}` }}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
                         <div className="flex-1 space-y-0.5 min-h-0 overflow-hidden">
                           {/* 1. Header - Account Name */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[11px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
+                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
                               {getAccountName(d.accountId)}
                             </p>
                             <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -359,23 +359,19 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           )}
 
-                          {/* 3. Products - up to 2 lines */}
+                          {/* 3. Products - inline */}
                           {d.products && d.products.length > 0 && (
-                            <div className="flex items-start gap-1 overflow-hidden">
-                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0 mt-0.5" />
-                              <div className="min-w-0 overflow-hidden">
-                                {d.products.slice(0, 1).map((p, i) => (
-                                  <p key={i} className="text-[8px] font-light text-muted-foreground truncate leading-tight">{p.productName} ×{p.qty}</p>
-                                ))}
-                                {d.products.length > 1 && (
-                                  <p className="text-[8px] font-light text-muted-foreground leading-tight">+{d.products.length - 1} lainnya</p>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-1 overflow-hidden">
+                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                              <p className="text-[10px] font-light text-muted-foreground truncate leading-tight">
+                                {d.products.slice(0, 1).map(p => `${p.productName} ×${p.qty}`).join(', ')}
+                                {d.products.length > 1 && ` +${d.products.length - 1}`}
+                              </p>
                             </div>
                           )}
 
                           {/* 4. Value */}
-                          <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
+                          <p className="text-[11px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
                         <div className="shrink-0 space-y-0.5 pt-0.5 border-t border-border/50 overflow-hidden">
