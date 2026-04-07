@@ -302,81 +302,71 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
-                        <div className="flex-1 space-y-2 min-h-0 overflow-hidden">
+                        <div className="flex-1 space-y-1 min-h-0 overflow-hidden">
                           {/* Header: Deal name + action buttons */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[13px] text-primary font-bold leading-tight truncate flex-1 min-w-0" title={d.name}>
+                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0" title={d.name}>
                               {d.name}
                             </p>
-                            <div className="flex items-center gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               {onDuplicate && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
-                                  <Copy className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onDuplicate(d); }} title="Duplikasi deal">
+                                  <Copy className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                                 </Button>
                               )}
                               {onEdit && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
-                                  <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); onEdit(d); }}>
+                                  <Pencil className="h-3 w-3 text-muted-foreground hover:text-foreground" />
                                 </Button>
                               )}
                               {onDelete && (
-                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
-                                  <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                                <Button variant="ghost" size="sm" className="h-5 w-5 p-0" onClick={(e) => { e.stopPropagation(); setDeleteTarget(d); }}>
+                                  <Trash2 className="h-3 w-3 text-muted-foreground hover:text-destructive" />
                                 </Button>
                               )}
                             </div>
                           </div>
 
-                          {/* Account name with icon */}
-                          <div className="flex items-center gap-1.5 overflow-hidden">
-                            <Building2 className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                            <p className="text-xs font-semibold text-foreground truncate" title={getAccountName(d.accountId)}>
+                          {/* Account + Location on same row */}
+                          <div className="flex items-center gap-1 overflow-hidden">
+                            <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                            <p className="text-[11px] font-semibold text-foreground truncate" title={getAccountName(d.accountId)}>
                               {getAccountName(d.accountId)}
                             </p>
+                            {d.location && (
+                              <>
+                                <span className="text-muted-foreground/40 shrink-0">·</span>
+                                <MapPin className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                <p className="text-[10px] text-muted-foreground truncate" title={d.location}>
+                                  {d.location}
+                                </p>
+                              </>
+                            )}
                           </div>
 
-                          {/* Location with MapPin icon */}
-                          {d.location && (
-                            <div className="flex items-center gap-1.5 overflow-hidden">
-                              <MapPin className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                              <p className="text-[11px] text-muted-foreground truncate" title={d.location}>
-                                {d.location}
+                          {/* Products - single line summary */}
+                          {d.products && d.products.length > 0 && (
+                            <div className="flex items-center gap-1 overflow-hidden">
+                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                              <p className="text-[10px] text-muted-foreground truncate" title={d.products.map(p => `${p.productName}×${p.qty}`).join(', ')}>
+                                {d.products.slice(0, 2).map(p => `${p.productName}×${p.qty}`).join(', ')}
+                                {d.products.length > 2 ? ` +${d.products.length - 2}` : ''}
                               </p>
                             </div>
                           )}
 
-                          {/* Products list with icon - max 2 items */}
-                          {d.products && d.products.length > 0 && (
-                            <div className="space-y-1 overflow-hidden">
-                              {d.products.slice(0, 2).map((p, i) => (
-                                <div key={i} className="flex items-center gap-1.5 overflow-hidden">
-                                  <Package className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  <p className="text-[11px] text-muted-foreground truncate" title={`${p.productName} × ${p.qty}`}>
-                                    {p.productName} × {p.qty}
-                                  </p>
-                                </div>
-                              ))}
-                              {d.products.length > 2 && (
-                                <p className="text-[10px] text-muted-foreground/70 italic pl-5 truncate">+{d.products.length - 2} item lainnya</p>
-                              )}
-                            </div>
-                          )}
-
                           {/* Value */}
-                          <p className="text-sm font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
+                          <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
-                        {/* Footer: Expected close + margin/probability */}
-                        <div className="shrink-0 space-y-1.5 pt-1.5 border-t border-border/50 overflow-hidden">
+                        {/* Footer: compact 2 rows */}
+                        <div className="shrink-0 space-y-1 pt-1 border-t border-border/50 overflow-hidden">
                           <div className="flex items-center justify-between overflow-hidden">
                             <div className="flex items-center gap-1 text-destructive truncate" title="Expected Close">
-                              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
-                              <div className="truncate">
-                                <p className="text-[10px] font-medium leading-none">Expected Close</p>
-                                <p className="text-xs font-bold leading-tight">{formatDate(d.expectedCloseDate)}</p>
-                              </div>
+                              <CalendarClock className="h-3 w-3 shrink-0" />
+                              <p className="text-[10px] font-bold leading-none truncate">{formatDate(d.expectedCloseDate)}</p>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0 text-[11px]">
+                            <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
                               {d.expectedMargin != null && d.expectedMargin > 0 && (
                                 <span className="text-muted-foreground" title="Margin">M:{d.expectedMargin}%</span>
                               )}
@@ -397,12 +387,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           <div className="flex items-center justify-between overflow-hidden">
                             {getSalesName ? (
                               <div className="flex items-center gap-1 overflow-hidden min-w-0">
-                                <User className="h-3 w-3 text-muted-foreground shrink-0" />
-                                <p className="text-[11px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
+                                <User className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
+                                <p className="text-[10px] text-muted-foreground truncate">{getSalesName(d.salesId)}</p>
                               </div>
                             ) : <div />}
                             {d.segment && (
-                              <span className="text-[10px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0 ml-1">
+                              <span className="text-[9px] font-medium text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0 ml-1">
                                 {d.segment}
                               </span>
                             )}
