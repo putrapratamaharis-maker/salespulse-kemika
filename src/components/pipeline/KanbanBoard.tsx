@@ -301,12 +301,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   onDrop={(e) => handleDrop(e, col.stage)}
                 >
                   {/* Column Header - colored bar */}
-                  <div className={`px-3 py-2.5 ${stageHeaderColors[col.stage]} rounded-t-xl`}>
+                  <div className={`py-2.5 ${stageHeaderColors[col.stage]} rounded-t-xl px-[12px]`}>
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-bold text-white truncate">{col.label}</span>
                       <span className="text-xs font-bold text-white bg-white/20 rounded-full px-2 py-0.5 shrink-0">{col.deals.length}</span>
                     </div>
-                    <p className="text-[11px] font-medium text-white/80 truncate mt-0.5">{formatIDRFull(col.totalValue)}</p>
+                    <p className="text-white/80 truncate mt-0.5 font-bold text-xs">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
                   <ScrollArea showHorizontalScrollbar={false} className="max-h-[calc(100vh-340px)] w-full [&>div>div]:!overflow-x-hidden">
