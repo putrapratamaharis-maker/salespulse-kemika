@@ -258,25 +258,25 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
-            <div className="flex gap-2.5 px-4 pb-2">
+            <div className="flex gap-2 px-4 pb-2">
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col w-[240px] min-w-[240px] shrink-0 rounded-lg border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  className={`flex flex-col w-[230px] min-w-[230px] max-w-[230px] shrink-0 rounded-lg border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
                 >
                   {/* Column Header */}
-                  <div className="px-2.5 py-2 border-b border-inherit">
+                  <div className="px-2 py-2 border-b border-inherit">
                     <div className="flex items-center justify-between mb-0.5">
                       <StatusBadge status={col.color} label={col.label} />
                       <span className="text-xs font-semibold text-muted-foreground">{col.deals.length}</span>
                     </div>
-                    <p className="text-[11px] font-bold text-foreground">{formatIDRFull(col.totalValue)}</p>
+                    <p className="text-[11px] font-bold text-foreground truncate">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
-                  <ScrollArea className="max-h-[calc(100vh-320px)]">
+                  <ScrollArea className="max-h-[calc(100vh-320px)] w-full [&>div>div]:!overflow-x-hidden">
                   <div className="p-1.5 space-y-1.5">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
@@ -286,7 +286,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           key={d.id}
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          className={`bg-card rounded-md border shadow-sm p-2 space-y-1 ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group font-normal`}
+                          className={`bg-card rounded-md border shadow-sm p-2 space-y-1 overflow-hidden ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group font-normal`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Account name - bold on top */}
@@ -316,12 +316,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
 
                         {/* Deal name - only show if no products */}
                         {(!d.products || d.products.length === 0) && (
-                          <p className="text-[11px] font-medium text-foreground/80 break-words">{d.name}</p>
+                          <p className="text-[11px] font-medium text-foreground/80 truncate" title={d.name}>{d.name}</p>
                         )}
 
                         {/* Sales name (for global pipeline) */}
                         {getSalesName && (
-                          <p className="text-[10px] break-words font-normal text-primary">{getSalesName(d.salesId)}</p>
+                          <p className="text-[10px] truncate font-normal text-primary" title={getSalesName(d.salesId)}>{getSalesName(d.salesId)}</p>
                         )}
 
                         {/* Location */}
@@ -336,7 +336,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         {d.products && d.products.length > 0 && (
                           <div className="space-y-0.5 pt-0.5 overflow-hidden">
                             {d.products.slice(0, 3).map((p, i) => (
-                              <p key={i} className="text-[10px] text-muted-foreground break-words font-normal" title={`${p.productName} (${p.qty} ${p.unit})`}>
+                              <p key={i} className="text-[10px] text-muted-foreground truncate font-normal" title={`${p.productName} (${p.qty} ${p.unit})`}>
                                 • {p.productName} ({p.qty} {p.unit})
                               </p>
                             ))}
