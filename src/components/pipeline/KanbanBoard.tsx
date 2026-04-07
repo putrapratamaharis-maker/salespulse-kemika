@@ -288,7 +288,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   </div>
 
                   <ScrollArea showHorizontalScrollbar={false} className="max-h-[calc(100vh-340px)] w-full [&>div>div]:!overflow-x-hidden">
-                  <div className="p-2 space-y-2">
+                  <div className="p-2 space-y-2 overflow-hidden">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-6">No deals</p>
                     ) : (
@@ -297,8 +297,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           key={d.id}
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          style={{ width: '100%', maxWidth: '100%' }}
-                          className={`bg-card rounded-lg border shadow-sm p-3 overflow-hidden box-border h-[230px] flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
+                          className={`bg-card rounded-lg border shadow-sm p-2.5 overflow-hidden box-border w-full min-h-[200px] flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Main content area */}
