@@ -251,10 +251,12 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       poNumber: isInvoiceStage ? (poNumber.trim() || invoiceNumber.trim()) : (stage === 'po_secured' ? poNumber.trim() : undefined),
     };
 
-    onAdd(newDeal);
-    if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
-    resetForm();
-    setOpen(false);
+    const success = await onAdd(newDeal);
+    if (success) {
+      if (isInvoiceStage) sonnerToast.success('Invoice berhasil dibuat dari lead baru');
+      resetForm();
+      setOpen(false);
+    }
   };
 
   const formatRp = (val: number) =>

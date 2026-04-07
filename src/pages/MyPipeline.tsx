@@ -153,7 +153,7 @@ const MyPipeline = () => {
 
   const handleEditDeal = (deal: Deal) => { setEditingDeal(deal); setEditDialogOpen(true); };
 
-  const handleSaveEdit = async (updatedDeal: Deal) => {
+  const handleSaveEdit = async (updatedDeal: Deal): Promise<boolean> => {
     const { error } = await supabase.from('deals').update({
       name: updatedDeal.name,
       account_id: updatedDeal.accountId,
@@ -170,7 +170,7 @@ const MyPipeline = () => {
     }).eq('id', updatedDeal.id);
     if (error) {
       toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' });
-      return;
+      return false;
     }
     // Update deal products: delete old, insert new
     if (updatedDeal.products) {
@@ -191,6 +191,7 @@ const MyPipeline = () => {
     }
     toast({ title: 'Deal berhasil diperbarui' });
     fetchDeals();
+    return true;
   };
 
   const handleDeleteDeal = async (deal: Deal, reason: string) => {

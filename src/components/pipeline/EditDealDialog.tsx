@@ -242,10 +242,12 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       poNumber,
     };
 
-    onSave(updated);
-    toast({ title: 'Deal berhasil diperbarui' });
+    const success = await onSave(updated);
     setSaving(false);
-    onOpenChange(false);
+    if (success) {
+      toast({ title: 'Deal berhasil diperbarui' });
+      onOpenChange(false);
+    }
   };
 
   if (!deal) {
