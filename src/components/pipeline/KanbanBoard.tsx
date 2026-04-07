@@ -111,6 +111,26 @@ function getMonthOptions(): { value: string; label: string }[] {
 }
 
 export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
+  // Generate stable color map per sales person
+  const salesColorMap = useMemo(() => {
+    const palette = [
+      { bg: 'hsla(210, 55%, 92%, 0.6)', border: 'hsl(210, 60%, 45%)' },
+      { bg: 'hsla(174, 50%, 90%, 0.6)', border: 'hsl(174, 55%, 35%)' },
+      { bg: 'hsla(270, 45%, 92%, 0.6)', border: 'hsl(270, 50%, 50%)' },
+      { bg: 'hsla(35, 60%, 90%, 0.6)', border: 'hsl(35, 65%, 42%)' },
+      { bg: 'hsla(350, 50%, 92%, 0.6)', border: 'hsl(350, 55%, 48%)' },
+      { bg: 'hsla(150, 45%, 90%, 0.6)', border: 'hsl(150, 50%, 35%)' },
+      { bg: 'hsla(230, 50%, 92%, 0.6)', border: 'hsl(230, 55%, 50%)' },
+      { bg: 'hsla(15, 55%, 91%, 0.6)', border: 'hsl(15, 60%, 45%)' },
+      { bg: 'hsla(190, 50%, 90%, 0.6)', border: 'hsl(190, 55%, 38%)' },
+      { bg: 'hsla(315, 40%, 92%, 0.6)', border: 'hsl(315, 45%, 48%)' },
+    ];
+    const ids = [...new Set(deals.map(d => d.salesId))].sort();
+    const map = new Map<string, { bg: string; border: string }>();
+    ids.forEach((id, i) => map.set(id, palette[i % palette.length]));
+    return map;
+  }, [deals]);
+
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
