@@ -382,7 +382,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
                               {d.expectedMargin != null && d.expectedMargin > 0 && (
-                                <span className="text-muted-foreground">M:{d.expectedMargin}%</span>
+                                <span className="text-muted-foreground font-semibold">M:{d.expectedMargin}%</span>
                               )}
                               <span
                                 className={`font-bold ${
