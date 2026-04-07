@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
-import { CalendarClock, MapPin, Percent } from 'lucide-react';
+import { CalendarClock, MapPin, Percent, Building2, Package, User } from 'lucide-react';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
