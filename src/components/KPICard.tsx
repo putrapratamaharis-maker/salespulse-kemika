@@ -17,7 +17,7 @@ interface KPICardProps {
 
 export function KPICard({ label, value, change, changeLabel, status, icon: Icon, className, autoFitText, borderAccent, tooltip }: KPICardProps) {
   return (
-    <div className={cn('kpi-card animate-fade-in border-l-[5px] relative', borderAccent, className)}>
+    <div className={cn('kpi-card animate-fade-in relative', className)}>
       <div className="flex items-start justify-between mb-3">
         <span className="text-xs font-bold text-foreground uppercase tracking-wider">{label}</span>
         {Icon && (
