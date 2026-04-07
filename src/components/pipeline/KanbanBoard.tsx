@@ -276,8 +276,8 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                     <p className="text-[11px] font-bold text-foreground truncate">{formatIDRFull(col.totalValue)}</p>
                   </div>
 
-                  <ScrollArea className="max-h-[calc(100vh-320px)] w-full">
-                  <div className="p-1.5 space-y-1.5 w-full">
+                  <ScrollArea className="max-h-[calc(100vh-320px)] w-full [&>div>div]:!overflow-x-hidden">
+                  <div className="p-1.5 space-y-1.5">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-4">No deals</p>
                     ) : (
