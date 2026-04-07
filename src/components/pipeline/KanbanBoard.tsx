@@ -329,7 +329,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         <div className="flex-1 space-y-0.5 min-h-0 overflow-hidden">
                           {/* 1. Header - Account Name */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[13px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
+                            <p className="text-[11px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
                               {getAccountName(d.accountId)}
                             </p>
                             <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
