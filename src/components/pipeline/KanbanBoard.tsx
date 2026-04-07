@@ -1,6 +1,8 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
 import { CalendarClock, MapPin, Percent, Building2, Package, User } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import * as TooltipPrimitive from '@radix-ui/react-tooltip';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -293,8 +295,10 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                       <p className="text-xs text-muted-foreground text-center py-6">No deals</p>
                     ) : (
                       col.deals.map(d => (
+                        <TooltipProvider key={d.id} delayDuration={500}>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                         <div
-                          key={d.id}
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
                           className={`bg-card rounded-lg border shadow-sm p-2.5 overflow-hidden box-border flex flex-col ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-lg transition-shadow group`}
@@ -303,9 +307,8 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         >
                         {/* Main content area */}
                         <div className="flex-1 space-y-1 min-h-0 overflow-hidden">
-                          {/* Header: Deal name + action buttons */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0" title={d.name}>
+                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
                               {d.name}
                             </p>
                             <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -327,51 +330,46 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           </div>
 
-                          {/* Account + Location on same row */}
                           <div className="flex items-center gap-1 overflow-hidden">
                             <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <p className="text-[11px] font-semibold text-foreground truncate" title={getAccountName(d.accountId)}>
+                            <p className="text-[11px] font-semibold text-foreground truncate">
                               {getAccountName(d.accountId)}
                             </p>
                             {d.location && (
                               <>
                                 <span className="text-muted-foreground/40 shrink-0">·</span>
                                 <MapPin className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                                <p className="text-[10px] text-muted-foreground truncate" title={d.location}>
+                                <p className="text-[10px] text-muted-foreground truncate">
                                   {d.location}
                                 </p>
                               </>
                             )}
                           </div>
 
-                          {/* Products - single line summary */}
                           {d.products && d.products.length > 0 && (
                             <div className="flex items-center gap-1 overflow-hidden">
                               <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                              <p className="text-[10px] text-muted-foreground truncate" title={d.products.map(p => `${p.productName}×${p.qty}`).join(', ')}>
+                              <p className="text-[10px] text-muted-foreground truncate">
                                 {d.products.slice(0, 2).map(p => `${p.productName}×${p.qty}`).join(', ')}
                                 {d.products.length > 2 ? ` +${d.products.length - 2}` : ''}
                               </p>
                             </div>
                           )}
 
-                          {/* Value */}
                           <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
-                        {/* Footer: compact 2 rows */}
                         <div className="shrink-0 space-y-1 pt-1 border-t border-border/50 overflow-hidden">
                           <div className="flex items-center justify-between overflow-hidden">
-                            <div className="flex items-center gap-1 text-destructive truncate" title="Expected Close">
+                            <div className="flex items-center gap-1 text-destructive truncate">
                               <CalendarClock className="h-3 w-3 shrink-0" />
                               <p className="text-[10px] font-bold leading-none truncate">{formatDate(d.expectedCloseDate)}</p>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0 text-[10px]">
                               {d.expectedMargin != null && d.expectedMargin > 0 && (
-                                <span className="text-muted-foreground" title="Margin">M:{d.expectedMargin}%</span>
+                                <span className="text-muted-foreground">M:{d.expectedMargin}%</span>
                               )}
                               <span
-                                title="Probability"
                                 className={`font-bold ${
                                   d.probability === 100 ? 'text-emerald-600 dark:text-emerald-400'
                                   : d.probability >= 80 ? 'text-blue-600 dark:text-blue-400'
@@ -383,7 +381,6 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           </div>
 
-                          {/* Sales name + Segment badge */}
                           <div className="flex items-center justify-between overflow-hidden">
                             {getSalesName ? (
                               <div className="flex items-center gap-1 overflow-hidden min-w-0">
@@ -399,6 +396,50 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           </div>
                         </div>
                         </div>
+                            </TooltipTrigger>
+                            <TooltipPrimitive.Portal>
+                              <TooltipContent side="right" align="start" className="max-w-[300px] p-3 space-y-1.5 text-xs z-[9999]">
+                                <p className="font-bold text-primary text-sm leading-snug">{d.name}</p>
+                                <div className="flex items-center gap-1.5">
+                                  <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
+                                  <span className="font-semibold">{getAccountName(d.accountId)}</span>
+                                </div>
+                                {d.location && (
+                                  <div className="flex items-center gap-1.5">
+                                    <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="text-muted-foreground">{d.location}</span>
+                                  </div>
+                                )}
+                                {d.products && d.products.length > 0 && (
+                                  <div className="space-y-0.5">
+                                    {d.products.map((p, i) => (
+                                      <div key={i} className="flex items-center gap-1.5">
+                                        <Package className="h-3 w-3 text-muted-foreground shrink-0" />
+                                        <span className="text-muted-foreground">{p.productName} × {p.qty} {p.unit}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                <p className="font-bold text-foreground text-sm">{formatIDRFull(d.value)}</p>
+                                <div className="flex items-center justify-between pt-1 border-t border-border/50">
+                                  <span className="text-destructive font-medium">Close: {formatDate(d.expectedCloseDate)}</span>
+                                  <span className="font-bold">{d.probability}%</span>
+                                </div>
+                                {(d.expectedMargin != null && d.expectedMargin > 0) && (
+                                  <p className="text-muted-foreground">Margin: {d.expectedMargin}%</p>
+                                )}
+                                {getSalesName && (
+                                  <div className="flex items-center gap-1.5">
+                                    <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                                    <span className="text-muted-foreground">{getSalesName(d.salesId)}</span>
+                                    {d.segment && <span className="ml-auto bg-muted px-1.5 py-0.5 rounded text-[10px] font-medium">{d.segment}</span>}
+                                  </div>
+                                )}
+                                {d.notes && <p className="text-muted-foreground italic border-t border-border/50 pt-1 break-words">{d.notes}</p>}
+                              </TooltipContent>
+                            </TooltipPrimitive.Portal>
+                          </Tooltip>
+                        </TooltipProvider>
                       ))
                     )}
                   </div>
