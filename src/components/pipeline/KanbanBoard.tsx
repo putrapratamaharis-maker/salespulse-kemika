@@ -268,12 +268,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
-            <div className="flex gap-3 px-4 pb-2" style={{ width: 'max-content' }}>
+            <div className="flex gap-4 px-4 pb-2" style={{ width: 'max-content' }}>
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  style={{ width: 280, minWidth: 280, maxWidth: 280 }}
-                  className={`flex flex-col shrink-0 rounded-xl border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  style={{ width: 290, minWidth: 290, maxWidth: 290 }}
+                  className={`flex flex-col shrink-0 rounded-xl border transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
@@ -288,7 +288,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   </div>
 
                   <ScrollArea showHorizontalScrollbar={false} className="max-h-[calc(100vh-340px)] w-full [&>div>div]:!overflow-x-hidden">
-                  <div className="p-2 space-y-2 overflow-hidden">
+                  <div className="p-3 space-y-2.5">
                     {col.deals.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-6">No deals</p>
                     ) : (
