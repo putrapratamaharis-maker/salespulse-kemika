@@ -421,43 +421,73 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         </div>
                             </TooltipTrigger>
                             <TooltipPrimitive.Portal>
-                              <TooltipContent side="right" align="start" className="max-w-[300px] p-3 space-y-1.5 text-xs z-[9999]">
-                                <p className="font-bold text-primary text-sm leading-snug">{d.name}</p>
-                                <div className="flex items-center gap-1.5">
-                                  <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
-                                  <span className="font-semibold">{getAccountName(d.accountId)}</span>
-                                </div>
+                              <TooltipContent side="right" align="start" className="max-w-[320px] p-3 space-y-1.5 text-xs z-[9999]">
+                                {/* 1. Account Name (header) */}
+                                <p className="font-bold text-primary text-sm leading-snug">{getAccountName(d.accountId)}</p>
+
+                                {/* 2. Location */}
                                 {d.location && (
                                   <div className="flex items-center gap-1.5">
                                     <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
                                     <span className="text-muted-foreground">{d.location}</span>
                                   </div>
                                 )}
+
+                                {/* Deal Name */}
+                                <p className="text-[11px] font-semibold text-foreground">{d.name}</p>
+
+                                {/* 3. Products - all items */}
                                 {d.products && d.products.length > 0 && (
                                   <div className="space-y-0.5">
-                                    {d.products.map((p, i) => (
-                                      <div key={i} className="flex items-center gap-1.5">
-                                        <Package className="h-3 w-3 text-muted-foreground shrink-0" />
-                                        <span className="text-muted-foreground">{p.productName} × {p.qty} {p.unit}</span>
+                                    <div className="flex items-start gap-1.5">
+                                      <Package className="h-3 w-3 text-muted-foreground shrink-0 mt-0.5" />
+                                      <div className="space-y-0.5">
+                                        {d.products.map((p, i) => (
+                                          <p key={i} className="text-muted-foreground leading-tight">
+                                            {p.productName} × {p.qty} {p.unit}
+                                            {p.pricePerUnit > 0 && <span className="ml-1 text-foreground/60">@ {formatIDRFull(p.pricePerUnit)}</span>}
+                                          </p>
+                                        ))}
                                       </div>
-                                    ))}
+                                    </div>
                                   </div>
                                 )}
+
+                                {/* 4. Value */}
                                 <p className="font-bold text-foreground text-sm">{formatIDRFull(d.value)}</p>
+
+                                {/* 5. Close Date + Margin + Probability */}
                                 <div className="flex items-center justify-between pt-1 border-t border-border/50">
-                                  <span className="text-destructive font-medium">Close: {formatDate(d.expectedCloseDate)}</span>
-                                  <span className="font-bold">{d.probability}%</span>
-                                </div>
-                                {(d.expectedMargin != null && d.expectedMargin > 0) && (
-                                  <p className="text-muted-foreground">Margin: {d.expectedMargin}%</p>
-                                )}
-                                {getSalesName && (
-                                  <div className="flex items-center gap-1.5">
-                                    <User className="h-3 w-3 text-muted-foreground shrink-0" />
-                                    <span className="text-muted-foreground">{getSalesName(d.salesId)}</span>
-                                    {d.segment && <span className="ml-auto bg-muted px-1.5 py-0.5 rounded text-[10px] font-medium">{d.segment}</span>}
+                                  <div className="flex items-center gap-1">
+                                    <CalendarClock className="h-3 w-3 text-destructive shrink-0" />
+                                    <span className="text-destructive font-bold">{formatDate(d.expectedCloseDate)}</span>
                                   </div>
-                                )}
+                                  <div className="flex items-center gap-1.5">
+                                    {(d.expectedMargin != null && d.expectedMargin > 0) && (
+                                      <span className="text-muted-foreground">M:{d.expectedMargin}%</span>
+                                    )}
+                                    <span className="font-bold">{d.probability}%</span>
+                                  </div>
+                                </div>
+
+                                {/* 6. Sales + Segment */}
+                                <div className="flex items-center justify-between">
+                                  {getSalesName ? (
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                      <User className="h-3 w-3 text-muted-foreground shrink-0" />
+                                      <span className="text-muted-foreground truncate">{getSalesName(d.salesId)}</span>
+                                    </div>
+                                  ) : <div />}
+                                  {d.segment && (
+                                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded shrink-0 ml-1 ${
+                                      d.segment === 'B2G' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300'
+                                      : d.segment === 'B2B' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300'
+                                      : 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300'
+                                    }`}>{d.segment}</span>
+                                  )}
+                                </div>
+
+                                {/* Notes */}
                                 {d.notes && <p className="text-muted-foreground italic border-t border-border/50 pt-1 break-words">{d.notes}</p>}
                               </TooltipContent>
                             </TooltipPrimitive.Portal>
