@@ -258,11 +258,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         </CardHeader>
         <CardContent className="p-0 pb-4">
           <ScrollArea className="w-full">
-            <div className="flex gap-3 px-4 pb-2">
+            <div className="flex gap-2 px-4 pb-2" style={{ width: 'max-content' }}>
               {kanbanData.map(col => (
                 <div
                   key={col.stage}
-                  className={`flex flex-col w-[220px] min-w-[220px] max-w-[220px] shrink-0 rounded-lg border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
+                  style={{ width: 210, minWidth: 210, maxWidth: 210 }}
+                  className={`flex flex-col shrink-0 rounded-lg border overflow-hidden transition-all ${stageBgColors[col.stage]} ${dragOverStage === col.stage ? 'ring-2 ring-primary ring-offset-2' : ''}`}
                   onDragOver={(e) => handleDragOver(e, col.stage)}
                   onDragLeave={handleDragLeave}
                   onDrop={(e) => handleDrop(e, col.stage)}
@@ -286,11 +287,12 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           key={d.id}
                           draggable={!readOnly}
                           onDragStart={(e) => !readOnly && handleDragStart(e, d.id)}
-                          className={`bg-card rounded-md border shadow-sm p-1.5 space-y-0.5 overflow-hidden w-full box-border ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group font-normal`}
+                          style={{ width: '100%', maxWidth: '100%' }}
+                          className={`bg-card rounded-md border shadow-sm p-1.5 space-y-0.5 overflow-hidden box-border ${readOnly ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'} hover:shadow-md transition-shadow group font-normal`}
                           onClick={(e) => { if ((e.target as HTMLElement).closest('button')) return; setDetailDeal(d); }}
                         >
                         {/* Account name - bold on top */}
-                        <div className="flex items-start justify-between gap-1">
+                        <div className="flex items-start justify-between gap-1 overflow-hidden">
                           <p className="text-xs text-foreground leading-tight truncate flex-1 min-w-0 text-left font-medium" title={getAccountName(d.accountId)}>
                             <GripVertical className="h-3 w-3 text-muted-foreground/50 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity inline mr-0.5 align-text-bottom" />
                             {getAccountName(d.accountId)}
@@ -328,7 +330,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         {d.location && (
                           <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-normal truncate" title={`Letak: ${d.location}`}>
                             <MapPin className="h-2.5 w-2.5 shrink-0" />
-                            {d.location}
+                            <span className="truncate">{d.location}</span>
                           </p>
                         )}
 
@@ -341,26 +343,26 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                               </p>
                             ))}
                             {d.products.length > 3 && (
-                              <p className="text-[10px] text-muted-foreground italic">+{d.products.length - 3} item lainnya</p>
+                              <p className="text-[10px] text-muted-foreground italic truncate">+{d.products.length - 3} item lainnya</p>
                             )}
                           </div>
                         )}
 
                         {/* Value row */}
-                        <div className="flex items-center justify-between pt-1">
-                          <span className="text-xs font-bold text-foreground">{formatIDRFull(d.value)}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded font-normal border-solid text-destructive bg-[sidebar-primary-foreground] bg-orange-100">{d.segment}</span>
+                        <div className="flex items-center justify-between pt-1 overflow-hidden">
+                          <span className="text-xs font-bold text-foreground truncate">{formatIDRFull(d.value)}</span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded font-normal border-solid text-destructive bg-orange-100 shrink-0">{d.segment}</span>
                         </div>
 
                         {/* Meta row: expected close, margin, probability */}
-                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50 gap-1">
-                          <span className="flex items-center gap-0.5 text-accent font-normal" title="Expected Close">
-                            <CalendarClock className="h-3 w-3" />
-                            {formatDate(d.expectedCloseDate)}
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground pt-0.5 border-t border-border/50 gap-1 overflow-hidden">
+                          <span className="flex items-center gap-0.5 text-accent font-normal truncate" title="Expected Close">
+                            <CalendarClock className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{formatDate(d.expectedCloseDate)}</span>
                           </span>
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-1.5 shrink-0">
                             {d.expectedMargin != null && d.expectedMargin > 0 && (
-                              <span title="Expected Margin">M: {d.expectedMargin}%</span>
+                              <span className="truncate" title="Expected Margin">M:{d.expectedMargin}%</span>
                             )}
                             <span
                               title="Probability"
