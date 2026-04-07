@@ -578,6 +578,7 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
           </form>
         </ScrollArea>
       </DialogContent>
-    </Dialog>
+      </Dialog>
+    </>
   );
 }
