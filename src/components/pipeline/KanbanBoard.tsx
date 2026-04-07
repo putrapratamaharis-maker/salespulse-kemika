@@ -327,9 +327,10 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         >
                         {/* Main content area */}
                         <div className="flex-1 space-y-1 min-h-0 overflow-hidden">
+                          {/* 1. Header - Account Name */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
-                              {d.name}
+                            <p className="text-[13px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
+                              {getAccountName(d.accountId)}
                             </p>
                             <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                               {onDuplicate && (
@@ -350,32 +351,30 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-1 overflow-hidden">
-                            <Building2 className="h-3 w-3 text-muted-foreground shrink-0" />
-                            <p className="text-[11px] font-semibold text-foreground truncate">
-                              {getAccountName(d.accountId)}
-                            </p>
-                            {d.location && (
-                              <>
-                                <span className="text-muted-foreground/40 shrink-0">·</span>
-                                <MapPin className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                                <p className="text-[10px] text-muted-foreground truncate">
-                                  {d.location}
-                                </p>
-                              </>
-                            )}
-                          </div>
-
-                          {d.products && d.products.length > 0 && (
+                          {/* 2. Location (optional) */}
+                          {d.location && (
                             <div className="flex items-center gap-1 overflow-hidden">
-                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                              <p className="text-[10px] text-muted-foreground truncate">
-                                {d.products.slice(0, 2).map(p => `${p.productName}×${p.qty}`).join(', ')}
-                                {d.products.length > 2 ? ` +${d.products.length - 2}` : ''}
-                              </p>
+                              <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
+                              <p className="text-[11px] text-muted-foreground truncate">{d.location}</p>
                             </div>
                           )}
 
+                          {/* 3. Products - up to 3 lines */}
+                          {d.products && d.products.length > 0 && (
+                            <div className="flex items-start gap-1 overflow-hidden">
+                              <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0 mt-0.5" />
+                              <div className="min-w-0 overflow-hidden">
+                                {d.products.slice(0, 3).map((p, i) => (
+                                  <p key={i} className="text-[10px] font-light text-muted-foreground truncate leading-tight">{p.productName} ×{p.qty}</p>
+                                ))}
+                                {d.products.length > 3 && (
+                                  <p className="text-[10px] font-light text-muted-foreground leading-tight">+{d.products.length - 3} lainnya</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* 4. Value */}
                           <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
