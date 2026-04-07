@@ -263,13 +263,12 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
     val > 0 ? `Rp ${val.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '-';
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" />
-          New Leads / Deal
-        </Button>
-      </DialogTrigger>
+    <>
+      <Button size="sm" className="gap-1.5" onClick={() => setOpen(true)}>
+        <Plus className="h-4 w-4" />
+        New Leads / Deal
+      </Button>
+      <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-0">
           <DialogTitle>Tambah Leads / Forecast Baru</DialogTitle>
