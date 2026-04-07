@@ -378,7 +378,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           <p className="text-[13px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
                         </div>
 
-                        <div className="shrink-0 space-y-1 pt-1 border-t border-border/50 overflow-hidden">
+                        <div className="shrink-0 space-y-0.5 pt-0.5 border-t border-border/50 overflow-hidden">
                           <div className="flex items-center justify-between overflow-hidden">
                             <div className="flex items-center gap-1 text-destructive truncate">
                               <CalendarClock className="h-3 w-3 shrink-0" />
