@@ -14,6 +14,7 @@ import { AccountSelectWithCreate } from '@/components/InlineAccountCreate';
 import { supabase } from '@/integrations/supabase/client';
 import { toast as sonnerToast } from 'sonner';
 import { format } from 'date-fns';
+import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -364,30 +365,19 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs">Product Category</Label>
-                      <Select value={product.category} onValueChange={v => updateProduct(idx, 'category', v)}>
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih kategori" /></SelectTrigger>
-                        <SelectContent>
-                          {dbCategories.map(c => <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>)}
-                        </SelectContent>
-                      </Select>
+                      <ProductCategoryCombobox
+                        value={product.category}
+                        categories={dbCategories}
+                        onSelect={(v) => updateProduct(idx, 'category', v)}
+                      />
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs">Product Name</Label>
-                      <Select
+                      <ProductNameCombobox
                         value={product.productName}
-                        onValueChange={v => {
-                          const prod = dbProducts.find(p => p.name === v);
-                          if (prod) handleProductSelect(idx, prod.id);
-                          else updateProduct(idx, 'productName', v);
-                        }}
-                      >
-                        <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Pilih produk" /></SelectTrigger>
-                        <SelectContent>
-                          {getFilteredProducts(product.category).map(p => (
-                            <SelectItem key={p.id} value={p.name}>{p.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        products={getFilteredProducts(product.category)}
+                        onSelect={(productId) => handleProductSelect(idx, productId)}
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-4 gap-2">

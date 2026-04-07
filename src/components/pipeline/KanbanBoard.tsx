@@ -1,6 +1,6 @@
 import { useState, useRef, useMemo, DragEvent } from 'react';
 import { Deal, DealStage, Segment, formatIDRFull, formatDate } from '@/types/sales';
-import { CalendarClock, Percent } from 'lucide-react';
+import { CalendarClock, MapPin, Percent } from 'lucide-react';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/StatusBadge';
@@ -322,6 +322,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         {/* Sales name (for global pipeline) */}
                         {getSalesName && (
                           <p className="text-[10px] break-words font-normal text-primary">{getSalesName(d.salesId)}</p>
+                        )}
+
+                        {/* Location */}
+                        {d.location && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-normal truncate" title={`Letak: ${d.location}`}>
+                            <MapPin className="h-2.5 w-2.5 shrink-0" />
+                            {d.location}
+                          </p>
                         )}
 
                         {/* Products list - max 3 items */}
