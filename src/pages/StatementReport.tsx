@@ -271,7 +271,20 @@ export default function StatementReport() {
     toast({ title: 'Tabel berhasil disalin', description: 'Data tabel telah disalin ke clipboard.' });
   };
 
-  const handleDownload = () => {
+  const saveDownloadHistory = async (fileName: string, fileFormat: string) => {
+    if (!user || !previewReport) return;
+    await supabase.from('download_history' as any).insert({
+      user_id: user.id,
+      report_type: previewReport.type,
+      report_name: previewReport.name,
+      file_format: fileFormat,
+      file_name: fileName,
+      filters: previewReport.filters as any,
+      record_count: previewReport.rows.length,
+    } as any);
+  };
+
+  const handleDownloadCSV = async () => {
     if (!previewReport) return;
     const header = previewReport.columns.join(',');
     const body = previewReport.rows.map(row => previewReport.columns.map(col => {
@@ -281,12 +294,48 @@ export default function StatementReport() {
     const csv = `${header}\n${body}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
+    a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
+    await saveDownloadHistory(fileName, 'csv');
     toast({ title: 'Download dimulai', description: 'File CSV sedang diunduh.' });
+  };
+
+  const handleDownloadXLSX = async () => {
+    if (!previewReport) return;
+    const wsData = [previewReport.columns, ...previewReport.rows.map(row => previewReport.columns.map(col => formatCellValue(col, row[col])))];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    await saveDownloadHistory(fileName, 'xlsx');
+    toast({ title: 'Download dimulai', description: 'File XLSX sedang diunduh.' });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!previewReport) return;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text(previewReport.name, 14, 15);
+    doc.setFontSize(9);
+    doc.text(`Period: ${previewReport.filters.dateFrom} — ${previewReport.filters.dateTo} | Segment: ${previewReport.filters.segment} | Sales: ${previewReport.filters.salesPerson}`, 14, 22);
+    doc.text(`Generated: ${format(new Date(previewReport.generatedAt), 'dd MMM yyyy HH:mm', { locale: idLocale })} | Records: ${previewReport.rows.length}`, 14, 27);
+    const tableBody = previewReport.rows.map((row, i) => [String(i + 1), ...previewReport.columns.map(col => formatCellValue(col, row[col]))]);
+    autoTable(doc, {
+      head: [['#', ...previewReport.columns]],
+      body: tableBody,
+      startY: 32,
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
+    doc.save(fileName);
+    await saveDownloadHistory(fileName, 'pdf');
+    toast({ title: 'Download dimulai', description: 'File PDF sedang diunduh.' });
   };
 
   const handlePrint = () => {
