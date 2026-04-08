@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { FileText, Search, Calendar as CalendarIcon, FolderOpen, Loader2, Copy, Download, Printer, ArrowLeft, Info } from 'lucide-react';
+import { FileText, Search, Calendar as CalendarIcon, FolderOpen, Loader2, Copy, Download, Printer, ArrowLeft, Info, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,12 +9,17 @@ import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/AuthContext';
 import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subQuarters } from 'date-fns';
 import { id as idLocale } from 'date-fns/locale';
 import { formatIDR } from '@/types/sales';
 import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const reportTypes = [
   { id: 'revenue-summary', name: 'Revenue Summary' },
@@ -83,6 +88,7 @@ interface GeneratedReport {
 }
 
 export default function StatementReport() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedReportType, setSelectedReportType] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('last-month');
@@ -265,7 +271,20 @@ export default function StatementReport() {
     toast({ title: 'Tabel berhasil disalin', description: 'Data tabel telah disalin ke clipboard.' });
   };
 
-  const handleDownload = () => {
+  const saveDownloadHistory = async (fileName: string, fileFormat: string) => {
+    if (!user || !previewReport) return;
+    await supabase.from('download_history' as any).insert({
+      user_id: user.id,
+      report_type: previewReport.type,
+      report_name: previewReport.name,
+      file_format: fileFormat,
+      file_name: fileName,
+      filters: previewReport.filters as any,
+      record_count: previewReport.rows.length,
+    } as any);
+  };
+
+  const handleDownloadCSV = async () => {
     if (!previewReport) return;
     const header = previewReport.columns.join(',');
     const body = previewReport.rows.map(row => previewReport.columns.map(col => {
@@ -275,12 +294,48 @@ export default function StatementReport() {
     const csv = `${header}\n${body}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.csv`;
+    a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
+    await saveDownloadHistory(fileName, 'csv');
     toast({ title: 'Download dimulai', description: 'File CSV sedang diunduh.' });
+  };
+
+  const handleDownloadXLSX = async () => {
+    if (!previewReport) return;
+    const wsData = [previewReport.columns, ...previewReport.rows.map(row => previewReport.columns.map(col => formatCellValue(col, row[col])))];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Report');
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    await saveDownloadHistory(fileName, 'xlsx');
+    toast({ title: 'Download dimulai', description: 'File XLSX sedang diunduh.' });
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!previewReport) return;
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14);
+    doc.text(previewReport.name, 14, 15);
+    doc.setFontSize(9);
+    doc.text(`Period: ${previewReport.filters.dateFrom} — ${previewReport.filters.dateTo} | Segment: ${previewReport.filters.segment} | Sales: ${previewReport.filters.salesPerson}`, 14, 22);
+    doc.text(`Generated: ${format(new Date(previewReport.generatedAt), 'dd MMM yyyy HH:mm', { locale: idLocale })} | Records: ${previewReport.rows.length}`, 14, 27);
+    const tableBody = previewReport.rows.map((row, i) => [String(i + 1), ...previewReport.columns.map(col => formatCellValue(col, row[col]))]);
+    autoTable(doc, {
+      head: [['#', ...previewReport.columns]],
+      body: tableBody,
+      startY: 32,
+      styles: { fontSize: 7 },
+      headStyles: { fillColor: [59, 130, 246] },
+    });
+    const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
+    doc.save(fileName);
+    await saveDownloadHistory(fileName, 'pdf');
+    toast({ title: 'Download dimulai', description: 'File PDF sedang diunduh.' });
   };
 
   const handlePrint = () => {
@@ -385,9 +440,24 @@ export default function StatementReport() {
               <Button variant="outline" size="sm" onClick={handleCopyTable}>
                 <Copy className="h-4 w-4 mr-1.5" /> Copy Table
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-1.5" /> Download
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1.5" /> Download <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDownloadXLSX}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadPDF}>
+                    <FilePdf className="h-4 w-4 mr-2" /> PDF (.pdf)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadCSV}>
+                    <FileDown className="h-4 w-4 mr-2" /> CSV (.csv)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-1.5" /> Print
               </Button>

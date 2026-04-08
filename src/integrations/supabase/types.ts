@@ -260,6 +260,42 @@ export type Database = {
           },
         ]
       }
+      download_history: {
+        Row: {
+          created_at: string
+          file_format: string
+          file_name: string
+          filters: Json
+          id: string
+          record_count: number
+          report_name: string
+          report_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_format?: string
+          file_name: string
+          filters?: Json
+          id?: string
+          record_count?: number
+          report_name: string
+          report_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_format?: string
+          file_name?: string
+          filters?: Json
+          id?: string
+          record_count?: number
+          report_name?: string
+          report_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           account_id: string
