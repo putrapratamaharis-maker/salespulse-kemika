@@ -88,6 +88,7 @@ interface GeneratedReport {
 }
 
 export default function StatementReport() {
+  const { user } = useAuth();
   const { toast } = useToast();
   const [selectedReportType, setSelectedReportType] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('last-month');
