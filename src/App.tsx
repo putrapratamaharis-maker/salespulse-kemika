@@ -29,6 +29,8 @@ import AuditLog from "./pages/AuditLog";
 import DealDeletionApproval from "./pages/DealDeletionApproval";
 import Auth from "./pages/Auth";
 import Reports from "./pages/Reports";
+import StatementReport from "./pages/StatementReport";
+import DownloadManager from "./pages/DownloadManager";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -75,6 +77,8 @@ function ProtectedRoutes() {
           <Route path="/audit-log" element={<AuditLog />} />
           <Route path="/deal-deletion-approval" element={<DealDeletionApproval />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/reports/statement" element={<StatementReport />} />
+          <Route path="/reports/downloads" element={<DownloadManager />} />
           <Route path="/admin" element={<AdminPanel />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="*" element={<NotFound />} />
