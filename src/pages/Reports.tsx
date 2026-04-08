@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { FileText, Download, Search, Calendar, FolderOpen } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const reportTypes = [
   { id: 'revenue-summary', name: 'Revenue Summary' },
@@ -30,9 +31,9 @@ const periodOptions = [
 
 const segmentOptions = [
   { id: 'all', name: 'All Segments' },
-  { id: 'enterprise', name: 'Enterprise' },
-  { id: 'mid-market', name: 'Mid-Market' },
-  { id: 'smb', name: 'SMB' },
+  { id: 'B2G', name: 'B2G' },
+  { id: 'B2B', name: 'B2B' },
+  { id: 'B2C', name: 'B2C' },
 ];
 
 interface DownloadItem {
@@ -59,6 +60,13 @@ export default function Reports() {
   const [selectedSales, setSelectedSales] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [generatedReports] = useState<any[]>([]);
+  const [salesProfiles, setSalesProfiles] = useState<{ user_id: string; full_name: string }[]>([]);
+
+  useEffect(() => {
+    supabase.rpc('get_active_sales_profiles').then(({ data }) => {
+      if (data) setSalesProfiles(data);
+    });
+  }, []);
 
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -178,6 +186,9 @@ export default function Reports() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Sales</SelectItem>
+                      {salesProfiles.map(sp => (
+                        <SelectItem key={sp.user_id} value={sp.user_id}>{sp.full_name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
