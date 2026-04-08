@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, User, Users, PieChart, TrendingUp, DollarSign,
   Package, CreditCard, Settings, ChevronDown, BarChart3, Target, Activity, GitBranch, Building2,
-  Database, UserCog, ClipboardList, Trash2, Bell
+  Database, UserCog, ClipboardList, Trash2, Bell, FileText
 } from 'lucide-react';
 import { NavLink } from '@/components/NavLink';
 import { useAppContext } from '@/context/AppContext';
@@ -71,6 +71,7 @@ export function AppSidebar() {
   const isSuperAdmin = systemRole === 'super_admin';
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
   const isMasterDataActive = ['/accounts', '/users', '/product-master'].includes(location.pathname);
+  const isReportActive = location.pathname === '/reports';
 
   const [pendingDeletions, setPendingDeletions] = useState(0);
 
@@ -242,6 +243,20 @@ export function AppSidebar() {
                       </CollapsibleContent>
                     )}
                   </Collapsible>
+                </SidebarMenuItem>
+
+                {/* Reports */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/reports"
+                      className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <FileText className="mr-2 h-4 w-4 shrink-0" />
+                      {!collapsed && <span>Reports</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
                 </SidebarMenuItem>
 
                 {/* Admin items — filtered by role */}
