@@ -186,6 +186,9 @@ export default function Reports() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Sales</SelectItem>
+                      {salesProfiles.map(sp => (
+                        <SelectItem key={sp.user_id} value={sp.user_id}>{sp.full_name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
