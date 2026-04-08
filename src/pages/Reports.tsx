@@ -161,8 +161,8 @@ export default function Reports() {
                       <TableCell className="text-sm text-muted-foreground">{item.generatedAt}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">{item.size}</TableCell>
                       <TableCell>
-                        {item.status === 'ready' && <Badge className="bg-emerald-100 text-emerald-700 text-[10px]">Ready</Badge>}
-                        {item.status === 'generating' && <Badge className="bg-amber-100 text-amber-700 text-[10px]">Generating...</Badge>}
+                        {item.status === 'ready' && <Badge className="bg-primary/10 text-primary text-[10px]">Ready</Badge>}
+                        {item.status === 'generating' && <Badge className="bg-accent/50 text-accent-foreground text-[10px]">Generating...</Badge>}
                         {item.status === 'failed' && <Badge variant="destructive" className="text-[10px]">Failed</Badge>}
                       </TableCell>
                       <TableCell className="text-right">

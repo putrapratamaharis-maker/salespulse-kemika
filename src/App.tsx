@@ -28,6 +28,7 @@ import ProductMaster from "./pages/ProductMaster";
 import AuditLog from "./pages/AuditLog";
 import DealDeletionApproval from "./pages/DealDeletionApproval";
 import Auth from "./pages/Auth";
+import Reports from "./pages/Reports";
 import ResetPassword from "./pages/ResetPassword";
 import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
