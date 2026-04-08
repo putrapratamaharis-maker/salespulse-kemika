@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FileText, Download, Search, Calendar, FolderOpen } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { FileText, Download, Search, Calendar as CalendarIcon, FolderOpen, Loader2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,14 +8,19 @@ import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar } from '@/components/ui/calendar';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { format, startOfMonth, endOfMonth, startOfQuarter, endOfQuarter, startOfYear, endOfYear, subMonths, subQuarters } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
+import { formatIDR } from '@/types/sales';
+import { cn } from '@/lib/utils';
 
 const reportTypes = [
   { id: 'revenue-summary', name: 'Revenue Summary' },
   { id: 'pipeline-status', name: 'Pipeline Status' },
   { id: 'activity-log', name: 'Activity Log' },
-  { id: 'kpi-scorecard', name: 'KPI Scorecard' },
   { id: 'ar-aging', name: 'AR Aging Report' },
   { id: 'product-sales', name: 'Product Sales Report' },
 ];
@@ -36,21 +41,39 @@ const segmentOptions = [
   { id: 'B2C', name: 'B2C' },
 ];
 
-interface DownloadItem {
-  id: string;
-  name: string;
-  format: 'xlsx' | 'pdf';
-  generatedAt: string;
-  status: 'ready' | 'generating' | 'failed';
-  size: string;
+function computeDateRange(period: string): { from: Date; to: Date } {
+  const now = new Date();
+  switch (period) {
+    case 'this-month':
+      return { from: startOfMonth(now), to: endOfMonth(now) };
+    case 'last-month': {
+      const prev = subMonths(now, 1);
+      return { from: startOfMonth(prev), to: endOfMonth(prev) };
+    }
+    case 'this-quarter':
+      return { from: startOfQuarter(now), to: endOfQuarter(now) };
+    case 'last-quarter': {
+      const prevQ = subQuarters(now, 1);
+      return { from: startOfQuarter(prevQ), to: endOfQuarter(prevQ) };
+    }
+    case 'this-year':
+      return { from: startOfYear(now), to: endOfYear(now) };
+    default:
+      return { from: startOfMonth(now), to: now };
+  }
 }
 
-const sampleDownloads: DownloadItem[] = [
-  { id: '1', name: 'Revenue Summary - Mar 2026', format: 'xlsx', generatedAt: '2026-04-07 14:30', status: 'ready', size: '245 KB' },
-  { id: '2', name: 'Pipeline Status - Q1 2026', format: 'pdf', generatedAt: '2026-04-06 09:15', status: 'ready', size: '1.2 MB' },
-  { id: '3', name: 'KPI Scorecard - Mar 2026', format: 'xlsx', generatedAt: '2026-04-05 16:45', status: 'ready', size: '180 KB' },
-  { id: '4', name: 'AR Aging Report - Apr 2026', format: 'pdf', generatedAt: '2026-04-08 08:00', status: 'generating', size: '-' },
-];
+interface ReportRow {
+  [key: string]: string | number | null;
+}
+
+interface GeneratedReport {
+  type: string;
+  name: string;
+  columns: string[];
+  rows: ReportRow[];
+  generatedAt: string;
+}
 
 export default function Reports() {
   const { toast } = useToast();
@@ -59,8 +82,14 @@ export default function Reports() {
   const [selectedSegment, setSelectedSegment] = useState('all');
   const [selectedSales, setSelectedSales] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [generatedReports] = useState<any[]>([]);
   const [salesProfiles, setSalesProfiles] = useState<{ user_id: string; full_name: string }[]>([]);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedReports, setGeneratedReports] = useState<GeneratedReport[]>([]);
+
+  // Date range state
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>(computeDateRange('last-month'));
+  const [fromOpen, setFromOpen] = useState(false);
+  const [toOpen, setToOpen] = useState(false);
 
   useEffect(() => {
     supabase.rpc('get_active_sales_profiles').then(({ data }) => {
@@ -68,34 +97,233 @@ export default function Reports() {
     });
   }, []);
 
-  const now = new Date();
-  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-  const endDate = now;
-
-  const formatDate = (d: Date) =>
-    `${String(d.getDate()).padStart(2, '0')} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`;
-
-  const handleGenerate = () => {
-    if (!selectedReportType) {
-      toast({ title: 'Pilih Report Type', description: 'Silakan pilih jenis report terlebih dahulu.', variant: 'destructive' });
-      return;
+  // Auto-compute date range when period changes (except custom)
+  useEffect(() => {
+    if (selectedPeriod !== 'custom') {
+      setDateRange(computeDateRange(selectedPeriod));
     }
-    const report = reportTypes.find(r => r.id === selectedReportType);
-    toast({
-      title: 'Report sedang digenerate',
-      description: `${report?.name} sedang diproses. Cek di Download Manager.`,
-    });
-  };
+  }, [selectedPeriod]);
+
+  const formatDateDisplay = (d: Date) => format(d, 'dd MMM yyyy', { locale: idLocale });
 
   const handleClearFilter = () => {
     setSelectedReportType('');
     setSelectedPeriod('last-month');
     setSelectedSegment('all');
     setSelectedSales('all');
+    setDateRange(computeDateRange('last-month'));
   };
 
-  const handleDownload = (item: DownloadItem) => {
-    toast({ title: 'Mengunduh...', description: `${item.name}.${item.format}` });
+  const handleGenerate = async () => {
+    if (!selectedReportType) {
+      toast({ title: 'Pilih Report Type', description: 'Silakan pilih jenis report terlebih dahulu.', variant: 'destructive' });
+      return;
+    }
+
+    setIsGenerating(true);
+    const fromStr = format(dateRange.from, 'yyyy-MM-dd');
+    const toStr = format(dateRange.to, 'yyyy-MM-dd');
+
+    try {
+      let report: GeneratedReport | null = null;
+
+      switch (selectedReportType) {
+        case 'revenue-summary':
+          report = await generateRevenueSummary(fromStr, toStr);
+          break;
+        case 'pipeline-status':
+          report = await generatePipelineStatus(fromStr, toStr);
+          break;
+        case 'activity-log':
+          report = await generateActivityLog(fromStr, toStr);
+          break;
+        case 'ar-aging':
+          report = await generateARAging();
+          break;
+        case 'product-sales':
+          report = await generateProductSales(fromStr, toStr);
+          break;
+      }
+
+      if (report) {
+        setGeneratedReports(prev => [report!, ...prev]);
+        toast({ title: 'Report berhasil digenerate', description: `${report.name} siap ditampilkan.` });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({ title: 'Gagal generate report', description: 'Terjadi kesalahan saat mengambil data.', variant: 'destructive' });
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // --- Report generators ---
+
+  const buildSegmentFilter = () => selectedSegment !== 'all' ? selectedSegment : null;
+  const buildSalesFilter = () => selectedSales !== 'all' ? selectedSales : null;
+
+  const generateRevenueSummary = async (from: string, to: string): Promise<GeneratedReport> => {
+    let query = supabase.from('invoices').select('invoice_number, net_sales, gross_profit, issue_date, segment, account_id, sales_id, paid_date')
+      .gte('issue_date', from).lte('issue_date', to);
+    const seg = buildSegmentFilter();
+    if (seg) query = query.eq('segment', seg);
+    const salesF = buildSalesFilter();
+    if (salesF) query = query.eq('sales_id', salesF);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = (data || []).map(inv => ({
+      'Invoice #': inv.invoice_number,
+      'Issue Date': inv.issue_date,
+      'Net Sales': inv.net_sales,
+      'Gross Profit': inv.gross_profit,
+      'Segment': inv.segment,
+      'Status': inv.paid_date ? 'Paid' : 'Unpaid',
+    }));
+
+    return {
+      type: 'revenue-summary',
+      name: `Revenue Summary (${formatDateDisplay(dateRange.from)} - ${formatDateDisplay(dateRange.to)})`,
+      columns: ['Invoice #', 'Issue Date', 'Net Sales', 'Gross Profit', 'Segment', 'Status'],
+      rows,
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  const generatePipelineStatus = async (from: string, to: string): Promise<GeneratedReport> => {
+    let query = supabase.from('deals').select('name, stage, value, probability, expected_close_date, segment, days_in_stage')
+      .gte('expected_close_date', from).lte('expected_close_date', to);
+    const seg = buildSegmentFilter();
+    if (seg) query = query.eq('segment', seg);
+    const salesF = buildSalesFilter();
+    if (salesF) query = query.eq('sales_id', salesF);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = (data || []).map(d => ({
+      'Deal Name': d.name,
+      'Stage': d.stage,
+      'Value': d.value,
+      'Probability': `${d.probability}%`,
+      'Expected Close': d.expected_close_date,
+      'Segment': d.segment,
+      'Days in Stage': d.days_in_stage,
+    }));
+
+    return {
+      type: 'pipeline-status',
+      name: `Pipeline Status (${formatDateDisplay(dateRange.from)} - ${formatDateDisplay(dateRange.to)})`,
+      columns: ['Deal Name', 'Stage', 'Value', 'Probability', 'Expected Close', 'Segment', 'Days in Stage'],
+      rows,
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  const generateActivityLog = async (from: string, to: string): Promise<GeneratedReport> => {
+    let query = supabase.from('sales_activities').select('type, activity_date, notes, outcome, purpose')
+      .gte('activity_date', from).lte('activity_date', to);
+    const salesF = buildSalesFilter();
+    if (salesF) query = query.eq('sales_id', salesF);
+
+    const { data, error } = await query.order('activity_date', { ascending: false });
+    if (error) throw error;
+
+    const rows = (data || []).map(a => ({
+      'Date': a.activity_date,
+      'Type': a.type,
+      'Purpose': a.purpose || '-',
+      'Outcome': a.outcome || '-',
+      'Notes': a.notes || '-',
+    }));
+
+    return {
+      type: 'activity-log',
+      name: `Activity Log (${formatDateDisplay(dateRange.from)} - ${formatDateDisplay(dateRange.to)})`,
+      columns: ['Date', 'Type', 'Purpose', 'Outcome', 'Notes'],
+      rows,
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  const generateARAging = async (): Promise<GeneratedReport> => {
+    let query = supabase.from('invoices').select('invoice_number, net_sales, issue_date, due_date, paid_date, segment, sales_id')
+      .is('paid_date', null);
+    const seg = buildSegmentFilter();
+    if (seg) query = query.eq('segment', seg);
+    const salesF = buildSalesFilter();
+    if (salesF) query = query.eq('sales_id', salesF);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const today = new Date();
+    const rows = (data || []).map(inv => {
+      const due = new Date(inv.due_date);
+      const diffDays = Math.floor((today.getTime() - due.getTime()) / (1000 * 60 * 60 * 24));
+      let aging = 'Current';
+      if (diffDays > 90) aging = '> 90 days';
+      else if (diffDays > 60) aging = '61-90 days';
+      else if (diffDays > 30) aging = '31-60 days';
+      else if (diffDays > 0) aging = '1-30 days';
+
+      return {
+        'Invoice #': inv.invoice_number,
+        'Net Sales': inv.net_sales,
+        'Issue Date': inv.issue_date,
+        'Due Date': inv.due_date,
+        'Overdue Days': Math.max(0, diffDays),
+        'Aging': aging,
+        'Segment': inv.segment,
+      };
+    });
+
+    return {
+      type: 'ar-aging',
+      name: `AR Aging Report (as of ${formatDateDisplay(today)})`,
+      columns: ['Invoice #', 'Net Sales', 'Issue Date', 'Due Date', 'Overdue Days', 'Aging', 'Segment'],
+      rows,
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  const generateProductSales = async (from: string, to: string): Promise<GeneratedReport> => {
+    let query = supabase.from('product_sales').select('month, revenue, units_sold, segment, product_id, products(name)')
+      .gte('month', from.slice(0, 7)).lte('month', to.slice(0, 7));
+    const seg = buildSegmentFilter();
+    if (seg) query = query.eq('segment', seg);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = (data || []).map((ps: any) => ({
+      'Product': ps.products?.name || '-',
+      'Month': ps.month,
+      'Units Sold': ps.units_sold,
+      'Revenue': ps.revenue,
+      'Segment': ps.segment || '-',
+    }));
+
+    return {
+      type: 'product-sales',
+      name: `Product Sales (${formatDateDisplay(dateRange.from)} - ${formatDateDisplay(dateRange.to)})`,
+      columns: ['Product', 'Month', 'Units Sold', 'Revenue', 'Segment'],
+      rows,
+      generatedAt: new Date().toISOString(),
+    };
+  };
+
+  // Filtered reports based on search
+  const filteredReports = useMemo(() => {
+    if (!searchQuery) return generatedReports;
+    return generatedReports.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  }, [generatedReports, searchQuery]);
+
+  const formatCellValue = (col: string, val: any) => {
+    if (val === null || val === undefined) return '-';
+    if (['Net Sales', 'Gross Profit', 'Value', 'Revenue'].includes(col)) return formatIDR(Number(val));
+    return String(val);
   };
 
   return (
@@ -111,7 +339,6 @@ export default function Reports() {
         </TabsList>
 
         <TabsContent value="statement" className="mt-4 space-y-6">
-          {/* Header */}
           <div>
             <h2 className="text-xl font-bold text-foreground">Statement Report</h2>
             <p className="text-sm text-muted-foreground">Generate a report compiling your revenue, pipeline, or activity history.</p>
@@ -153,11 +380,65 @@ export default function Reports() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <div className="flex items-center gap-2 flex-1 rounded-md border border-input bg-background px-3 h-10 text-sm text-muted-foreground">
-                      <span>{formatDate(startDate)}</span>
-                      <span>→</span>
-                      <span>{formatDate(endDate)}</span>
-                      <Calendar className="h-4 w-4 ml-auto text-muted-foreground" />
+
+                    {/* Interactive date range */}
+                    <div className="flex items-center gap-1 flex-1">
+                      <Popover open={fromOpen} onOpenChange={setFromOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn("h-10 flex-1 justify-start text-left text-sm font-normal",
+                              selectedPeriod !== 'custom' && "opacity-60 cursor-default"
+                            )}
+                            disabled={selectedPeriod !== 'custom'}
+                          >
+                            {formatDateDisplay(dateRange.from)}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={dateRange.from}
+                            onSelect={(d) => {
+                              if (d) {
+                                setDateRange(prev => ({ ...prev, from: d }));
+                                setFromOpen(false);
+                              }
+                            }}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <span className="text-muted-foreground text-sm">→</span>
+                      <Popover open={toOpen} onOpenChange={setToOpen}>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn("h-10 flex-1 justify-start text-left text-sm font-normal",
+                              selectedPeriod !== 'custom' && "opacity-60 cursor-default"
+                            )}
+                            disabled={selectedPeriod !== 'custom'}
+                          >
+                            {formatDateDisplay(dateRange.to)}
+                            <CalendarIcon className="h-4 w-4 ml-auto text-muted-foreground" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={dateRange.to}
+                            onSelect={(d) => {
+                              if (d) {
+                                setDateRange(prev => ({ ...prev, to: d }));
+                                setToOpen(false);
+                              }
+                            }}
+                            initialFocus
+                            className="p-3 pointer-events-auto"
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
                 </div>
@@ -194,12 +475,12 @@ export default function Reports() {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex justify-end gap-3 pt-2">
                 <Button variant="outline" onClick={handleClearFilter}>
                   Clear Filter
                 </Button>
-                <Button onClick={handleGenerate}>
+                <Button onClick={handleGenerate} disabled={isGenerating}>
+                  {isGenerating && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                   Generate Report
                 </Button>
               </div>
@@ -212,7 +493,6 @@ export default function Reports() {
               <CardTitle className="text-base font-semibold">Report Overview</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Search & Date */}
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -223,16 +503,9 @@ export default function Reports() {
                     className="pl-9 h-10"
                   />
                 </div>
-                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 h-10 text-sm text-muted-foreground shrink-0">
-                  <span>{formatDate(startDate)}</span>
-                  <span>→</span>
-                  <span>{formatDate(endDate)}</span>
-                  <Calendar className="h-4 w-4 ml-2" />
-                </div>
               </div>
 
-              {/* Empty State */}
-              {generatedReports.length === 0 && (
+              {filteredReports.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center">
                   <div className="relative mb-6">
                     <div className="w-24 h-24 rounded-2xl bg-muted/60 flex items-center justify-center">
@@ -242,6 +515,49 @@ export default function Reports() {
                   <h3 className="text-base font-semibold text-foreground mb-1">No Report Generated Yet</h3>
                   <p className="text-sm text-muted-foreground">Generate a report to see your transaction statements!</p>
                 </div>
+              ) : (
+                filteredReports.map((report, idx) => (
+                  <div key={idx} className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground">{report.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          Generated: {format(new Date(report.generatedAt), 'dd MMM yyyy HH:mm', { locale: idLocale })} · {report.rows.length} records
+                        </p>
+                      </div>
+                    </div>
+                    <div className="rounded-md border overflow-auto max-h-[400px]">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {report.columns.map(col => (
+                              <TableHead key={col} className="text-xs whitespace-nowrap">{col}</TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {report.rows.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={report.columns.length} className="text-center text-sm text-muted-foreground py-8">
+                                Tidak ada data untuk filter yang dipilih.
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            report.rows.map((row, rIdx) => (
+                              <TableRow key={rIdx}>
+                                {report.columns.map(col => (
+                                  <TableCell key={col} className="text-sm whitespace-nowrap">
+                                    {formatCellValue(col, row[col])}
+                                  </TableCell>
+                                ))}
+                              </TableRow>
+                            ))
+                          )}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
@@ -254,46 +570,13 @@ export default function Reports() {
               <CardTitle className="text-base font-semibold">Riwayat Download</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nama Report</TableHead>
-                    <TableHead>Format</TableHead>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead>Ukuran</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sampleDownloads.map(item => (
-                    <TableRow key={item.id}>
-                      <TableCell className="font-medium text-sm">{item.name}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px] uppercase">{item.format}</Badge>
-                      </TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{item.generatedAt}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{item.size}</TableCell>
-                      <TableCell>
-                        {item.status === 'ready' && <Badge className="bg-primary/10 text-primary text-[10px]">Ready</Badge>}
-                        {item.status === 'generating' && <Badge className="bg-accent/50 text-accent-foreground text-[10px]">Generating...</Badge>}
-                        {item.status === 'failed' && <Badge variant="destructive" className="text-[10px]">Failed</Badge>}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-7 text-xs"
-                          disabled={item.status !== 'ready'}
-                          onClick={() => handleDownload(item)}
-                        >
-                          <Download className="h-3.5 w-3.5 mr-1" /> Unduh
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="w-24 h-24 rounded-2xl bg-muted/60 flex items-center justify-center mb-6">
+                  <Download className="h-12 w-12 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-base font-semibold text-foreground mb-1">Belum ada riwayat download</h3>
+                <p className="text-sm text-muted-foreground">Generate report terlebih dahulu, lalu download dari Report Overview.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
