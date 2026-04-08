@@ -124,7 +124,7 @@ export default function Reports() {
                       <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
                     </Button>
                     <Button size="sm" variant="outline" className="text-xs h-8 flex-1" onClick={() => handleGenerate(report.id)}>
-                      <FilePdf className="h-3.5 w-3.5 mr-1" /> PDF
+                      <File className="h-3.5 w-3.5 mr-1" /> PDF
                     </Button>
                   </div>
                 </CardContent>
