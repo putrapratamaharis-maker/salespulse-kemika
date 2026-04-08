@@ -440,9 +440,24 @@ export default function StatementReport() {
               <Button variant="outline" size="sm" onClick={handleCopyTable}>
                 <Copy className="h-4 w-4 mr-1.5" /> Copy Table
               </Button>
-              <Button variant="outline" size="sm" onClick={handleDownload}>
-                <Download className="h-4 w-4 mr-1.5" /> Download
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Download className="h-4 w-4 mr-1.5" /> Download <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={handleDownloadXLSX}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadPDF}>
+                    <FilePdf className="h-4 w-4 mr-2" /> PDF (.pdf)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleDownloadCSV}>
+                    <FileDown className="h-4 w-4 mr-2" /> CSV (.csv)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" onClick={handlePrint}>
                 <Printer className="h-4 w-4 mr-1.5" /> Print
               </Button>
