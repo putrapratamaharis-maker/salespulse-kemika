@@ -1,25 +1,38 @@
 import { useState } from 'react';
-import { FileText, Download, Calendar, Filter, FileSpreadsheet, File } from 'lucide-react';
+import { FileText, Download, Search, Calendar, FolderOpen } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 
 const reportTypes = [
-  { id: 'revenue-summary', name: 'Revenue Summary', description: 'Ringkasan revenue per bulan & segment', category: 'Revenue' },
-  { id: 'pipeline-status', name: 'Pipeline Status', description: 'Status semua deals di pipeline', category: 'Pipeline' },
-  { id: 'activity-log', name: 'Activity Log', description: 'Log aktivitas sales per periode', category: 'Activity' },
-  { id: 'kpi-scorecard', name: 'KPI Scorecard', description: 'Scorecard KPI bulanan per sales', category: 'KPI' },
-  { id: 'ar-aging', name: 'AR Aging Report', description: 'Aging piutang berdasarkan tanggal jatuh tempo', category: 'Finance' },
-  { id: 'product-sales', name: 'Product Sales Report', description: 'Performa penjualan per produk', category: 'Product' },
+  { id: 'revenue-summary', name: 'Revenue Summary' },
+  { id: 'pipeline-status', name: 'Pipeline Status' },
+  { id: 'activity-log', name: 'Activity Log' },
+  { id: 'kpi-scorecard', name: 'KPI Scorecard' },
+  { id: 'ar-aging', name: 'AR Aging Report' },
+  { id: 'product-sales', name: 'Product Sales Report' },
 ];
 
-const months = [
-  'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+const periodOptions = [
+  { id: 'this-month', name: 'This Month' },
+  { id: 'last-month', name: 'Last Month' },
+  { id: 'this-quarter', name: 'This Quarter' },
+  { id: 'last-quarter', name: 'Last Quarter' },
+  { id: 'this-year', name: 'This Year' },
+  { id: 'custom', name: 'Custom' },
+];
+
+const segmentOptions = [
+  { id: 'all', name: 'All Segments' },
+  { id: 'enterprise', name: 'Enterprise' },
+  { id: 'mid-market', name: 'Mid-Market' },
+  { id: 'smb', name: 'SMB' },
 ];
 
 interface DownloadItem {
@@ -40,15 +53,37 @@ const sampleDownloads: DownloadItem[] = [
 
 export default function Reports() {
   const { toast } = useToast();
-  const [selectedMonth, setSelectedMonth] = useState(String(new Date().getMonth()));
-  const [selectedYear, setSelectedYear] = useState(String(new Date().getFullYear()));
+  const [selectedReportType, setSelectedReportType] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('last-month');
+  const [selectedSegment, setSelectedSegment] = useState('all');
+  const [selectedSales, setSelectedSales] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [generatedReports] = useState<any[]>([]);
 
-  const handleGenerate = (reportId: string) => {
-    const report = reportTypes.find(r => r.id === reportId);
+  const now = new Date();
+  const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+  const endDate = now;
+
+  const formatDate = (d: Date) =>
+    `${String(d.getDate()).padStart(2, '0')} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]} ${d.getFullYear()}`;
+
+  const handleGenerate = () => {
+    if (!selectedReportType) {
+      toast({ title: 'Pilih Report Type', description: 'Silakan pilih jenis report terlebih dahulu.', variant: 'destructive' });
+      return;
+    }
+    const report = reportTypes.find(r => r.id === selectedReportType);
     toast({
       title: 'Report sedang digenerate',
-      description: `${report?.name} untuk ${months[Number(selectedMonth)]} ${selectedYear} sedang diproses. Cek di Download Manager.`,
+      description: `${report?.name} sedang diproses. Cek di Download Manager.`,
     });
+  };
+
+  const handleClearFilter = () => {
+    setSelectedReportType('');
+    setSelectedPeriod('last-month');
+    setSelectedSegment('all');
+    setSelectedSales('all');
   };
 
   const handleDownload = (item: DownloadItem) => {
@@ -57,11 +92,6 @@ export default function Reports() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Reports</h2>
-        <p className="text-sm text-muted-foreground">Generate dan unduh laporan penjualan</p>
-      </div>
-
       <Tabs defaultValue="statement">
         <TabsList>
           <TabsTrigger value="statement">
@@ -72,72 +102,145 @@ export default function Reports() {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="statement" className="mt-4 space-y-4">
-          {/* Filters */}
+        <TabsContent value="statement" className="mt-4 space-y-6">
+          {/* Header */}
+          <div>
+            <h2 className="text-xl font-bold text-foreground">Statement Report</h2>
+            <p className="text-sm text-muted-foreground">Generate a report compiling your revenue, pipeline, or activity history.</p>
+          </div>
+
+          {/* Report Filter Card */}
           <Card>
-            <CardContent className="pt-4 pb-4">
-              <div className="flex flex-wrap items-end gap-3">
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Bulan</label>
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-[140px] h-9">
-                      <SelectValue />
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold">Report</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+                {/* Report Type */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">Report Type</Label>
+                  <Select value={selectedReportType} onValueChange={setSelectedReportType}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue placeholder="Select report type" />
                     </SelectTrigger>
                     <SelectContent>
-                      {months.map((m, i) => (
-                        <SelectItem key={i} value={String(i)}>{m}</SelectItem>
+                      {reportTypes.map(r => (
+                        <SelectItem key={r.id} value={r.id}>{r.name}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-medium text-muted-foreground">Tahun</label>
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger className="w-[100px] h-9">
+
+                {/* Period */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">Period</Label>
+                  <div className="flex gap-2">
+                    <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
+                      <SelectTrigger className="h-10 w-[140px]">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {periodOptions.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <div className="flex items-center gap-2 flex-1 rounded-md border border-input bg-background px-3 h-10 text-sm text-muted-foreground">
+                      <span>{formatDate(startDate)}</span>
+                      <span>→</span>
+                      <span>{formatDate(endDate)}</span>
+                      <Calendar className="h-4 w-4 ml-auto text-muted-foreground" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Segment */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">Segment</Label>
+                  <Select value={selectedSegment} onValueChange={setSelectedSegment}>
+                    <SelectTrigger className="h-10">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[2024, 2025, 2026].map(y => (
-                        <SelectItem key={y} value={String(y)}>{y}</SelectItem>
+                      {segmentOptions.map(s => (
+                        <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Sales Person */}
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-semibold text-foreground">Sales Person</Label>
+                  <Select value={selectedSales} onValueChange={setSelectedSales}>
+                    <SelectTrigger className="h-10">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Sales</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button variant="outline" onClick={handleClearFilter}>
+                  Clear Filter
+                </Button>
+                <Button onClick={handleGenerate}>
+                  Generate Report
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
-          {/* Report cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reportTypes.map(report => (
-              <Card key={report.id} className="hover:shadow-md transition-shadow">
-                <CardHeader className="pb-2">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-[10px]">{report.category}</Badge>
+          {/* Report Overview Card */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold">Report Overview</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Search & Date */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by report name"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    className="pl-9 h-10"
+                  />
+                </div>
+                <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 h-10 text-sm text-muted-foreground shrink-0">
+                  <span>{formatDate(startDate)}</span>
+                  <span>→</span>
+                  <span>{formatDate(endDate)}</span>
+                  <Calendar className="h-4 w-4 ml-2" />
+                </div>
+              </div>
+
+              {/* Empty State */}
+              {generatedReports.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-16 text-center">
+                  <div className="relative mb-6">
+                    <div className="w-24 h-24 rounded-2xl bg-muted/60 flex items-center justify-center">
+                      <FolderOpen className="h-12 w-12 text-muted-foreground/50" />
+                    </div>
                   </div>
-                  <CardTitle className="text-sm font-semibold mt-2">{report.name}</CardTitle>
-                  <CardDescription className="text-xs">{report.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex gap-2">
-                    <Button size="sm" variant="outline" className="text-xs h-8 flex-1" onClick={() => handleGenerate(report.id)}>
-                      <FileSpreadsheet className="h-3.5 w-3.5 mr-1" /> Excel
-                    </Button>
-                    <Button size="sm" variant="outline" className="text-xs h-8 flex-1" onClick={() => handleGenerate(report.id)}>
-                      <File className="h-3.5 w-3.5 mr-1" /> PDF
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  <h3 className="text-base font-semibold text-foreground mb-1">No Report Generated Yet</h3>
+                  <p className="text-sm text-muted-foreground">Generate a report to see your transaction statements!</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
+        {/* Download Manager Tab */}
         <TabsContent value="downloads" className="mt-4">
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold">Riwayat Download</CardTitle>
-              <CardDescription className="text-xs">File report yang sudah digenerate</CardDescription>
+              <CardTitle className="text-base font-semibold">Riwayat Download</CardTitle>
             </CardHeader>
             <CardContent>
               <Table>
