@@ -71,7 +71,7 @@ export function AppSidebar() {
   const isSuperAdmin = systemRole === 'super_admin';
   const isMyPerfActive = location.pathname.startsWith('/my-performance');
   const isMasterDataActive = ['/accounts', '/users', '/product-master'].includes(location.pathname);
-  const isReportActive = location.pathname === '/reports';
+  const isReportActive = ['/reports', '/reports/statement', '/reports/downloads'].includes(location.pathname);
 
   const [pendingDeletions, setPendingDeletions] = useState(0);
 
