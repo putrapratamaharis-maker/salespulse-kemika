@@ -60,6 +60,13 @@ export default function Reports() {
   const [selectedSales, setSelectedSales] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [generatedReports] = useState<any[]>([]);
+  const [salesProfiles, setSalesProfiles] = useState<{ user_id: string; full_name: string }[]>([]);
+
+  useEffect(() => {
+    supabase.rpc('get_active_sales_profiles').then(({ data }) => {
+      if (data) setSalesProfiles(data);
+    });
+  }, []);
 
   const now = new Date();
   const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
