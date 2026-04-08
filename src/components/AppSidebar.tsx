@@ -245,6 +245,20 @@ export function AppSidebar() {
                   </Collapsible>
                 </SidebarMenuItem>
 
+                {/* Reports */}
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink
+                      to="/reports"
+                      className="hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <FileText className="mr-2 h-4 w-4 shrink-0" />
+                      {!collapsed && <span>Reports</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
                 {/* Admin items — filtered by role */}
                 {isAdmin && adminItems
                   .filter(item => !item.superOnly || isSuperAdmin)
