@@ -177,10 +177,32 @@
 
 @layer components {
   .kpi-card {
-    @apply rounded-xl border-2 p-5 shadow-sm transition-all duration-300 ease-out hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 cursor-default;
+    @apply rounded-xl border-2 p-5 shadow-sm transition-all duration-300 ease-out hover:shadow-xl hover:scale-[1.03] hover:-translate-y-1 cursor-default relative overflow-hidden;
     border-color: hsl(var(--border));
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 100%);
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .dark .kpi-card::before {
+    background: linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0) 100%);
+  }
+
+  .kpi-card > * {
+    position: relative;
+    z-index: 1;
   }
 
   /* KPI gradient backgrounds + matching borders - light mode */
