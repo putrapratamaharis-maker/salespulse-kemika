@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Download, Calendar, Filter, FileSpreadsheet, FilePdf } from 'lucide-react';
+import { FileText, Download, Calendar, Filter, FileSpreadsheet, File } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
