@@ -8,10 +8,10 @@ import { Trophy, ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loa
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface SegmentData {
+  revenueYTD: number;
   revenue: number;
   grossProfit: number;
   marginPct: number;
-  winRate: number;
   avgDealSize: number;
   conversionRate: number;
 }
