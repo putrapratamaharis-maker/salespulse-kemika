@@ -271,8 +271,21 @@ export default function StatementReport() {
     toast({ title: 'Tabel berhasil disalin', description: 'Data tabel telah disalin ke clipboard.' });
   };
 
-  const saveDownloadHistory = async (fileName: string, fileFormat: string) => {
+  const uploadAndSaveHistory = async (blob: Blob, fileName: string, fileFormat: string) => {
     if (!user || !previewReport) return;
+    const storagePath = `${user.id}/${fileName}`;
+    const { error: uploadError } = await supabase.storage
+      .from('report-files')
+      .upload(storagePath, blob, { upsert: true });
+    
+    let fileUrl: string | null = null;
+    if (!uploadError) {
+      const { data: signedData } = await supabase.storage
+        .from('report-files')
+        .createSignedUrl(storagePath, 60 * 60 * 24 * 365); // 1 year
+      fileUrl = signedData?.signedUrl || null;
+    }
+
     await supabase.from('download_history' as any).insert({
       user_id: user.id,
       report_type: previewReport.type,
@@ -281,6 +294,7 @@ export default function StatementReport() {
       file_name: fileName,
       filters: previewReport.filters as any,
       record_count: previewReport.rows.length,
+      file_url: fileUrl,
     } as any);
   };
 
@@ -300,7 +314,7 @@ export default function StatementReport() {
     a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
-    await saveDownloadHistory(fileName, 'csv');
+    await uploadAndSaveHistory(blob, fileName, 'csv');
     toast({ title: 'Download dimulai', description: 'File CSV sedang diunduh.' });
   };
 
@@ -311,8 +325,10 @@ export default function StatementReport() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
     const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`;
+    const xlsxData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([xlsxData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     XLSX.writeFile(wb, fileName);
-    await saveDownloadHistory(fileName, 'xlsx');
+    await uploadAndSaveHistory(blob, fileName, 'xlsx');
     toast({ title: 'Download dimulai', description: 'File XLSX sedang diunduh.' });
   };
 
@@ -334,7 +350,8 @@ export default function StatementReport() {
     });
     const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
     doc.save(fileName);
-    await saveDownloadHistory(fileName, 'pdf');
+    const pdfBlob = doc.output('blob');
+    await uploadAndSaveHistory(pdfBlob, fileName, 'pdf');
     toast({ title: 'Download dimulai', description: 'File PDF sedang diunduh.' });
   };
 

@@ -265,6 +265,7 @@ export type Database = {
           created_at: string
           file_format: string
           file_name: string
+          file_url: string | null
           filters: Json
           id: string
           record_count: number
@@ -276,6 +277,7 @@ export type Database = {
           created_at?: string
           file_format?: string
           file_name: string
+          file_url?: string | null
           filters?: Json
           id?: string
           record_count?: number
@@ -287,6 +289,7 @@ export type Database = {
           created_at?: string
           file_format?: string
           file_name?: string
+          file_url?: string | null
           filters?: Json
           id?: string
           record_count?: number
