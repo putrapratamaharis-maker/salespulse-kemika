@@ -193,13 +193,19 @@ const SegmentPerformance = () => {
         supabase.from('targets').select('revenue_target, segment, month'),
       ]);
 
+      const now = new Date();
+      const currentMonth = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const yearStr = `${year}`;
+
       const result: Record<string, SegmentData> = {};
       const movement: Record<string, MonthlyMovement[]> = {};
 
       for (const seg of ['B2G', 'B2B', 'B2C']) {
-        const segInv = (invoices || []).filter((i: any) => i.segment === seg);
+        const allSegInv = (invoices || []).filter((i: any) => i.segment === seg);
+        const ytdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(yearStr));
+        const mtdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(currentMonth));
         const segDeals = (deals || []).filter((d: any) => d.segment === seg);
-        result[seg] = computeSegment(segInv, segDeals);
+        result[seg] = computeSegment(mtdInv, ytdInv, segDeals);
         movement[seg] = buildMovementData(invoices || [], targets || [], seg, year);
       }
 
