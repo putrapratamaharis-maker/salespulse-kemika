@@ -342,133 +342,7 @@ export default function StatementReport() {
     window.print();
   };
 
-  // --- Preview Mode ---
-  if (previewReport) {
-    return (
-      <div className="space-y-6 print:space-y-4">
-        {/* Back button */}
-        <div className="flex items-center gap-3 print:hidden">
-          <Button variant="ghost" size="sm" onClick={() => setPreviewReport(null)}>
-            <ArrowLeft className="h-4 w-4 mr-1" /> Kembali
-          </Button>
-          <div>
-            <h2 className="text-xl font-bold text-foreground">Report Preview</h2>
-            <p className="text-sm text-muted-foreground">Preview hasil report yang telah digenerate</p>
-          </div>
-        </div>
-
-        {/* Report Information */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <Info className="h-4 w-4 text-primary" />
-              Report Information
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-              <div>
-                <span className="text-muted-foreground">Report Type</span>
-                <p className="font-medium text-foreground">{previewReport.filters.reportType}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Period</span>
-                <p className="font-medium text-foreground">{previewReport.filters.dateFrom} — {previewReport.filters.dateTo}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Segment</span>
-                <p className="font-medium text-foreground">{previewReport.filters.segment}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Sales Person</span>
-                <p className="font-medium text-foreground">{previewReport.filters.salesPerson}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Generated At</span>
-                <p className="font-medium text-foreground">{format(new Date(previewReport.generatedAt), 'dd MMM yyyy HH:mm', { locale: idLocale })}</p>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Total Records</span>
-                <p className="font-medium text-foreground">{previewReport.rows.length} records</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Report Table */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base font-semibold">{previewReport.name}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div ref={tableRef} className="rounded-md border overflow-auto max-h-[500px]">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="text-xs whitespace-nowrap w-[50px]">#</TableHead>
-                    {previewReport.columns.map(col => (
-                      <TableHead key={col} className="text-xs whitespace-nowrap">{col}</TableHead>
-                    ))}
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {previewReport.rows.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={previewReport.columns.length + 1} className="text-center text-sm text-muted-foreground py-8">
-                        Tidak ada data untuk filter yang dipilih.
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    previewReport.rows.map((row, rIdx) => (
-                      <TableRow key={rIdx}>
-                        <TableCell className="text-sm text-muted-foreground">{rIdx + 1}</TableCell>
-                        {previewReport.columns.map(col => (
-                          <TableCell key={col} className="text-sm whitespace-nowrap">
-                            {formatCellValue(col, row[col])}
-                          </TableCell>
-                        ))}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-
-            {/* Action Buttons */}
-            <Separator className="my-4 print:hidden" />
-            <div className="flex justify-end gap-3 print:hidden">
-              <Button variant="outline" size="sm" onClick={handleCopyTable}>
-                <Copy className="h-4 w-4 mr-1.5" /> Copy Table
-              </Button>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm">
-                    <Download className="h-4 w-4 mr-1.5" /> Download <ChevronDown className="h-3 w-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={handleDownloadXLSX}>
-                    <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadPDF}>
-                    <FilePdf className="h-4 w-4 mr-2" /> PDF (.pdf)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleDownloadCSV}>
-                    <FileDown className="h-4 w-4 mr-2" /> CSV (.csv)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              <Button variant="outline" size="sm" onClick={handlePrint}>
-                <Printer className="h-4 w-4 mr-1.5" /> Print
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  // --- Filter Mode ---
+  // --- Single page layout: filters + report overview ---
   return (
     <div className="space-y-6">
       <div>
@@ -561,21 +435,122 @@ export default function StatementReport() {
         </CardContent>
       </Card>
 
-      {/* Report Overview - Empty State */}
+      {/* Report Overview */}
       <Card>
         <CardHeader className="pb-4">
           <CardTitle className="text-base font-semibold">Report Overview</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="relative mb-6">
-              <div className="w-24 h-24 rounded-2xl bg-muted/60 flex items-center justify-center">
-                <FolderOpen className="h-12 w-12 text-muted-foreground/50" />
+          {!previewReport ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="relative mb-6">
+                <div className="w-24 h-24 rounded-2xl bg-muted/60 flex items-center justify-center">
+                  <FolderOpen className="h-12 w-12 text-muted-foreground/50" />
+                </div>
+              </div>
+              <h3 className="text-base font-semibold text-foreground mb-1">No Report Generated Yet</h3>
+              <p className="text-sm text-muted-foreground">Generate a report to see your transaction statements!</p>
+            </div>
+          ) : (
+            <div className="space-y-6 print:space-y-4">
+              {/* Report Information */}
+              <div className="rounded-lg border bg-muted/30 p-4">
+                <h4 className="text-sm font-semibold flex items-center gap-2 mb-3">
+                  <Info className="h-4 w-4 text-primary" />
+                  Report Information
+                </h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">Report Type</span>
+                    <p className="font-medium text-foreground">{previewReport.filters.reportType}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Period</span>
+                    <p className="font-medium text-foreground">{previewReport.filters.dateFrom} — {previewReport.filters.dateTo}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Segment</span>
+                    <p className="font-medium text-foreground">{previewReport.filters.segment}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Sales Person</span>
+                    <p className="font-medium text-foreground">{previewReport.filters.salesPerson}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Generated At</span>
+                    <p className="font-medium text-foreground">{format(new Date(previewReport.generatedAt), 'dd MMM yyyy HH:mm', { locale: idLocale })}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">Total Records</span>
+                    <p className="font-medium text-foreground">{previewReport.rows.length} records</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Report Table */}
+              <div ref={tableRef} className="rounded-md border overflow-auto max-h-[500px]">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="text-xs whitespace-nowrap w-[50px]">#</TableHead>
+                      {previewReport.columns.map(col => (
+                        <TableHead key={col} className="text-xs whitespace-nowrap">{col}</TableHead>
+                      ))}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {previewReport.rows.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={previewReport.columns.length + 1} className="text-center text-sm text-muted-foreground py-8">
+                          Tidak ada data untuk filter yang dipilih.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      previewReport.rows.map((row, rIdx) => (
+                        <TableRow key={rIdx}>
+                          <TableCell className="text-sm text-muted-foreground">{rIdx + 1}</TableCell>
+                          {previewReport.columns.map(col => (
+                            <TableCell key={col} className="text-sm whitespace-nowrap">
+                              {formatCellValue(col, row[col])}
+                            </TableCell>
+                          ))}
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Action Buttons */}
+              <Separator className="print:hidden" />
+              <div className="flex justify-end gap-3 print:hidden">
+                <Button variant="outline" size="sm" onClick={handleCopyTable}>
+                  <Copy className="h-4 w-4 mr-1.5" /> Copy Table
+                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm">
+                      <Download className="h-4 w-4 mr-1.5" /> Download <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={handleDownloadXLSX}>
+                      <FileSpreadsheet className="h-4 w-4 mr-2" /> Excel (.xlsx)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadPDF}>
+                      <FilePdf className="h-4 w-4 mr-2" /> PDF (.pdf)
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleDownloadCSV}>
+                      <FileDown className="h-4 w-4 mr-2" /> CSV (.csv)
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <Button variant="outline" size="sm" onClick={handlePrint}>
+                  <Printer className="h-4 w-4 mr-1.5" /> Print
+                </Button>
               </div>
             </div>
-            <h3 className="text-base font-semibold text-foreground mb-1">No Report Generated Yet</h3>
-            <p className="text-sm text-muted-foreground">Generate a report to see your transaction statements!</p>
-          </div>
+          )}
         </CardContent>
       </Card>
     </div>
