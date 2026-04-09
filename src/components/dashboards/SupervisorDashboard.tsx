@@ -20,6 +20,7 @@ interface TeamMember {
   pipelineValue: number;
   activityCount: number;
   stuckDeals: number;
+  stuckValue: number;
   overdueInvoices: number;
 }
 
