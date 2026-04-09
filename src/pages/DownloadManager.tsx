@@ -112,6 +112,12 @@ export default function DownloadManager() {
     toast({ title: `${ids.length} riwayat dihapus` });
   };
 
+  const handleRedownloadSelected = () => {
+    const items = history.filter(h => selectedIds.has(h.id));
+    if (items.length === 0) return;
+    toast({ title: `${items.length} file dipilih`, description: 'Untuk mendownload ulang, silakan generate kembali dari Statement Report.' });
+  };
+
   const formatReportType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
@@ -271,7 +277,7 @@ export default function DownloadManager() {
               <Trash2 className="h-4 w-4" />
               Delete
             </Button>
-            <Button size="sm" className="gap-1.5">
+            <Button size="sm" className="gap-1.5" onClick={handleRedownloadSelected}>
               <Download className="h-4 w-4" />
               Download
             </Button>
