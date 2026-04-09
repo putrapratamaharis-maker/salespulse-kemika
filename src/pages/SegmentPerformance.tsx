@@ -4,14 +4,14 @@ import { formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Trophy, ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
+import { ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
 interface SegmentData {
+  revenueYTD: number;
   revenue: number;
   grossProfit: number;
   marginPct: number;
-  winRate: number;
   avgDealSize: number;
   conversionRate: number;
 }
@@ -23,12 +23,12 @@ interface MonthlyMovement {
 }
 
 function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: SegmentData }) {
-  const { revenue, grossProfit, marginPct, winRate, avgDealSize, conversionRate } = data;
+  const { revenueYTD, revenue, grossProfit, marginPct, avgDealSize, conversionRate } = data;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <KPICard label="Revenue YTD" value={formatIDRFull(revenueYTD)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total net_sales dari invoice segment ini di tahun berjalan" />
       <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total net_sales dari invoice segment ini di bulan berjalan" />
-      <KPICard label="Win Rate" value={formatPercent(winRate)} status={winRate >= 50 ? 'green' : 'yellow'} icon={Trophy} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Jumlah deal Won ÷ Total deal (Won + Lost) × 100%" />
       <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Gross Profit ÷ Revenue × 100%. Threshold hijau ≥ 17%" />
       <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total nilai deal ÷ Jumlah deal pada segment ini" />
       <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal Won ÷ Total deal aktif × 100%" />
@@ -141,18 +141,16 @@ function RevenueMovementChart({ data }: { data: MonthlyMovement[] }) {
   );
 }
 
-function computeSegment(invoices: any[], deals: any[]): SegmentData {
-  const revenue = invoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
-  const grossProfit = invoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
+function computeSegment(mtdInvoices: any[], ytdInvoices: any[], deals: any[]): SegmentData {
+  const revenue = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const grossProfit = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
   const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
   const closedWon = deals.filter((d: any) => d.stage === 'po_secured').length;
-  const closedLost = deals.filter((d: any) => d.stage === 'lost').length;
-  const totalClosed = closedWon + closedLost;
-  const winRate = totalClosed > 0 ? (closedWon / totalClosed) * 100 : 0;
   const avgDealSize = closedWon > 0 ? deals.filter((d: any) => d.stage === 'po_secured').reduce((s: number, d: any) => s + d.value, 0) / closedWon : 0;
-  const paidInvoices = invoices.filter((i: any) => i.paid_date).length;
-  const conversionRate = invoices.length > 0 ? (paidInvoices / invoices.length) * 100 : 0;
-  return { revenue, grossProfit, marginPct, winRate, avgDealSize, conversionRate };
+  const paidInvoices = ytdInvoices.filter((i: any) => i.paid_date).length;
+  const conversionRate = ytdInvoices.length > 0 ? (paidInvoices / ytdInvoices.length) * 100 : 0;
+  return { revenueYTD, revenue, grossProfit, marginPct, avgDealSize, conversionRate };
 }
 
 function buildMovementData(
@@ -195,13 +193,19 @@ const SegmentPerformance = () => {
         supabase.from('targets').select('revenue_target, segment, month'),
       ]);
 
+      const now = new Date();
+      const currentMonth = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      const yearStr = `${year}`;
+
       const result: Record<string, SegmentData> = {};
       const movement: Record<string, MonthlyMovement[]> = {};
 
       for (const seg of ['B2G', 'B2B', 'B2C']) {
-        const segInv = (invoices || []).filter((i: any) => i.segment === seg);
+        const allSegInv = (invoices || []).filter((i: any) => i.segment === seg);
+        const ytdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(yearStr));
+        const mtdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(currentMonth));
         const segDeals = (deals || []).filter((d: any) => d.segment === seg);
-        result[seg] = computeSegment(segInv, segDeals);
+        result[seg] = computeSegment(mtdInv, ytdInv, segDeals);
         movement[seg] = buildMovementData(invoices || [], targets || [], seg, year);
       }
 
@@ -220,7 +224,7 @@ const SegmentPerformance = () => {
     );
   }
 
-  const emptySegment: SegmentData = { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 };
+  const emptySegment: SegmentData = { revenueYTD: 0, revenue: 0, grossProfit: 0, marginPct: 0, avgDealSize: 0, conversionRate: 0 };
   const emptyMovement: MonthlyMovement[] = MONTH_LABELS.map(m => ({ month: m, realisasi: 0, target: 0 }));
 
   return (
