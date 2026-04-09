@@ -125,11 +125,12 @@ export function SupervisorDashboard() {
         <p className="text-sm text-muted-foreground">{teamData.length} direct reports — {currentUser.segment} segment</p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
-        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
-        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
-        <KPICard label="Stuck Deals (>14D)" value={String(stuckCount)} changeLabel={stuckCount > 0 ? formatIDRFull(totalStuckValue) + ' at risk' : 'All clear!'} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" />
+        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckCount)} changeLabel={stuckCount > 0 ? formatIDRFull(totalStuckValue) + ' at risk' : 'All clear!'} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       <Card>
