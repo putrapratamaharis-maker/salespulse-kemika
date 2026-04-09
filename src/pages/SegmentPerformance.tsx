@@ -141,18 +141,16 @@ function RevenueMovementChart({ data }: { data: MonthlyMovement[] }) {
   );
 }
 
-function computeSegment(invoices: any[], deals: any[]): SegmentData {
-  const revenue = invoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
-  const grossProfit = invoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
+function computeSegment(mtdInvoices: any[], ytdInvoices: any[], deals: any[]): SegmentData {
+  const revenue = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
+  const grossProfit = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
   const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
   const closedWon = deals.filter((d: any) => d.stage === 'po_secured').length;
-  const closedLost = deals.filter((d: any) => d.stage === 'lost').length;
-  const totalClosed = closedWon + closedLost;
-  const winRate = totalClosed > 0 ? (closedWon / totalClosed) * 100 : 0;
   const avgDealSize = closedWon > 0 ? deals.filter((d: any) => d.stage === 'po_secured').reduce((s: number, d: any) => s + d.value, 0) / closedWon : 0;
-  const paidInvoices = invoices.filter((i: any) => i.paid_date).length;
-  const conversionRate = invoices.length > 0 ? (paidInvoices / invoices.length) * 100 : 0;
-  return { revenue, grossProfit, marginPct, winRate, avgDealSize, conversionRate };
+  const paidInvoices = ytdInvoices.filter((i: any) => i.paid_date).length;
+  const conversionRate = ytdInvoices.length > 0 ? (paidInvoices / ytdInvoices.length) * 100 : 0;
+  return { revenueYTD, revenue, grossProfit, marginPct, avgDealSize, conversionRate };
 }
 
 function buildMovementData(
