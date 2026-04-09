@@ -91,7 +91,7 @@ export function SupervisorDashboard() {
           region: sub.region || '',
           revenue, marginPct, achievementPct, pipelineValue,
           activityCount: userActivities.length,
-          stuckDeals, overdueInvoices,
+          stuckDeals, stuckValue, overdueInvoices,
         };
       });
 
