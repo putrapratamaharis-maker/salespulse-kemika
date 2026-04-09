@@ -196,6 +196,37 @@ const Pipeline = () => {
       />
 
       {/* Sales Comparison Bar Chart */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-semibold">Pipeline Comparison per Sales</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={salesComparisonData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
+              <YAxis tickFormatter={(v: number) => formatIDRAxis(v)} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} width={90} />
+              <Tooltip content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null;
+                const data = payload[0]?.payload;
+                return (
+                  <div className="rounded-lg border bg-background p-2.5 shadow-md text-xs space-y-1">
+                    <p className="font-semibold text-foreground">{label}</p>
+                    {payload.map((entry: any, i: number) => (
+                      <p key={i} style={{ color: entry.color }}>{entry.name}: {formatIDRFull(entry.value as number)}</p>
+                    ))}
+                    <p className="text-muted-foreground">Jumlah Deals: {data?.deals}</p>
+                  </div>
+                );
+              }} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="pipeline" name="Pipeline Value" fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="forecast" name="Weighted Forecast" fill="hsl(var(--chart-4))" radius={[4, 4, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </CardContent>
+      </Card>
+
 
       <Card>
         <CardHeader className="pb-2">
