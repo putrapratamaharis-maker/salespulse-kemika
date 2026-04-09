@@ -116,7 +116,22 @@ export default function DownloadManager() {
   const handleRedownloadSelected = () => {
     const items = history.filter(h => selectedIds.has(h.id));
     if (items.length === 0) return;
-    toast({ title: `${items.length} file dipilih`, description: 'Untuk mendownload ulang, silakan generate kembali dari Statement Report.' });
+    let downloaded = 0;
+    for (const item of items) {
+      if (item.file_url) {
+        const a = document.createElement('a');
+        a.href = item.file_url;
+        a.download = item.file_name;
+        a.target = '_blank';
+        a.click();
+        downloaded++;
+      }
+    }
+    if (downloaded > 0) {
+      toast({ title: `${downloaded} file sedang diunduh` });
+    } else {
+      toast({ title: 'File tidak tersedia', description: 'File lama belum tersimpan di storage. Silakan generate ulang dari Statement Report.', variant: 'destructive' });
+    }
   };
 
   const formatReportType = (type: string) => {
