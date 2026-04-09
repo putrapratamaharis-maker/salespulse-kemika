@@ -20,6 +20,7 @@ interface TeamMember {
   pipelineValue: number;
   activityCount: number;
   stuckDeals: number;
+  stuckValue: number;
   overdueInvoices: number;
 }
 
@@ -79,7 +80,9 @@ export function SupervisorDashboard() {
         const achievementPct = userTarget ? (revenue / Number(userTarget.revenue_target)) * 100 : 0;
         const openDeals = userDeals.filter(d => !['closed_won', 'closed_lost', 'canceled', 'lost'].includes(d.stage));
         const pipelineValue = openDeals.reduce((s, d) => s + Number(d.value), 0);
-        const stuckDeals = openDeals.filter(d => d.days_in_stage > 14).length;
+        const stuckDealsList = openDeals.filter(d => d.days_in_stage > 14);
+        const stuckDeals = stuckDealsList.length;
+        const stuckValue = stuckDealsList.reduce((s, d) => s + Number(d.value), 0);
         const overdueInvoices = userInvoices.filter(inv => !inv.paid_date && new Date(inv.due_date) < new Date()).length;
 
         return {
@@ -88,7 +91,7 @@ export function SupervisorDashboard() {
           region: sub.region || '',
           revenue, marginPct, achievementPct, pipelineValue,
           activityCount: userActivities.length,
-          stuckDeals, overdueInvoices,
+          stuckDeals, stuckValue, overdueInvoices,
         };
       });
 
@@ -103,6 +106,7 @@ export function SupervisorDashboard() {
   const teamAchievement = totalTarget > 0 ? (totalRevenue / totalTarget) * 100 : 0;
   const totalPipeline = teamData.reduce((s, d) => s + d.pipelineValue, 0);
   const stuckCount = teamData.reduce((s, d) => s + d.stuckDeals, 0);
+  const totalStuckValue = teamData.reduce((s, d) => s + d.stuckValue, 0);
 
   const ranked = [...teamData].sort((a, b) => b.achievementPct - a.achievementPct);
 
@@ -125,7 +129,7 @@ export function SupervisorDashboard() {
         <KPICard label="Team Revenue MTD" value={formatIDRFull(totalRevenue)} icon={DollarSign} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
         <KPICard label="Team Achievement" value={formatPercent(teamAchievement)} status={getAchievementStatus(teamAchievement)} icon={Target} autoFitText className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={TrendingUp} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
-        <KPICard label="Stuck Deals" value={String(stuckCount)} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckCount)} changeLabel={stuckCount > 0 ? formatIDRFull(totalStuckValue) + ' at risk' : 'All clear!'} status={stuckCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       <Card>
