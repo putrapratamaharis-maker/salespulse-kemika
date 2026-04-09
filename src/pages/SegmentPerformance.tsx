@@ -224,7 +224,7 @@ const SegmentPerformance = () => {
     );
   }
 
-  const emptySegment: SegmentData = { revenue: 0, grossProfit: 0, marginPct: 0, winRate: 0, avgDealSize: 0, conversionRate: 0 };
+  const emptySegment: SegmentData = { revenueYTD: 0, revenue: 0, grossProfit: 0, marginPct: 0, avgDealSize: 0, conversionRate: 0 };
   const emptyMovement: MonthlyMovement[] = MONTH_LABELS.map(m => ({ month: m, realisasi: 0, target: 0 }));
 
   return (
