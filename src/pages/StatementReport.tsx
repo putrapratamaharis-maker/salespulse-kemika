@@ -314,7 +314,7 @@ export default function StatementReport() {
     a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
-    await saveDownloadHistory(fileName, 'csv');
+    await uploadAndSaveHistory(blob, fileName, 'csv');
     toast({ title: 'Download dimulai', description: 'File CSV sedang diunduh.' });
   };
 
@@ -325,8 +325,10 @@ export default function StatementReport() {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Report');
     const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.xlsx`;
+    const xlsxData = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([xlsxData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
     XLSX.writeFile(wb, fileName);
-    await saveDownloadHistory(fileName, 'xlsx');
+    await uploadAndSaveHistory(blob, fileName, 'xlsx');
     toast({ title: 'Download dimulai', description: 'File XLSX sedang diunduh.' });
   };
 
