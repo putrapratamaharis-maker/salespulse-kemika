@@ -3,7 +3,7 @@ import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
-import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet, Calendar } from 'lucide-react';
+import { DollarSign, Target, Percent, CreditCard, TrendingUp, BarChart3, Package, Layers, Building2, Loader2, Banknote, MapPin, Wallet, Calendar, Users } from 'lucide-react';
 import { SalesRevenueRanking } from './SalesRevenueRanking';
 import { LiveStatusRow } from './LiveStatusRow';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,6 +62,7 @@ export function ManagerDashboard() {
   const [totalPipeline, setTotalPipeline] = useState(0);
   const [weightedForecast, setWeightedForecast] = useState(0);
   const [cashIn, setCashIn] = useState(0);
+  const [totalTickets, setTotalTickets] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
@@ -79,7 +80,7 @@ export function ManagerDashboard() {
       const yearStr = String(selYear);
 
       // Use security definer RPC for company-wide data (bypasses RLS)
-      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }] = await Promise.all([
+      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }, { count: totalDealCount }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
           _current_year: selYear,
           _current_month: selMonth,
@@ -87,7 +88,10 @@ export function ManagerDashboard() {
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
         supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
+        supabase.from('deals').select('*', { count: 'exact', head: true }),
       ]);
+
+      setTotalTickets(totalDealCount || 0);
 
       // Gross Profit YTD & Cash-In from invoices
       let gpYTD = 0;
@@ -264,8 +268,9 @@ export function ManagerDashboard() {
       </div>
 
       {/* Row 4: Pipeline */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Qualification, Proposal, Negotiation, Quotation)" />
+        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif pada tahap terbuka" />
       </div>
 

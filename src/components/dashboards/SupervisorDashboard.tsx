@@ -184,7 +184,7 @@ export function SupervisorDashboard() {
                     <TableCell className="text-sm">{d.activityCount}</TableCell>
                     <TableCell>
                       <div className="flex gap-1">
-                        {d.stuckDeals > 0 && <StatusBadge status="red" label={`${d.stuckDeals} stuck`} />}
+                        {d.stuckDeals > 0 && <StatusBadge status="red" label={`${d.stuckDeals} >14D stuck`} />}
                         {d.overdueInvoices > 0 && <StatusBadge status="yellow" label={`${d.overdueInvoices} overdue`} />}
                       </div>
                     </TableCell>
