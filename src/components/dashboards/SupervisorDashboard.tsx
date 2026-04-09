@@ -90,7 +90,7 @@ export function SupervisorDashboard() {
           userId: sub.user_id,
           name: sub.full_name,
           region: sub.region || '',
-          revenue, marginPct, achievementPct, pipelineValue,
+          revenue, marginPct, achievementPct, pipelineValue, dealCount: userDeals.length,
           activityCount: userActivities.length,
           stuckDeals, stuckValue, overdueInvoices,
         };
