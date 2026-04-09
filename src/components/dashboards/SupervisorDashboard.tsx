@@ -103,6 +103,7 @@ export function SupervisorDashboard() {
   const teamAchievement = totalTarget > 0 ? (totalRevenue / totalTarget) * 100 : 0;
   const totalPipeline = teamData.reduce((s, d) => s + d.pipelineValue, 0);
   const stuckCount = teamData.reduce((s, d) => s + d.stuckDeals, 0);
+  const totalStuckValue = teamData.reduce((s, d) => s + d.stuckValue, 0);
 
   const ranked = [...teamData].sort((a, b) => b.achievementPct - a.achievementPct);
 
