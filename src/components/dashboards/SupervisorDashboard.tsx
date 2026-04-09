@@ -18,6 +18,7 @@ interface TeamMember {
   marginPct: number;
   achievementPct: number;
   pipelineValue: number;
+  dealCount: number;
   activityCount: number;
   stuckDeals: number;
   stuckValue: number;
