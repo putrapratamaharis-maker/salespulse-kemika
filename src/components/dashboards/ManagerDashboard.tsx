@@ -80,7 +80,7 @@ export function ManagerDashboard() {
       const yearStr = String(selYear);
 
       // Use security definer RPC for company-wide data (bypasses RLS)
-      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }, { data: allDeals }] = await Promise.all([
+      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }, { count: totalDealCount }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
           _current_year: selYear,
           _current_month: selMonth,
@@ -88,8 +88,10 @@ export function ManagerDashboard() {
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
         supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
-        supabase.from('deals').select('id', { count: 'exact', head: true }),
+        supabase.from('deals').select('*', { count: 'exact', head: true }),
       ]);
+
+      setTotalTickets(totalDealCount || 0);
 
       // Gross Profit YTD & Cash-In from invoices
       let gpYTD = 0;
