@@ -114,7 +114,7 @@ const Pipeline = () => {
   const openDeals = allDeals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
   const totalPipeline = openDeals.reduce((s, d) => s + d.value, 0);
   const weightedForecast = openDeals.reduce((s, d) => s + d.value * d.probability / 100, 0);
-  const stuckDeals = openDeals.filter(d => d.daysInStage > 10);
+  const stuckDeals = openDeals.filter(d => d.daysInStage > 14);
 
   // Stage breakdown
   const stages: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
@@ -183,7 +183,7 @@ const Pipeline = () => {
         <KPICard label="Total Ticket/Card" value={String(allDeals.length)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
-        <KPICard label="Stuck Deals" value={String(stuckDeals.length)} status={stuckDeals.length > 0 ? 'yellow' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah deal aktif yang sudah > 10 hari tanpa perubahan stage" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckDeals.length)} changeLabel={stuckDeals.length > 0 ? formatIDRFull(stuckDeals.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} status={stuckDeals.length > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       {/* Kanban Board */}
