@@ -350,7 +350,8 @@ export default function StatementReport() {
     });
     const fileName = `${previewReport.name.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd_HHmm')}.pdf`;
     doc.save(fileName);
-    await saveDownloadHistory(fileName, 'pdf');
+    const pdfBlob = doc.output('blob');
+    await uploadAndSaveHistory(pdfBlob, fileName, 'pdf');
     toast({ title: 'Download dimulai', description: 'File PDF sedang diunduh.' });
   };
 
