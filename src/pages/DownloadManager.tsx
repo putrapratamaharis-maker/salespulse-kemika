@@ -112,6 +112,12 @@ export default function DownloadManager() {
     toast({ title: `${ids.length} riwayat dihapus` });
   };
 
+  const handleRedownloadSelected = () => {
+    const items = history.filter(h => selectedIds.has(h.id));
+    if (items.length === 0) return;
+    toast({ title: `${items.length} file dipilih`, description: 'Untuk mendownload ulang, silakan generate kembali dari Statement Report.' });
+  };
+
   const formatReportType = (type: string) => {
     return type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   };
