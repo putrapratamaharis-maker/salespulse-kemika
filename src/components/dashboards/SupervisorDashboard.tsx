@@ -80,7 +80,9 @@ export function SupervisorDashboard() {
         const achievementPct = userTarget ? (revenue / Number(userTarget.revenue_target)) * 100 : 0;
         const openDeals = userDeals.filter(d => !['closed_won', 'closed_lost', 'canceled', 'lost'].includes(d.stage));
         const pipelineValue = openDeals.reduce((s, d) => s + Number(d.value), 0);
-        const stuckDeals = openDeals.filter(d => d.days_in_stage > 14).length;
+        const stuckDealsList = openDeals.filter(d => d.days_in_stage > 14);
+        const stuckDeals = stuckDealsList.length;
+        const stuckValue = stuckDealsList.reduce((s, d) => s + Number(d.value), 0);
         const overdueInvoices = userInvoices.filter(inv => !inv.paid_date && new Date(inv.due_date) < new Date()).length;
 
         return {
