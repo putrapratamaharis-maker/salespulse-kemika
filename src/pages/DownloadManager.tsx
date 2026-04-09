@@ -23,6 +23,7 @@ interface DownloadRecord {
   report_name: string;
   file_format: string;
   file_name: string;
+  file_url: string | null;
   filters: Record<string, string>;
   record_count: number;
   created_at: string;
