@@ -188,9 +188,9 @@ const SegmentPerformance = () => {
       const year = new Date().getFullYear();
 
       const [{ data: invoices }, { data: deals }, { data: targets }] = await Promise.all([
-        supabase.from('invoices').select('net_sales, gross_profit, segment, paid_date, issue_date'),
-        supabase.from('deals').select('value, stage, segment'),
-        supabase.from('targets').select('revenue_target, segment, month'),
+        supabase.rpc('get_segment_invoices'),
+        supabase.rpc('get_segment_deals'),
+        supabase.rpc('get_segment_targets'),
       ]);
 
       const now = new Date();

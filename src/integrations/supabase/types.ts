@@ -1262,6 +1262,44 @@ export type Database = {
         Args: { _current_month: number; _current_year: number }
         Returns: Json
       }
+      get_segment_deals: {
+        Args: never
+        Returns: {
+          segment: string
+          stage: Database["public"]["Enums"]["deal_stage"]
+          value: number
+        }[]
+      }
+      get_segment_invoices: {
+        Args: never
+        Returns: {
+          account_id: string
+          created_at: string
+          due_date: string
+          gross_profit: number
+          id: string
+          invoice_number: string
+          issue_date: string
+          net_sales: number
+          paid_date: string | null
+          sales_id: string
+          segment: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_segment_targets: {
+        Args: never
+        Returns: {
+          month: string
+          revenue_target: number
+          segment: string
+        }[]
+      }
       get_user_org_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["org_role"]
