@@ -82,37 +82,30 @@ export function ManagerDashboard() {
       const yearStr = String(selYear);
 
       // Use security definer RPC for company-wide data (bypasses RLS)
-      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: pipelineDeals }, { count: totalDealCount }] = await Promise.all([
+      const [{ data: kpiData, error: kpiError }, { data: accounts }, { data: invoicesYTD }, { data: allDealsData }] = await Promise.all([
         supabase.rpc('get_executive_summary_kpis', {
           _current_year: selYear,
           _current_month: selMonth,
         }),
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
-        supabase.from('deals').select('value, probability, stage, days_in_stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost")'),
-        supabase.from('deals').select('*', { count: 'exact', head: true }),
+        supabase.rpc('get_all_deals_pipeline'),
       ]);
 
-      setTotalTickets(totalDealCount || 0);
+      // Use same RPC data source as Pipeline & Forecast page for consistency
+      const allDeals = allDealsData || [];
+      setTotalTickets(allDeals.length);
 
-      // Gross Profit YTD & Cash-In from invoices
-      let gpYTD = 0;
-      let cashInTotal = 0;
-      (invoicesYTD || []).forEach(inv => {
-        gpYTD += Number(inv.gross_profit) || 0;
-        if (inv.paid_date) cashInTotal += Number(inv.net_sales) || 0;
-      });
-      setGrossProfitYTD(gpYTD);
-      setCashIn(cashInTotal);
-
-      // Total Pipeline & Weighted Forecast & Stuck Deals (same logic as Pipeline & Forecast page)
-      const pipelineTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0), 0);
+      const openDeals = allDeals.filter(d => !['po_secured', 'invoice_issued', 'canceled', 'lost'].includes(d.stage));
+      const pipelineTotal = openDeals.reduce((s, d) => s + (Number(d.value) || 0), 0);
       setTotalPipeline(pipelineTotal);
-      const wfTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0) * (Number(d.probability) || 0) / 100, 0);
+      const wfTotal = openDeals.reduce((s, d) => s + (Number(d.value) || 0) * (Number(d.probability) || 0) / 100, 0);
       setWeightedForecast(wfTotal);
-      const stuck = (pipelineDeals || []).filter(d => (d.days_in_stage || 0) > 14);
+      const stuck = openDeals.filter(d => (d.days_in_stage || 0) > 14);
       setStuckDealsCount(stuck.length);
       setStuckDealsValue(stuck.reduce((s, d) => s + (Number(d.value) || 0), 0));
+
+      // Gross Profit YTD & Cash-In from invoices
 
       const allAccounts = accounts || [];
 
