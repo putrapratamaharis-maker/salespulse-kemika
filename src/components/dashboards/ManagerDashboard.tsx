@@ -103,9 +103,11 @@ export function ManagerDashboard() {
       setGrossProfitYTD(gpYTD);
       setCashIn(cashInTotal);
 
-      // Total Pipeline
+      // Total Pipeline & Weighted Forecast (same logic as Pipeline & Forecast page)
       const pipelineTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0), 0);
       setTotalPipeline(pipelineTotal);
+      const wfTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0) * (Number(d.probability) || 0) / 100, 0);
+      setWeightedForecast(wfTotal);
 
       const allAccounts = accounts || [];
 
