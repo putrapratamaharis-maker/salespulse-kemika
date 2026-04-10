@@ -63,6 +63,8 @@ export function ManagerDashboard() {
   const [weightedForecast, setWeightedForecast] = useState(0);
   const [cashIn, setCashIn] = useState(0);
   const [totalTickets, setTotalTickets] = useState(0);
+  const [stuckDealsCount, setStuckDealsCount] = useState(0);
+  const [stuckDealsValue, setStuckDealsValue] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
@@ -87,7 +89,7 @@ export function ManagerDashboard() {
         }),
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
-        supabase.from('deals').select('value, probability, stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost")'),
+        supabase.from('deals').select('value, probability, stage, days_in_stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost")'),
         supabase.from('deals').select('*', { count: 'exact', head: true }),
       ]);
 
@@ -103,11 +105,14 @@ export function ManagerDashboard() {
       setGrossProfitYTD(gpYTD);
       setCashIn(cashInTotal);
 
-      // Total Pipeline & Weighted Forecast (same logic as Pipeline & Forecast page)
+      // Total Pipeline & Weighted Forecast & Stuck Deals (same logic as Pipeline & Forecast page)
       const pipelineTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0), 0);
       setTotalPipeline(pipelineTotal);
       const wfTotal = (pipelineDeals || []).reduce((s, d) => s + (Number(d.value) || 0) * (Number(d.probability) || 0) / 100, 0);
       setWeightedForecast(wfTotal);
+      const stuck = (pipelineDeals || []).filter(d => (d.days_in_stage || 0) > 14);
+      setStuckDealsCount(stuck.length);
+      setStuckDealsValue(stuck.reduce((s, d) => s + (Number(d.value) || 0), 0));
 
       const allAccounts = accounts || [];
 
@@ -270,10 +275,11 @@ export function ManagerDashboard() {
       </div>
 
       {/* Row 4: Pipeline */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
         <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckDealsCount)} changeLabel={stuckDealsCount > 0 ? formatIDRFull(stuckDealsValue) + ' at risk' : 'All clear!'} status={stuckDealsCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
