@@ -356,7 +356,7 @@ const MyPipeline = () => {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-semibold flex items-center gap-2">
@@ -371,6 +371,8 @@ const MyPipeline = () => {
               <Table>
                 <TableHeader><TableRow>
                   <TableHead className="text-xs">Deal</TableHead>
+                  <TableHead className="text-xs">Account</TableHead>
+                  <TableHead className="text-xs">Location</TableHead>
                   <TableHead className="text-xs">Value (Rp)</TableHead>
                   <TableHead className="text-xs">Prob.</TableHead>
                   <TableHead className="text-xs">Close Date</TableHead>
@@ -379,6 +381,8 @@ const MyPipeline = () => {
                   {nearingClose.map(d => (
                     <TableRow key={d.id}>
                       <TableCell className="text-sm font-medium">{d.name}</TableCell>
+                      <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
+                      <TableCell className="text-sm">{d.location || '-'}</TableCell>
                       <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell><StatusBadge status={d.probability >= 60 ? 'green' : d.probability >= 30 ? 'yellow' : 'red'} label={`${d.probability}%`} /></TableCell>
                       <TableCell className="text-sm">{formatDate(d.expectedCloseDate)}</TableCell>
