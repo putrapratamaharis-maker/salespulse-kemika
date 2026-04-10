@@ -87,7 +87,7 @@ export function ManagerDashboard() {
         }),
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
-        supabase.from('deals').select('value').in('stage', ['prospect', 'qualification', 'proposal', 'negotiation', 'quotation']),
+        supabase.from('deals').select('value, probability, stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost","closed_won","closed_lost")'),
         supabase.from('deals').select('*', { count: 'exact', head: true }),
       ]);
 
