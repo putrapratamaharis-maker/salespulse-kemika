@@ -119,7 +119,7 @@ export function ManagerDashboard() {
         setTotalTarget(Number(d.total_target) || 0);
         setTotalTargetYear(Number(d.yearly_target) || 0);
         setOutstandingAR(Number(d.outstanding_ar) || 0);
-        setWeightedForecast(Number(d.weighted_forecast) || 0);
+        // weightedForecast already calculated from pipelineDeals above
 
         // Segment revenue
         const segArr = (d.segment_revenue as any[]) || [];
