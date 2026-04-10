@@ -87,7 +87,7 @@ export function ManagerDashboard() {
         }),
         supabase.from('accounts').select('id, name, segment, region'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
-        supabase.from('deals').select('value, probability, stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost","closed_won","closed_lost")'),
+        supabase.from('deals').select('value, probability, stage').not('stage', 'in', '("po_secured","invoice_issued","canceled","lost")'),
         supabase.from('deals').select('*', { count: 'exact', head: true }),
       ]);
 
@@ -272,8 +272,8 @@ export function ManagerDashboard() {
       {/* Row 4: Pipeline */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
-        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
         <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
+        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
       </div>
 
       {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}
