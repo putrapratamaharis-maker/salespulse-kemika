@@ -59,34 +59,37 @@ const Revenue = () => {
   const fetchInvoices = async () => {
     setLoading(true);
 
-    const [invoiceRes, dealsRes] = await Promise.all([
-      supabase
-        .from('invoices')
-        .select('id, invoice_number, net_sales, gross_profit, issue_date, due_date, paid_date, segment, accounts(name)')
-        .order('issue_date', { ascending: false }),
-      supabase
-        .from('deals')
-        .select('value, segment, expected_close_date')
-        .in('stage', ['po_secured', 'invoice_issued']),
+    const [invoiceRes, accountsRes, dealsRes] = await Promise.all([
+      supabase.rpc('get_segment_invoices'),
+      supabase.from('accounts').select('id, name'),
+      supabase.rpc('get_all_deals_pipeline'),
     ]);
 
-    const mapped = (invoiceRes.data || []).map((row: any) => ({
-      id: row.id,
-      invoice_number: row.invoice_number,
-      net_sales: row.net_sales,
-      gross_profit: row.gross_profit,
-      issue_date: row.issue_date,
-      due_date: row.due_date,
-      paid_date: row.paid_date,
-      segment: row.segment,
-      account_name: row.accounts?.name || '',
-    }));
-    setAllInvoices(mapped);
-    setAllDeals((dealsRes.data || []).map((d: any) => ({
-      value: d.value || 0,
-      segment: d.segment || '',
-      expected_close_date: d.expected_close_date || '',
-    })));
+    const accountMap = new Map((accountsRes.data || []).map((a: any) => [a.id, a.name]));
+
+    const allInv = (invoiceRes.data || [])
+      .sort((a: any, b: any) => (b.issue_date || '').localeCompare(a.issue_date || ''))
+      .map((row: any) => ({
+        id: row.id,
+        invoice_number: row.invoice_number,
+        net_sales: row.net_sales,
+        gross_profit: row.gross_profit,
+        issue_date: row.issue_date,
+        due_date: row.due_date,
+        paid_date: row.paid_date,
+        segment: row.segment,
+        account_name: accountMap.get(row.account_id) || '',
+      }));
+    setAllInvoices(allInv);
+
+    const wonDeals = (dealsRes.data || [])
+      .filter((d: any) => ['po_secured', 'invoice_issued'].includes(d.stage))
+      .map((d: any) => ({
+        value: Number(d.value) || 0,
+        segment: d.segment || '',
+        expected_close_date: d.expected_close_date || '',
+      }));
+    setAllDeals(wonDeals);
     setLoading(false);
   };
 
