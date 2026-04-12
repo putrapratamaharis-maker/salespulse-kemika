@@ -26,6 +26,7 @@ interface InvoiceRow {
   paid_date: string | null;
   segment: string;
   account_name?: string;
+  sales_name?: string;
 }
 
 interface DealRow {
@@ -59,13 +60,15 @@ const Revenue = () => {
   const fetchInvoices = async () => {
     setLoading(true);
 
-    const [invoiceRes, accountsRes, dealsRes] = await Promise.all([
+    const [invoiceRes, accountsRes, dealsRes, profilesRes] = await Promise.all([
       supabase.rpc('get_segment_invoices'),
       supabase.from('accounts').select('id, name'),
       supabase.rpc('get_all_deals_pipeline'),
+      supabase.rpc('get_active_sales_profiles'),
     ]);
 
     const accountMap = new Map((accountsRes.data || []).map((a: any) => [a.id, a.name]));
+    const salesMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p.full_name]));
 
     const allInv = (invoiceRes.data || [])
       .sort((a: any, b: any) => (b.issue_date || '').localeCompare(a.issue_date || ''))
@@ -79,6 +82,7 @@ const Revenue = () => {
         paid_date: row.paid_date,
         segment: row.segment,
         account_name: accountMap.get(row.account_id) || '',
+        sales_name: salesMap.get(row.sales_id) || '',
       }));
     setAllInvoices(allInv);
 
@@ -285,6 +289,7 @@ const Revenue = () => {
               <TableRow>
                 <TableHead className="text-xs">Invoice #</TableHead>
                 <TableHead className="text-xs">Akun</TableHead>
+                <TableHead className="text-xs">Sales</TableHead>
                 <TableHead className="text-xs">Net Sales (Rp)</TableHead>
                 <TableHead className="text-xs">Gross Profit (Rp)</TableHead>
                 <TableHead className="text-xs">Margin %</TableHead>
@@ -296,7 +301,7 @@ const Revenue = () => {
             <TableBody>
               {invoices.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                  <TableCell colSpan={9} className="text-center text-sm text-muted-foreground py-8">
                     Tidak ada invoice ditemukan
                   </TableCell>
                 </TableRow>
@@ -307,6 +312,7 @@ const Revenue = () => {
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
+                    <TableCell className="text-sm text-muted-foreground">{inv.sales_name}</TableCell>
                     <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
                     <TableCell className="text-sm">{formatNumIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
