@@ -451,18 +451,24 @@ const MyPipeline = () => {
             <CardContent>
               <Table>
                 <TableHeader><TableRow className="hover:bg-transparent">
-                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-tl-md py-3">Deal</TableHead>
-                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Account</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-slate-600 to-slate-500 rounded-tl-md py-3 w-[40px]">No.</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 py-3">Account</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Product Item</TableHead>
                   <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-amber-500 to-amber-400 py-3">Stage</TableHead>
                   <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 cursor-pointer select-none" onClick={() => toggleSort('value')}>Value (Rp) <SortIcon col="value" /></TableHead>
                   <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-teal-600 to-teal-500 py-3 cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
                   <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 rounded-tr-md py-3 cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
-                  {sortedDeals.map(d => (
+                  {sortedDeals.map((d, idx) => (
                     <TableRow key={d.id} className="cursor-pointer hover:bg-muted/50" onClick={() => setDetailDeal(d)}>
-                      <TableCell className="text-sm font-medium">{d.name}</TableCell>
-                      <TableCell className="text-sm">{getAccountName(d.accountId)}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{idx + 1}</TableCell>
+                      <TableCell className="text-sm font-medium">{getAccountName(d.accountId)}</TableCell>
+                      <TableCell className="text-sm">
+                        {d.products && d.products.length > 0
+                          ? d.products.map(p => p.productName).join(', ')
+                          : <span className="text-muted-foreground text-xs">—</span>}
+                      </TableCell>
                       <TableCell><StatusBadge status={stageColors[d.stage]} label={stageLabels[d.stage]} /></TableCell>
                       <TableCell className="text-sm">{formatNumIDR(d.value)}</TableCell>
                       <TableCell className="text-sm">{d.probability}%</TableCell>
