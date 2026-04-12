@@ -108,12 +108,12 @@ const ARCashflow = () => {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Invoice #</TableHead>
-                <TableHead className="text-xs">Amount (Rp)</TableHead>
-                <TableHead className="text-xs">Issue Date</TableHead>
-                <TableHead className="text-xs">Due Date</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-tl-md py-3">Invoice #</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 text-right">Amount (Rp)</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Issue Date</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-amber-500 to-amber-400 py-3">Due Date</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 rounded-tr-md py-3">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -122,7 +122,7 @@ const ARCashflow = () => {
                 return (
                   <TableRow key={inv.id}>
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
-                    <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm text-right">{formatNumIDR(inv.net_sales)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.issue_date)}</TableCell>
                     <TableCell className="text-sm">{formatDate(inv.due_date)}</TableCell>
                     <TableCell>

@@ -224,24 +224,35 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
       <CardContent>
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead className="text-xs">Deal</TableHead>
-              {sortColumns.map(col => (
-                <TableHead
-                  key={col.key}
-                  className="text-xs cursor-pointer select-none hover:text-foreground transition-colors"
-                  onClick={() => handleSort(col.key)}
-                >
-                  <span className="inline-flex items-center gap-1">
-                    {col.label}
-                    {sortKey === col.key ? (
-                      sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
-                    ) : (
-                      <ArrowUpDown className="h-3 w-3 opacity-30" />
-                    )}
-                  </span>
-                </TableHead>
-              ))}
+            <TableRow className="hover:bg-transparent">
+              <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-tl-md py-3">Deal</TableHead>
+              {sortColumns.map((col, idx) => {
+                const colors = [
+                  'bg-gradient-to-br from-sky-600 to-sky-500',
+                  'bg-gradient-to-br from-emerald-600 to-emerald-500',
+                  'bg-gradient-to-br from-amber-500 to-amber-400',
+                  'bg-gradient-to-br from-orange-500 to-orange-400',
+                  'bg-gradient-to-br from-teal-600 to-teal-500',
+                  'bg-gradient-to-br from-rose-500 to-rose-400',
+                ];
+                const isLast = idx === sortColumns.length - 1;
+                return (
+                  <TableHead
+                    key={col.key}
+                    className={`text-xs text-white font-semibold cursor-pointer select-none hover:brightness-110 transition-all py-3 ${colors[idx] || ''} ${isLast ? 'rounded-tr-md' : ''}`}
+                    onClick={() => handleSort(col.key)}
+                  >
+                    <span className="inline-flex items-center gap-1">
+                      {col.label}
+                      {sortKey === col.key ? (
+                        sortDir === 'asc' ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />
+                      ) : (
+                        <ArrowUpDown className="h-3 w-3 opacity-60" />
+                      )}
+                    </span>
+                  </TableHead>
+                );
+              })}
             </TableRow>
           </TableHeader>
           <TableBody>
