@@ -283,13 +283,13 @@ const Products = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
-                      <TableHead className="pl-6 w-[40px]">#</TableHead>
-                      <TableHead>Produk</TableHead>
-                      <TableHead>Kategori</TableHead>
-                      <TableHead className="text-right">Revenue (Rp)</TableHead>
-                      <TableHead className="text-right">Units</TableHead>
-                      <TableHead className="w-[160px]">Kontribusi</TableHead>
+                    <TableRow className="hover:bg-transparent">
+                      <TableHead className="pl-6 w-[40px] text-xs text-white font-semibold bg-gradient-to-br from-slate-600 to-slate-500 rounded-tl-md py-3">#</TableHead>
+                      <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 py-3">Produk</TableHead>
+                      <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Kategori</TableHead>
+                      <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 text-right">Revenue (Rp)</TableHead>
+                      <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-amber-500 to-amber-400 py-3 text-right">Units</TableHead>
+                      <TableHead className="w-[160px] text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 rounded-tr-md py-3">Kontribusi</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>

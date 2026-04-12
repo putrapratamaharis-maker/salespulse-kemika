@@ -450,13 +450,13 @@ const MyPipeline = () => {
             <CardHeader className="pb-3"><CardTitle className="text-sm font-semibold">All Deals</CardTitle></CardHeader>
             <CardContent>
               <Table>
-                <TableHeader><TableRow>
-                  <TableHead className="text-xs">Deal</TableHead>
-                  <TableHead className="text-xs">Account</TableHead>
-                  <TableHead className="text-xs">Stage</TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('value')}>Value (Rp) <SortIcon col="value" /></TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
-                  <TableHead className="text-xs cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
+                <TableHeader><TableRow className="hover:bg-transparent">
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-tl-md py-3">Deal</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Account</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-amber-500 to-amber-400 py-3">Stage</TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 cursor-pointer select-none" onClick={() => toggleSort('value')}>Value (Rp) <SortIcon col="value" /></TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-teal-600 to-teal-500 py-3 cursor-pointer select-none" onClick={() => toggleSort('probability')}>Probability <SortIcon col="probability" /></TableHead>
+                  <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 rounded-tr-md py-3 cursor-pointer select-none" onClick={() => toggleSort('expectedCloseDate')}>Expected Close <SortIcon col="expectedCloseDate" /></TableHead>
                 </TableRow></TableHeader>
                 <TableBody>
                   {sortedDeals.map(d => (
