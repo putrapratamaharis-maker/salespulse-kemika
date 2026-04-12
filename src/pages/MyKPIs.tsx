@@ -240,14 +240,14 @@ const MyKPIs = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {computedKPIs.slice(0, 4).map((kpi, idx) => {
           const kpiColors = [
-            { bg: 'bg-kpi-blue', border: 'border-l-kpi-blue-border' },
-            { bg: 'bg-kpi-teal', border: 'border-l-kpi-teal-border' },
-            { bg: 'bg-kpi-amber', border: 'border-l-kpi-amber-border' },
-            { bg: 'bg-kpi-purple', border: 'border-l-kpi-purple-border' },
+            'bg-gradient-to-br from-indigo-600 to-indigo-500',
+            'bg-gradient-to-br from-teal-600 to-teal-500',
+            'bg-gradient-to-br from-amber-500 to-amber-400',
+            'bg-gradient-to-br from-sky-600 to-sky-500',
           ];
           const color = kpiColors[idx % kpiColors.length];
           return (
-            <KPICard key={kpi.definition.id} label={kpi.definition.name} value={kpi.formatted} status={kpi.status} icon={Target} autoFitText className={color.bg} borderAccent={color.border} />
+            <KPICard key={kpi.definition.id} label={kpi.definition.name} value={kpi.formatted} status={kpi.status} icon={Target} autoFitText className={color} />
           );
         })}
       </div>
