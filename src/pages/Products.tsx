@@ -33,34 +33,42 @@ const Products = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      const [{ data: prods }, { data: sales }, { data: cats }] = await Promise.all([
-        supabase.from('products').select('id, name, category_id').eq('is_active', true).order('name'),
-        supabase.from('product_sales').select('product_id, revenue, units_sold, segment'),
+      // Fetch deal_products joined with deals for real sales data (won deals: po_secured + invoice_issued)
+      const [{ data: dealProducts }, { data: cats }] = await Promise.all([
+        supabase
+          .from('deal_products')
+          .select('product_name, category, qty, price_per_unit, other_cost, deal_id, deals!inner(stage, segment)'),
         supabase.from('product_categories').select('id, name'),
       ]);
 
       const catMap = new Map((cats || []).map(c => [c.id, c.name]));
-      const salesByProduct = new Map<string, { revenue: number; units: number; segments: Set<string> }>();
 
-      (sales || []).forEach(s => {
-        const existing = salesByProduct.get(s.product_id) || { revenue: 0, units: 0, segments: new Set<string>() };
-        existing.revenue += Number(s.revenue) || 0;
-        existing.units += Number(s.units_sold) || 0;
-        if (s.segment) existing.segments.add(s.segment);
-        salesByProduct.set(s.product_id, existing);
+      // Aggregate by product_name (since deal_products uses name, not product_id reference)
+      const salesByProduct = new Map<string, { revenue: number; units: number; segments: Set<string>; category: string }>();
+
+      (dealProducts || []).forEach((dp: any) => {
+        const deal = dp.deals;
+        // Only count won deals for revenue
+        const isWon = deal?.stage === 'po_secured' || deal?.stage === 'invoice_issued';
+        if (!isWon) return;
+
+        const key = dp.product_name || '—';
+        const existing = salesByProduct.get(key) || { revenue: 0, units: 0, segments: new Set<string>(), category: dp.category || '—' };
+        const lineRevenue = (Number(dp.qty) || 0) * (Number(dp.price_per_unit) || 0) + (Number(dp.other_cost) || 0);
+        existing.revenue += lineRevenue;
+        existing.units += Number(dp.qty) || 0;
+        if (deal?.segment) existing.segments.add(deal.segment);
+        salesByProduct.set(key, existing);
       });
 
-      const merged: ProductWithSales[] = (prods || []).map(p => {
-        const s = salesByProduct.get(p.id);
-        return {
-          id: p.id,
-          name: p.name,
-          category: catMap.get(p.category_id || '') || '—',
-          totalRevenue: s?.revenue || 0,
-          unitsSold: s?.units || 0,
-          segments: s ? Array.from(s.segments) : [],
-        };
-      }).sort((a, b) => b.totalRevenue - a.totalRevenue);
+      const merged: ProductWithSales[] = Array.from(salesByProduct.entries()).map(([name, s]) => ({
+        id: name, // use product name as key
+        name,
+        category: s.category,
+        totalRevenue: s.revenue,
+        unitsSold: s.units,
+        segments: Array.from(s.segments),
+      })).sort((a, b) => b.totalRevenue - a.totalRevenue);
 
       const uniqueCats = [...new Set(merged.map(p => p.category).filter(c => c !== '—'))].sort();
       setCategories(uniqueCats);
