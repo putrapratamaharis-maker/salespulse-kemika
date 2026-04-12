@@ -131,7 +131,7 @@ const Products = () => {
 
       {/* KPI Cards — soft colored backgrounds */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-blue-border bg-kpi-blue">
+        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-blue-border bg-gradient-to-br from-indigo-600 to-indigo-500">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-blue-fg/10">
               <TrendingUp className="h-5 w-5 text-kpi-blue-fg" />
@@ -143,7 +143,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-teal-border bg-kpi-teal">
+        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-teal-border bg-gradient-to-br from-teal-600 to-teal-500">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-teal-fg/10">
               <Package className="h-5 w-5 text-kpi-teal-fg" />
@@ -155,7 +155,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-purple-border bg-kpi-purple">
+        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-purple-border bg-gradient-to-br from-sky-600 to-sky-500">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-purple-fg/10">
               <BarChart3 className="h-5 w-5 text-kpi-purple-fg" />
@@ -167,7 +167,7 @@ const Products = () => {
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-amber-border bg-kpi-amber">
+        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-amber-border bg-gradient-to-br from-amber-500 to-amber-400">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="p-2.5 rounded-lg bg-kpi-amber-fg/10">
               <Layers className="h-5 w-5 text-kpi-amber-fg" />
