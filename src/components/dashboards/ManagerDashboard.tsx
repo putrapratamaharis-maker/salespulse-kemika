@@ -247,32 +247,32 @@ export function ManagerDashboard() {
 
       {/* Row 1: YTD */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`Total Revenue Target ${selYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
-        <KPICard label={`% REVENUE VS TARGET ACHIEVED ${selYear}`} value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Revenue YTD ÷ Total Revenue Target Year × 100%" />
+        <KPICard label="Actual Revenue YTD" value={formatIDRFull(revenueYTD)} icon={Banknote} status={achievementPctYTD >= 100 ? 'green' : achievementPctYTD >= 80 ? 'yellow' : 'red'} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di tahun berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Total Revenue Target ${selYear}`} value={formatIDRFull(totalTargetYear)} icon={Target} autoFitText className="bg-gradient-to-br from-amber-500 to-amber-400" tooltip="Jumlah revenue target seluruh sales untuk tahun berjalan (dari Admin Panel → Sales Targets)" />
+        <KPICard label={`% REVENUE VS TARGET ACHIEVED ${selYear}`} value={formatPercent(achievementPctYTD)} status={getAchievementStatus(achievementPctYTD)} icon={Target} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" tooltip="Revenue YTD ÷ Total Revenue Target Year × 100%" />
       </div>
 
       {/* Row 2: MTD */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <KPICard label="Actual Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
-        <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-kpi-orange" borderAccent="border-l-kpi-orange-border" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
-        <KPICard label={`% REVENUE VS TARGET ACHIEVED ${monthName}`} value={formatPercent(achievementPctMTD)} status={getAchievementStatus(achievementPctMTD)} icon={Target} autoFitText className="bg-kpi-indigo" borderAccent="border-l-kpi-indigo-border" tooltip="Revenue MTD ÷ Revenue Target bulan berjalan × 100%" />
+        <KPICard label="Actual Revenue MTD" value={formatIDRFull(revenueMTD)} icon={DollarSign} autoFitText className="bg-gradient-to-br from-teal-600 to-teal-500" tooltip="Total nilai deal pada tahap PO Secured DAN Invoice Issued di bulan berjalan, berdasarkan PO/Won/Closed Date" />
+        <KPICard label={`Revenue Target ${monthName}`} value={formatIDRFull(totalTarget)} icon={Target} autoFitText className="bg-gradient-to-br from-orange-500 to-orange-400" tooltip="Jumlah revenue target seluruh sales untuk bulan berjalan" />
+        <KPICard label={`% REVENUE VS TARGET ACHIEVED ${monthName}`} value={formatPercent(achievementPctMTD)} status={getAchievementStatus(achievementPctMTD)} icon={Target} autoFitText className="bg-gradient-to-br from-cyan-600 to-cyan-500" tooltip="Revenue MTD ÷ Revenue Target bulan berjalan × 100%" />
       </div>
 
       {/* Row 3: Profitability, Pipeline & AR */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Gross Margin YTD" value={formatPercent(marginPctYTD)} status={marginPctYTD >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Gross Profit YTD ÷ Revenue YTD × 100%. Threshold hijau ≥ 17%" />
-        <KPICard label="Gross Profit YTD" value={formatIDRFull(grossProfitYTD)} icon={Banknote} autoFitText className="bg-kpi-cyan" borderAccent="border-l-kpi-cyan-border" tooltip="Total gross profit dari seluruh invoice di tahun berjalan" />
-        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashIn)} icon={Wallet} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice yang sudah dibayar (paid_date terisi) di tahun berjalan" />
-        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
+        <KPICard label="Gross Margin YTD" value={formatPercent(marginPctYTD)} status={marginPctYTD >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-gradient-to-br from-emerald-600 to-emerald-500" tooltip="Gross Profit YTD ÷ Revenue YTD × 100%. Threshold hijau ≥ 17%" />
+        <KPICard label="Gross Profit YTD" value={formatIDRFull(grossProfitYTD)} icon={Banknote} autoFitText className="bg-gradient-to-br from-cyan-600 to-cyan-500" tooltip="Total gross profit dari seluruh invoice di tahun berjalan" />
+        <KPICard label="Cash-In (Paid)" value={formatIDRFull(cashIn)} icon={Wallet} autoFitText className="bg-gradient-to-br from-emerald-600 to-emerald-500" tooltip="Total net_sales dari invoice yang sudah dibayar (paid_date terisi) di tahun berjalan" />
+        <KPICard label="Outstanding AR" value={formatIDRFull(outstandingAR)} icon={CreditCard} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Total net_sales dari invoice yang belum dibayar (paid_date kosong)" />
       </div>
 
       {/* Row 4: Pipeline */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
-        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
-        <KPICard label="Stuck Deals (>14D)" value={String(stuckDealsCount)} changeLabel={stuckDealsCount > 0 ? formatIDRFull(stuckDealsValue) + ' at risk' : 'All clear!'} status={stuckDealsCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-gradient-to-br from-teal-600 to-teal-500" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
+        <KPICard label="Total Ticket/Card" value={String(totalTickets)} icon={Users} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckDealsCount)} changeLabel={stuckDealsCount > 0 ? formatIDRFull(stuckDealsValue) + ' at risk' : 'All clear!'} status={stuckDealsCount > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       {/* Live Status Row: Online Users, Pending Approvals, Real-time Activity */}

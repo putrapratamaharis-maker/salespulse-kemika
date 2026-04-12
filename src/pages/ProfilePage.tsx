@@ -118,9 +118,9 @@ const ProfilePage = () => {
 
         <TabsContent value="overview" className="mt-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" />
-            <KPICard label="Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} className="bg-kpi-teal " borderAccent="border-l-kpi-teal-border" />
-            <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" />
+            <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} className="bg-gradient-to-br from-indigo-600 to-indigo-500" />
+            <KPICard label="Achievement" value={formatPercent(achievementPct)} status={getAchievementStatus(achievementPct)} icon={Target} className="bg-gradient-to-br from-teal-600 to-teal-500" />
+            <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} className="bg-gradient-to-br from-amber-500 to-amber-400" />
           </div>
         </TabsContent>
 

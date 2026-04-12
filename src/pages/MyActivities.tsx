@@ -560,7 +560,7 @@ const MyActivities = () => {
 
       {/* Summary KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Activities" value={String(activities.length)} icon={Activity} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" />
+        <KPICard label="Total Activities" value={String(activities.length)} icon={Activity} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" />
         <KPICard
           label="This Week"
           value={String(thisWeek.length)}
@@ -568,11 +568,10 @@ const MyActivities = () => {
           changeLabel={thisWeek.length >= minWeeklyTarget ? 'On track' : `Min ${minWeeklyTarget}/week`}
           icon={Clock}
           autoFitText
-          className="bg-kpi-teal"
-          borderAccent="border-l-kpi-teal-border"
+          className="bg-gradient-to-br from-teal-600 to-teal-500"
         />
-        <KPICard label="Online Meetings" value={String(typeCounts['online_meeting'] || 0)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" />
-        <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" />
+        <KPICard label="Online Meetings" value={String(typeCounts['online_meeting'] || 0)} icon={Users} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" />
+        <KPICard label="Visits" value={String(typeCounts['visit'] || 0)} icon={MapPin} autoFitText className="bg-gradient-to-br from-amber-500 to-amber-400" />
       </div>
 
       {/* Activity Type Breakdown */}

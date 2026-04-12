@@ -27,12 +27,12 @@ function SegmentKPIs({ segment, data }: { segment: 'B2G' | 'B2B' | 'B2C'; data: 
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      <KPICard label="Revenue YTD" value={formatIDRFull(revenueYTD)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Total net_sales dari invoice segment ini di tahun berjalan" />
-      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total net_sales dari invoice segment ini di bulan berjalan" />
-      <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-kpi-amber" borderAccent="border-l-kpi-amber-border" tooltip="Gross Profit ÷ Revenue × 100%. Threshold hijau ≥ 17%" />
-      <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total nilai deal ÷ Jumlah deal pada segment ini" />
-      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal Won ÷ Total deal aktif × 100%" />
-      <KPICard label="Gross Profit" value={formatIDRFull(grossProfit)} icon={RefreshCw} autoFitText className="bg-kpi-emerald" borderAccent="border-l-kpi-emerald-border" tooltip="Total gross_profit dari invoice segment ini di bulan berjalan" />
+      <KPICard label="Revenue YTD" value={formatIDRFull(revenueYTD)} icon={TrendingUp} autoFitText className="bg-gradient-to-br from-teal-600 to-teal-500" tooltip="Total net_sales dari invoice segment ini di tahun berjalan" />
+      <KPICard label="Revenue MTD" value={formatIDRFull(revenue)} icon={DollarSign} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total net_sales dari invoice segment ini di bulan berjalan" />
+      <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={BarChart3} autoFitText className="bg-gradient-to-br from-amber-500 to-amber-400" tooltip="Gross Profit ÷ Revenue × 100%. Threshold hijau ≥ 17%" />
+      <KPICard label="Avg Deal Size" value={formatIDRFull(avgDealSize)} icon={ShoppingCart} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" tooltip="Total nilai deal ÷ Jumlah deal pada segment ini" />
+      <KPICard label="Conversion Rate" value={formatPercent(conversionRate)} status={conversionRate >= 50 ? 'green' : 'yellow'} icon={TrendingUp} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Jumlah deal Won ÷ Total deal aktif × 100%" />
+      <KPICard label="Gross Profit" value={formatIDRFull(grossProfit)} icon={RefreshCw} autoFitText className="bg-gradient-to-br from-emerald-600 to-emerald-500" tooltip="Total gross_profit dari invoice segment ini di bulan berjalan" />
     </div>
   );
 }

@@ -180,10 +180,10 @@ const Pipeline = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-kpi-blue" borderAccent="border-l-kpi-blue-border" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
-        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-kpi-teal" borderAccent="border-l-kpi-teal-border" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
-        <KPICard label="Total Ticket/Card" value={String(allDeals.length)} icon={Users} autoFitText className="bg-kpi-purple" borderAccent="border-l-kpi-purple-border" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
-        <KPICard label="Stuck Deals (>14D)" value={String(stuckDeals.length)} changeLabel={stuckDeals.length > 0 ? formatIDRFull(stuckDeals.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} status={stuckDeals.length > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose" borderAccent="border-l-kpi-rose-border" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
+        <KPICard label="Total Pipeline" value={formatIDRFull(totalPipeline)} icon={BarChart3} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total nilai semua deal aktif (Prospect, Quotation, Negotiation)" />
+        <KPICard label="Weighted Forecast" value={formatIDRFull(weightedForecast)} icon={TrendingUp} autoFitText className="bg-gradient-to-br from-teal-600 to-teal-500" tooltip="Σ (value × probability / 100) dari deal aktif, tidak termasuk PO Secured, Invoice Issued, Canceled, Lost" />
+        <KPICard label="Total Ticket/Card" value={String(allDeals.length)} icon={Users} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" tooltip="Total kartu/tiket deal di semua stages (termasuk PO Secured, Invoice Issued, Canceled, Lost)" />
+        <KPICard label="Stuck Deals (>14D)" value={String(stuckDeals.length)} changeLabel={stuckDeals.length > 0 ? formatIDRFull(stuckDeals.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} status={stuckDeals.length > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
       {/* Kanban Board */}

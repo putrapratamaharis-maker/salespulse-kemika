@@ -131,50 +131,50 @@ const Products = () => {
 
       {/* KPI Cards — soft colored backgrounds */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-blue-border bg-kpi-blue">
+        <Card className="animate-fade-in border-0 bg-gradient-to-br from-indigo-600 to-indigo-500">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-kpi-blue-fg/10">
-              <TrendingUp className="h-5 w-5 text-kpi-blue-fg" />
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <TrendingUp className="h-5 w-5 text-white/80" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-kpi-blue-fg/70">Total Revenue</p>
-              <p className="text-lg font-bold tracking-tight text-kpi-blue-fg">{formatIDRFull(stats.totalRevenue)}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Total Revenue</p>
+              <p className="text-lg font-bold tracking-tight text-white">{formatIDRFull(stats.totalRevenue)}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-teal-border bg-kpi-teal">
+        <Card className="animate-fade-in border-0 bg-gradient-to-br from-teal-600 to-teal-500">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-kpi-teal-fg/10">
-              <Package className="h-5 w-5 text-kpi-teal-fg" />
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <Package className="h-5 w-5 text-white/80" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-kpi-teal-fg/70">Units Terjual</p>
-              <p className="text-lg font-bold tracking-tight text-kpi-teal-fg">{stats.totalUnits.toLocaleString()}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Units Terjual</p>
+              <p className="text-lg font-bold tracking-tight text-white">{stats.totalUnits.toLocaleString()}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-purple-border bg-kpi-purple">
+        <Card className="animate-fade-in border-0 bg-gradient-to-br from-sky-600 to-sky-500">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-kpi-purple-fg/10">
-              <BarChart3 className="h-5 w-5 text-kpi-purple-fg" />
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <BarChart3 className="h-5 w-5 text-white/80" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-kpi-purple-fg/70">Produk Aktif</p>
-              <p className="text-lg font-bold tracking-tight text-kpi-purple-fg">{stats.withSales} / {products.length}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Produk Aktif</p>
+              <p className="text-lg font-bold tracking-tight text-white">{stats.withSales} / {products.length}</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="animate-fade-in border-0 border-l-[5px] border-l-kpi-amber-border bg-kpi-amber">
+        <Card className="animate-fade-in border-0 bg-gradient-to-br from-amber-500 to-amber-400">
           <CardContent className="p-4 flex items-center gap-3">
-            <div className="p-2.5 rounded-lg bg-kpi-amber-fg/10">
-              <Layers className="h-5 w-5 text-kpi-amber-fg" />
+            <div className="p-2.5 rounded-lg bg-white/15">
+              <Layers className="h-5 w-5 text-white/80" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-medium uppercase tracking-wider text-kpi-amber-fg/70">Kategori</p>
-              <p className="text-lg font-bold tracking-tight text-kpi-amber-fg">{stats.categoryCount}</p>
+              <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Kategori</p>
+              <p className="text-lg font-bold tracking-tight text-white">{stats.categoryCount}</p>
             </div>
           </CardContent>
         </Card>

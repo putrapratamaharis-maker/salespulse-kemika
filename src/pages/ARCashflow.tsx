@@ -65,10 +65,10 @@ const ARCashflow = () => {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText className="bg-kpi-blue " borderAccent="border-l-kpi-blue-border" tooltip="Total net_sales dari semua invoice yang belum dibayar" />
-        <KPICard label="Total Overdue" value={formatIDRFull(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-kpi-rose " borderAccent="border-l-kpi-rose-border" tooltip="Total net_sales dari invoice yang sudah melewati due_date dan belum dibayar" />
-        <KPICard label="Collected MTD" value={formatIDRFull(totalPaid)} icon={CheckCircle} autoFitText className="bg-kpi-emerald " borderAccent="border-l-kpi-emerald-border" tooltip="Total net_sales dari invoice yang sudah dibayar (memiliki paid_date)" />
-        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} autoFitText className="bg-kpi-amber " borderAccent="border-l-kpi-amber-border" tooltip="Jumlah invoice yang sudah melewati due_date dan belum dibayar" />
+        <KPICard label="Total Outstanding" value={formatIDRFull(totalOutstanding)} icon={CreditCard} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total net_sales dari semua invoice yang belum dibayar" />
+        <KPICard label="Total Overdue" value={formatIDRFull(totalOverdue)} status={totalOverdue > 0 ? 'red' : 'green'} icon={AlertTriangle} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Total net_sales dari invoice yang sudah melewati due_date dan belum dibayar" />
+        <KPICard label="Collected MTD" value={formatIDRFull(totalPaid)} icon={CheckCircle} autoFitText className="bg-gradient-to-br from-emerald-600 to-emerald-500" tooltip="Total net_sales dari invoice yang sudah dibayar (memiliki paid_date)" />
+        <KPICard label="Overdue Invoices" value={String(overdue.length)} status={overdue.length > 0 ? 'red' : 'green'} icon={Clock} autoFitText className="bg-gradient-to-br from-amber-500 to-amber-400" tooltip="Jumlah invoice yang sudah melewati due_date dan belum dibayar" />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
