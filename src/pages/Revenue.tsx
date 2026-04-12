@@ -286,15 +286,15 @@ const Revenue = () => {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow>
-                <TableHead className="text-xs">Invoice #</TableHead>
-                <TableHead className="text-xs">Account Name</TableHead>
-                <TableHead className="text-xs">Sales</TableHead>
-                <TableHead className="text-xs">Net Sales (Rp)</TableHead>
-                <TableHead className="text-xs">Gross Profit (Rp)</TableHead>
-                <TableHead className="text-xs">Margin %</TableHead>
-                <TableHead className="text-xs">Segment</TableHead>
-                <TableHead className="text-xs">Status</TableHead>
+              <TableRow className="bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-600 hover:to-sky-500">
+                <TableHead className="text-xs text-white font-semibold">Invoice #</TableHead>
+                <TableHead className="text-xs text-white font-semibold">Account Name</TableHead>
+                <TableHead className="text-xs text-white font-semibold">Sales</TableHead>
+                <TableHead className="text-xs text-white font-semibold text-right">Net Sales (Rp)</TableHead>
+                <TableHead className="text-xs text-white font-semibold text-right">Gross Profit (Rp)</TableHead>
+                <TableHead className="text-xs text-white font-semibold">Margin %</TableHead>
+                <TableHead className="text-xs text-white font-semibold">Segment</TableHead>
+                <TableHead className="text-xs text-white font-semibold">Status</TableHead>
                 <TableHead className="text-xs w-10"></TableHead>
               </TableRow>
             </TableHeader>
@@ -313,8 +313,8 @@ const Revenue = () => {
                     <TableCell className="text-sm font-medium">{inv.invoice_number}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.account_name}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">{inv.sales_name}</TableCell>
-                    <TableCell className="text-sm">{formatNumIDR(inv.net_sales)}</TableCell>
-                    <TableCell className="text-sm">{formatNumIDR(inv.gross_profit)}</TableCell>
+                    <TableCell className="text-sm text-right">{formatNumIDR(inv.net_sales)}</TableCell>
+                    <TableCell className="text-sm text-right">{formatNumIDR(inv.gross_profit)}</TableCell>
                     <TableCell><StatusBadge status={m >= 17 ? 'green' : 'red'} label={formatPercent(m)} /></TableCell>
                     <TableCell className="text-sm">{inv.segment}</TableCell>
                     <TableCell>{inv.paid_date ? <StatusBadge status="green" label="Paid" /> : <StatusBadge status="yellow" label="Outstanding" />}</TableCell>
@@ -338,6 +338,14 @@ const Revenue = () => {
                   </TableRow>
                 );
               })}
+              {invoices.length > 0 && (
+                <TableRow className="bg-muted/50 font-semibold border-t-2">
+                  <TableCell colSpan={3} className="text-sm font-bold">Total</TableCell>
+                  <TableCell className="text-sm font-bold text-right">{formatIDRFull(totalRevenue)}</TableCell>
+                  <TableCell className="text-sm font-bold text-right">{formatIDRFull(totalGP)}</TableCell>
+                  <TableCell colSpan={4}></TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
