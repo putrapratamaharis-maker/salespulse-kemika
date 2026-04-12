@@ -286,16 +286,22 @@ const Revenue = () => {
         <CardContent>
           <Table>
             <TableHeader>
-              <TableRow className="bg-gradient-to-r from-sky-600 to-sky-500 hover:from-sky-600 hover:to-sky-500">
-                <TableHead className="text-xs text-white font-semibold">Invoice #</TableHead>
-                <TableHead className="text-xs text-white font-semibold">Account Name</TableHead>
-                <TableHead className="text-xs text-white font-semibold">Sales</TableHead>
-                <TableHead className="text-xs text-white font-semibold text-right">Net Sales (Rp)</TableHead>
-                <TableHead className="text-xs text-white font-semibold text-right">Gross Profit (Rp)</TableHead>
-                <TableHead className="text-xs text-white font-semibold">Margin %</TableHead>
-                <TableHead className="text-xs text-white font-semibold">Segment</TableHead>
-                <TableHead className="text-xs text-white font-semibold">Status</TableHead>
-                <TableHead className="text-xs w-10"></TableHead>
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 rounded-tl-md py-3">Invoice #</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Account Name</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-cyan-600 to-cyan-500 py-3">Sales</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 text-right">
+                  <div>Net Sales (Rp)</div>
+                  <div className="text-[10px] font-normal opacity-90 mt-0.5">{formatIDRFull(totalRevenue)}</div>
+                </TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-teal-600 to-teal-500 py-3 text-right">
+                  <div>Gross Profit (Rp)</div>
+                  <div className="text-[10px] font-normal opacity-90 mt-0.5">{formatIDRFull(totalGP)}</div>
+                </TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-amber-500 to-amber-400 py-3">Margin %</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-orange-500 to-orange-400 py-3">Segment</TableHead>
+                <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 py-3">Status</TableHead>
+                <TableHead className="text-xs w-10 bg-gradient-to-br from-slate-500 to-slate-400 rounded-tr-md py-3"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
