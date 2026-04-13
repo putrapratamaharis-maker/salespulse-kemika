@@ -146,7 +146,7 @@ const Products = () => {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Total Revenue</p>
-              <p className="text-lg font-bold tracking-tight text-white">{formatIDRFull(stats.totalRevenue)}</p>
+              <p className="text-lg font-bold tracking-tight text-white">Rp {formatNumIDR(stats.totalRevenue)}</p>
             </div>
           </CardContent>
         </Card>
