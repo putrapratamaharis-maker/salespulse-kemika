@@ -163,32 +163,47 @@ export function ManagerDashboard() {
     fetchDashboardData();
   }, [selYear, selMonth]);
 
-  // Fetch products from database
+  // Fetch products from deal_products (won deals) via RPC
   useEffect(() => {
     async function fetchProducts() {
       setLoadingProducts(true);
-      const { data: salesData } = await supabase
-        .from('product_sales')
-        .select('product_id, revenue, units_sold, products(name, category_id, product_categories(name))')
-        .order('revenue', { ascending: false })
-        .limit(10);
+      const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
+        supabase.rpc('get_all_deal_products_pipeline'),
+        supabase.rpc('get_all_deals_pipeline'),
+      ]);
 
-      if (salesData) {
-        const products: ProductWithCategory[] = salesData.map((s: any) => ({
-          name: s.products?.name ?? '—',
-          category: s.products?.product_categories?.name ?? '—',
-          revenue: Number(s.revenue),
-          units_sold: s.units_sold,
-        }));
-        setTopProducts(products);
+      const wonDealIds = new Set(
+        (allDeals || [])
+          .filter((d: any) => ['po_secured', 'invoice_issued'].includes(d.stage))
+          .map((d: any) => d.id)
+      );
 
-        const catMap = new Map<string, number>();
-        salesData.forEach((s: any) => {
-          const cat = s.products?.product_categories?.name ?? 'Uncategorized';
-          catMap.set(cat, (catMap.get(cat) || 0) + Number(s.revenue));
-        });
-        setCategoryData(Array.from(catMap, ([category, revenue]) => ({ category, revenue })).sort((a, b) => b.revenue - a.revenue));
-      }
+      const wonProducts = (allDealProducts || []).filter((dp: any) => wonDealIds.has(dp.deal_id));
+
+      // Aggregate by product name
+      const prodMap = new Map<string, { category: string; revenue: number; units: number }>();
+      wonProducts.forEach((dp: any) => {
+        const key = dp.product_name || '—';
+        const existing = prodMap.get(key) || { category: dp.category || '—', revenue: 0, units: 0 };
+        existing.revenue += (Number(dp.qty) || 0) * (Number(dp.price_per_unit) || 0) + (Number(dp.other_cost) || 0);
+        existing.units += Number(dp.qty) || 0;
+        prodMap.set(key, existing);
+      });
+
+      const sorted = Array.from(prodMap.entries())
+        .map(([name, v]) => ({ name, category: v.category, revenue: v.revenue, units_sold: v.units }))
+        .sort((a, b) => b.revenue - a.revenue);
+
+      setTopProducts(sorted.slice(0, 10));
+
+      // Category donut
+      const catMap = new Map<string, number>();
+      sorted.forEach(p => {
+        const cat = p.category || 'Uncategorized';
+        catMap.set(cat, (catMap.get(cat) || 0) + p.revenue);
+      });
+      setCategoryData(Array.from(catMap, ([category, revenue]) => ({ category, revenue })).sort((a, b) => b.revenue - a.revenue));
+
       setLoadingProducts(false);
     }
     fetchProducts();
