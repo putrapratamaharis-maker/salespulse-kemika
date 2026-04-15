@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 
 interface ProductWithSales {
   id: string;
@@ -16,6 +17,13 @@ interface ProductWithSales {
   unitsSold: number;
   segments: string[];
 }
+
+const DONUT_COLORS = [
+  'hsl(220, 70%, 55%)', 'hsl(160, 60%, 45%)', 'hsl(30, 80%, 55%)',
+  'hsl(340, 65%, 50%)', 'hsl(270, 55%, 55%)', 'hsl(190, 70%, 45%)',
+  'hsl(50, 75%, 50%)', 'hsl(0, 65%, 50%)', 'hsl(140, 50%, 45%)',
+  'hsl(300, 50%, 55%)',
+];
 
 const Products = () => {
   const [loading, setLoading] = useState(true);
@@ -33,23 +41,25 @@ const Products = () => {
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);
-      // Fetch deal_products joined with deals for real sales data (won deals: po_secured + invoice_issued)
-      const [{ data: dealProducts }, { data: cats }] = await Promise.all([
-        supabase
-          .from('deal_products')
-          .select('product_name, category, qty, price_per_unit, other_cost, deal_id, deals!inner(stage, segment)'),
-        supabase.from('product_categories').select('id, name'),
+      // Use SECURITY DEFINER functions to bypass RLS for company-wide data
+      const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
+        supabase.rpc('get_all_deal_products_pipeline'),
+        supabase.rpc('get_all_deals_pipeline'),
       ]);
 
-      const catMap = new Map((cats || []).map(c => [c.id, c.name]));
+      // Build deal lookup for stage/segment
+      const dealMap = new Map<string, { stage: string; segment: string }>();
+      (allDeals || []).forEach((d: any) => {
+        dealMap.set(d.id, { stage: d.stage, segment: d.segment });
+      });
 
-      // Aggregate by product_name (since deal_products uses name, not product_id reference)
+      // Aggregate by product_name
       const salesByProduct = new Map<string, { revenue: number; units: number; segments: Set<string>; category: string }>();
 
-      (dealProducts || []).forEach((dp: any) => {
-        const deal = dp.deals;
-        // Only count won deals for revenue
-        const isWon = deal?.stage === 'po_secured' || deal?.stage === 'invoice_issued';
+      (allDealProducts || []).forEach((dp: any) => {
+        const deal = dealMap.get(dp.deal_id);
+        if (!deal) return;
+        const isWon = deal.stage === 'po_secured' || deal.stage === 'invoice_issued';
         if (!isWon) return;
 
         const key = dp.product_name || '—';
@@ -57,12 +67,12 @@ const Products = () => {
         const lineRevenue = (Number(dp.qty) || 0) * (Number(dp.price_per_unit) || 0) + (Number(dp.other_cost) || 0);
         existing.revenue += lineRevenue;
         existing.units += Number(dp.qty) || 0;
-        if (deal?.segment) existing.segments.add(deal.segment);
+        if (deal.segment) existing.segments.add(deal.segment);
         salesByProduct.set(key, existing);
       });
 
       const merged: ProductWithSales[] = Array.from(salesByProduct.entries()).map(([name, s]) => ({
-        id: name, // use product name as key
+        id: name,
         name,
         category: s.category,
         totalRevenue: s.revenue,
@@ -98,6 +108,18 @@ const Products = () => {
   const top10 = useMemo(() => products.slice(0, 10), [products]);
   const top10Max = useMemo(() => Math.max(...top10.map(p => p.totalRevenue), 1), [top10]);
 
+  // Category donut data
+  const categoryDonutData = useMemo(() => {
+    const catRevenue = new Map<string, number>();
+    products.forEach(p => {
+      const cat = p.category || '—';
+      catRevenue.set(cat, (catRevenue.get(cat) || 0) + p.totalRevenue);
+    });
+    return Array.from(catRevenue.entries())
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+  }, [products]);
+
   // Filtered products for table
   const filteredProducts = useMemo(() => {
     let result = [...products];
@@ -129,6 +151,21 @@ const Products = () => {
 
   const medalColors = ['text-yellow-500', 'text-gray-400', 'text-amber-600'];
 
+  const CustomTooltip = ({ active, payload }: any) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      const pct = stats.totalRevenue > 0 ? (data.value / stats.totalRevenue) * 100 : 0;
+      return (
+        <div className="bg-popover border border-border rounded-lg px-3 py-2 shadow-md text-xs">
+          <p className="font-semibold text-foreground">{data.name}</p>
+          <p className="text-muted-foreground">Rp {formatNumIDR(data.value)}</p>
+          <p className="text-muted-foreground">{pct.toFixed(1)}%</p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-5">
       {/* Header */}
@@ -137,7 +174,7 @@ const Products = () => {
         <p className="text-sm text-muted-foreground">Ringkasan performa penjualan per produk</p>
       </div>
 
-      {/* KPI Cards — soft colored backgrounds */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <Card className="animate-fade-in border-0 bg-gradient-to-br from-indigo-600 to-indigo-500">
           <CardContent className="p-4 flex items-center gap-3">
@@ -188,60 +225,113 @@ const Products = () => {
         </Card>
       </div>
 
-      {/* Top 10 Products Infographic */}
-      {top10.length > 0 && (
-        <Card className="animate-fade-in">
-          <CardHeader className="pb-2">
-            <div className="flex items-center gap-2">
-              <Crown className="h-4 w-4 text-yellow-500" />
-              <CardTitle className="text-sm font-semibold">Top 10 Produk by Revenue</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="pb-4 space-y-2">
-            {top10.map((p, idx) => {
-              const pct = (p.totalRevenue / top10Max) * 100;
-              const contributionPct = stats.totalRevenue > 0 ? (p.totalRevenue / stats.totalRevenue) * 100 : 0;
-              return (
-                <div key={p.id} className="flex items-center gap-3 group">
-                  <div className="w-6 text-right">
-                    {idx < 3 ? (
-                      <Crown className={`h-4 w-4 inline ${medalColors[idx]}`} />
-                    ) : (
-                      <span className="text-xs font-semibold text-muted-foreground">{idx + 1}</span>
-                    )}
-                  </div>
-                  <div className="w-[140px] truncate text-sm font-medium" title={p.name}>{p.name}</div>
-                  <div className="flex-1 relative">
-                    <div className="h-6 rounded-md bg-secondary overflow-hidden">
-                      <div
-                        className="h-full rounded-md transition-all duration-500"
-                        style={{
-                          width: `${Math.max(pct, 2)}%`,
-                          background: idx === 0
-                            ? 'hsl(var(--primary))'
-                            : idx === 1
-                              ? 'hsl(var(--accent))'
-                              : idx === 2
-                                ? 'hsl(var(--chart-3))'
-                                : 'hsl(var(--muted-foreground) / 0.35)',
-                        }}
-                      />
+      {/* Top 10 + Category Donut side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Top 10 Products */}
+        {top10.length > 0 && (
+          <Card className="animate-fade-in lg:col-span-2">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Crown className="h-4 w-4 text-yellow-500" />
+                <CardTitle className="text-sm font-semibold">Top 10 Produk by Revenue</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4 space-y-2">
+              {top10.map((p, idx) => {
+                const pct = (p.totalRevenue / top10Max) * 100;
+                const contributionPct = stats.totalRevenue > 0 ? (p.totalRevenue / stats.totalRevenue) * 100 : 0;
+                return (
+                  <div key={p.id} className="flex items-center gap-3 group">
+                    <div className="w-6 text-right">
+                      {idx < 3 ? (
+                        <Crown className={`h-4 w-4 inline ${medalColors[idx]}`} />
+                      ) : (
+                        <span className="text-xs font-semibold text-muted-foreground">{idx + 1}</span>
+                      )}
+                    </div>
+                    <div className="w-[140px] truncate text-sm font-medium" title={p.name}>{p.name}</div>
+                    <div className="flex-1 relative">
+                      <div className="h-6 rounded-md bg-secondary overflow-hidden">
+                        <div
+                          className="h-full rounded-md transition-all duration-500"
+                          style={{
+                            width: `${Math.max(pct, 2)}%`,
+                            background: idx === 0
+                              ? 'hsl(var(--primary))'
+                              : idx === 1
+                                ? 'hsl(var(--accent))'
+                                : idx === 2
+                                  ? 'hsl(var(--chart-3))'
+                                  : 'hsl(var(--muted-foreground) / 0.35)',
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div className="w-[90px] text-right text-sm font-semibold tabular-nums">
+                      {formatIDRFull(p.totalRevenue)}
+                    </div>
+                    <div className="w-[50px] text-right">
+                      <Badge variant="secondary" className="text-[10px] font-normal">
+                        {contributionPct.toFixed(1)}%
+                      </Badge>
                     </div>
                   </div>
-                  <div className="w-[90px] text-right text-sm font-semibold tabular-nums">
-                    {formatIDRFull(p.totalRevenue)}
-                  </div>
-                  <div className="w-[50px] text-right">
-                    <Badge variant="secondary" className="text-[10px] font-normal">
-                      {contributionPct.toFixed(1)}%
-                    </Badge>
-                  </div>
-                </div>
-              );
-            })}
-          </CardContent>
-        </Card>
-      )}
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Category Donut */}
+        {categoryDonutData.length > 0 && (
+          <Card className="animate-fade-in">
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Layers className="h-4 w-4 text-primary" />
+                <CardTitle className="text-sm font-semibold">Kategori Produk</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="pb-4">
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={categoryDonutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {categoryDonutData.map((_, idx) => (
+                        <Cell key={idx} fill={DONUT_COLORS[idx % DONUT_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              {/* Legend */}
+              <div className="mt-3 space-y-1.5 max-h-[160px] overflow-y-auto">
+                {categoryDonutData.map((cat, idx) => {
+                  const pct = stats.totalRevenue > 0 ? (cat.value / stats.totalRevenue) * 100 : 0;
+                  return (
+                    <div key={cat.name} className="flex items-center gap-2 text-xs">
+                      <div
+                        className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                        style={{ background: DONUT_COLORS[idx % DONUT_COLORS.length] }}
+                      />
+                      <span className="truncate flex-1 text-foreground">{cat.name}</span>
+                      <span className="text-muted-foreground tabular-nums">{pct.toFixed(1)}%</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </div>
 
       {/* Product Detail Table */}
       <Card className="animate-fade-in">
