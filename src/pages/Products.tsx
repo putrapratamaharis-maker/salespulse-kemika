@@ -82,10 +82,10 @@ const Products = () => {
     if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}B`;
     if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(0)}M`;
     if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)}K`;
-    return `Rp ${val.toLocaleString('id-ID')}`;
+    return `Rp ${Math.floor(val).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
   };
 
-  const formatNumIDR = (val: number) => val.toLocaleString('id-ID');
+  const formatNumIDR = (val: number) => Math.floor(val).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
   const stats = useMemo(() => {
     const totalRevenue = products.reduce((s, p) => s + p.totalRevenue, 0);
