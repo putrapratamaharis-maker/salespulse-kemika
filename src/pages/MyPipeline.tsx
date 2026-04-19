@@ -320,7 +320,7 @@ const MyPipeline = () => {
           <h2 className="text-xl font-bold text-foreground">My Leads & Forecast</h2>
           <p className="text-sm text-muted-foreground">Lead pipeline & forecast — {currentUser.name}</p>
         </div>
-        <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
+        <NewLeadDialog onAdd={handleAddDeal} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} existingDeals={deals} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -535,7 +535,7 @@ const MyPipeline = () => {
       )}
 
       {editDialogOpen && editingDeal && (
-        <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} />
+        <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} existingDeals={deals} />
       )}
       <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} />
     </div>
