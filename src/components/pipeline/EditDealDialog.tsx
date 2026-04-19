@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast as sonnerToast } from 'sonner';
 import { format } from 'date-fns';
 import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
+import { findDuplicateDeals, DuplicateMatch } from '@/lib/dealDuplicateCheck';
+import { DuplicateDealAlert } from '@/components/pipeline/DuplicateDealAlert';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -40,6 +42,7 @@ interface EditDealDialogProps {
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
+  existingDeals?: Deal[];
 }
 
 const emptyProduct = (): DealProduct => ({
@@ -52,8 +55,10 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated }: EditDealDialogProps) {
+export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated, existingDeals = [] }: EditDealDialogProps) {
   const { toast } = useToast();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
