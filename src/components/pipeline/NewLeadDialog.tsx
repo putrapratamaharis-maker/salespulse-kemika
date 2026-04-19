@@ -18,6 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
+import { findDuplicateDeals, DuplicateMatch } from '@/lib/dealDuplicateCheck';
+import { DuplicateDealAlert } from '@/components/pipeline/DuplicateDealAlert';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Qualified Prospect' },
@@ -40,6 +42,7 @@ interface NewLeadDialogProps {
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
+  existingDeals?: Deal[];
 }
 
 const emptyProduct = (): DealProduct => ({
@@ -52,9 +55,11 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated }: NewLeadDialogProps) {
+export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated, existingDeals = [] }: NewLeadDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
