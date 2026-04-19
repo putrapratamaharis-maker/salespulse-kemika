@@ -218,6 +218,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const performSave = async () => {
     if (!deal) return;
 
+    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
     setSaving(true);
 
     // Create invoice record when transitioning to invoice_issued
