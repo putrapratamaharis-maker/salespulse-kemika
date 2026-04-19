@@ -204,6 +204,26 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       return;
     }
 
+    // Duplicate detection: same Account + Product + Total Value
+    const dupes = findDuplicateDeals({
+      accountId,
+      products,
+      totalValue,
+      existingDeals,
+    });
+
+    if (dupes.length > 0) {
+      setDuplicates(dupes);
+      setDuplicateOpen(true);
+      return;
+    }
+
+    await performSave();
+  };
+
+  const performSave = async () => {
+    const isInvoiceStage = stage === 'invoice_issued';
+
     // If invoice_issued, create invoice record first
     if (isInvoiceStage) {
       setSavingInvoice(true);
