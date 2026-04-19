@@ -562,6 +562,14 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
           )}
         </ScrollArea>
       </DialogContent>
+      <DuplicateDealAlert
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        duplicates={duplicates}
+        getAccountName={(id) => accountOptions.find(a => a.id === id)?.name || '-'}
+        onConfirm={async () => { setDuplicateOpen(false); await performSave(); }}
+        onCancel={() => setDuplicateOpen(false)}
+      />
     </Dialog>
   );
 }
