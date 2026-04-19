@@ -197,6 +197,27 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       if (!invoiceDueDate) { sonnerToast.error('Jatuh Tempo wajib diisi'); return; }
     }
 
+    // Duplicate detection: same Account + Product + Total Value (exclude current deal)
+    const dupes = findDuplicateDeals({
+      accountId,
+      products,
+      totalValue: totalValue > 0 ? totalValue : deal.value,
+      existingDeals,
+      excludeDealId: deal.id,
+    });
+
+    if (dupes.length > 0) {
+      setDuplicates(dupes);
+      setDuplicateOpen(true);
+      return;
+    }
+
+    await performSave();
+  };
+
+  const performSave = async () => {
+    if (!deal) return;
+
     setSaving(true);
 
     // Create invoice record when transitioning to invoice_issued
