@@ -592,6 +592,14 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
         </ScrollArea>
       </DialogContent>
       </Dialog>
+      <DuplicateDealAlert
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        duplicates={duplicates}
+        getAccountName={(id) => accountOptions.find(a => a.id === id)?.name || '-'}
+        onConfirm={async () => { setDuplicateOpen(false); await performSave(); }}
+        onCancel={() => setDuplicateOpen(false)}
+      />
     </>
   );
 }
