@@ -18,6 +18,8 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
+import { findDuplicateDeals, DuplicateMatch } from '@/lib/dealDuplicateCheck';
+import { DuplicateDealAlert } from '@/components/pipeline/DuplicateDealAlert';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Qualified Prospect' },
@@ -40,6 +42,7 @@ interface NewLeadDialogProps {
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
+  existingDeals?: Deal[];
 }
 
 const emptyProduct = (): DealProduct => ({
@@ -52,9 +55,11 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated }: NewLeadDialogProps) {
+export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated, existingDeals = [] }: NewLeadDialogProps) {
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
@@ -198,6 +203,26 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
       });
       return;
     }
+
+    // Duplicate detection: same Account + Product + Total Value
+    const dupes = findDuplicateDeals({
+      accountId,
+      products,
+      totalValue,
+      existingDeals,
+    });
+
+    if (dupes.length > 0) {
+      setDuplicates(dupes);
+      setDuplicateOpen(true);
+      return;
+    }
+
+    await performSave();
+  };
+
+  const performSave = async () => {
+    const isInvoiceStage = stage === 'invoice_issued';
 
     // If invoice_issued, create invoice record first
     if (isInvoiceStage) {
@@ -567,6 +592,14 @@ export function NewLeadDialog({ onAdd, accountOptions, salesId, onAccountCreated
         </ScrollArea>
       </DialogContent>
       </Dialog>
+      <DuplicateDealAlert
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        duplicates={duplicates}
+        getAccountName={(id) => accountOptions.find(a => a.id === id)?.name || '-'}
+        onConfirm={async () => { setDuplicateOpen(false); await performSave(); }}
+        onCancel={() => setDuplicateOpen(false)}
+      />
     </>
   );
 }

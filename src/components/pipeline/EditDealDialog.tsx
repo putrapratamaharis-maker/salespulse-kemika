@@ -15,6 +15,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast as sonnerToast } from 'sonner';
 import { format } from 'date-fns';
 import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
+import { findDuplicateDeals, DuplicateMatch } from '@/lib/dealDuplicateCheck';
+import { DuplicateDealAlert } from '@/components/pipeline/DuplicateDealAlert';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -40,6 +42,7 @@ interface EditDealDialogProps {
   accountOptions: { id: string; name: string; picContact?: string; picEmail?: string }[];
   salesId: string;
   onAccountCreated?: (account: { id: string; name: string; picContact?: string; picEmail?: string }) => void;
+  existingDeals?: Deal[];
 }
 
 const emptyProduct = (): DealProduct => ({
@@ -52,8 +55,10 @@ const emptyProduct = (): DealProduct => ({
   otherCost: 0,
 });
 
-export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated }: EditDealDialogProps) {
+export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOptions, salesId, onAccountCreated, existingDeals = [] }: EditDealDialogProps) {
   const { toast } = useToast();
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const [duplicates, setDuplicates] = useState<DuplicateMatch[]>([]);
 
   // Master data from DB
   const [dbCategories, setDbCategories] = useState<{ id: string; name: string }[]>([]);
@@ -192,6 +197,28 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       if (!invoiceDueDate) { sonnerToast.error('Jatuh Tempo wajib diisi'); return; }
     }
 
+    // Duplicate detection: same Account + Product + Total Value (exclude current deal)
+    const dupes = findDuplicateDeals({
+      accountId,
+      products,
+      totalValue: totalValue > 0 ? totalValue : deal.value,
+      existingDeals,
+      excludeDealId: deal.id,
+    });
+
+    if (dupes.length > 0) {
+      setDuplicates(dupes);
+      setDuplicateOpen(true);
+      return;
+    }
+
+    await performSave();
+  };
+
+  const performSave = async () => {
+    if (!deal) return;
+
+    const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
     setSaving(true);
 
     // Create invoice record when transitioning to invoice_issued
@@ -535,6 +562,14 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
           )}
         </ScrollArea>
       </DialogContent>
+      <DuplicateDealAlert
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        duplicates={duplicates}
+        getAccountName={(id) => accountOptions.find(a => a.id === id)?.name || '-'}
+        onConfirm={async () => { setDuplicateOpen(false); await performSave(); }}
+        onCancel={() => setDuplicateOpen(false)}
+      />
     </Dialog>
   );
 }
