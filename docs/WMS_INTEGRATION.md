@@ -209,6 +209,77 @@ curl -X POST \
 
 ---
 
+## 📤 3. POST `/wms-customer-upsert`
+
+Sinkronkan customer baru atau perubahan customer dari WMS ke SalesPulse `accounts`. Idempotent: upsert berdasarkan `code` (= `customer_id` di SalesPulse).
+
+**Endpoint**: `POST https://ggzttrxpkbpjbymrzpsg.supabase.co/functions/v1/wms-customer-upsert`
+
+**Headers**: `X-WMS-API-Key: <key>`, `Content-Type: application/json`
+
+**Request body**:
+```json
+{
+  "code": "CUST-WMS-001",          // wajib, jadi customer_id di SalesPulse (unique)
+  "name": "PT Bintang Mandiri",    // wajib
+  "customer_type": "Corporate",    // optional: Corporate|Government|Individual|Distributor|Retail
+  "pic": "Budi Santoso",
+  "email": "budi@example.com",
+  "phone": "081234567890",
+  "city": "Jakarta",
+  "region": "DKI Jakarta",         // optional, fallback ke city
+  "is_active": true
+}
+```
+
+**Mapping otomatis**:
+- `customer_type` → `segment`: Government → B2G, Individual/Retail → B2C, lainnya → B2B
+- Akun baru di-assign ke admin/super_admin pertama sebagai `sales_id` default (sales bisa reassign manual di SalesPulse)
+- Update tidak mengubah `sales_id` yang sudah ada
+
+**Response sukses (201 created / 200 updated)**:
+```json
+{ "success": true, "action": "created", "account_id": "uuid", "customer_id": "CUST-WMS-001", "name": "..." }
+```
+
+**Error**: 400 (field wajib hilang), 401 (API key salah), 503 (no admin user di SalesPulse).
+
+---
+
+## 📤 4. POST `/wms-product-upsert`
+
+Sinkronkan produk baru atau perubahan produk dari WMS ke SalesPulse `products`. Idempotent: upsert berdasarkan `sku`.
+
+**Endpoint**: `POST https://ggzttrxpkbpjbymrzpsg.supabase.co/functions/v1/wms-product-upsert`
+
+**Headers**: `X-WMS-API-Key: <key>`, `Content-Type: application/json`
+
+**Request body**:
+```json
+{
+  "sku": "SKU-WMS-12345",          // wajib, jadi sku di SalesPulse (unique)
+  "name": "Reagen Hematology X",   // wajib
+  "category_name": "Reagen",       // optional, auto-create kategori jika belum ada
+  "unit_name": "vial",             // optional, default "pcs"
+  "purchase_price": 150000,
+  "selling_price": 180000,         // optional, fallback ke purchase_price
+  "is_active": true
+}
+```
+
+**Behavior penting**:
+- Untuk produk yang sudah ada, `selling_price` di SalesPulse **TIDAK** di-overwrite jika sudah punya nilai >0 (sales bebas atur harga jual sendiri). Hanya `purchase_price` & metadata yang ikut update.
+- Kategori baru otomatis dibuat di `product_categories` jika `category_name` belum ada.
+
+**Response sukses (201 created / 200 updated)**:
+```json
+{ "success": true, "action": "updated", "product_id": "uuid", "sku": "...", "selling_price_preserved": true }
+```
+
+**Error**: 400 (field wajib hilang), 401 (API key salah), 500 (DB error).
+
+---
+
 ## 📞 Kontak
 
 Untuk pertanyaan teknis atau request fitur tambahan, hubungi admin SalesPulse.
