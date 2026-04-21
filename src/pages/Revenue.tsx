@@ -67,7 +67,7 @@ const Revenue = () => {
       supabase.rpc('get_active_sales_profiles'),
     ]);
 
-    const accountMap = new Map((accountsRes.data || []).map((a: any) => [a.id, a.name]));
+    const accountMap = new Map(((accountsRes.data || []) as any[]).map((a: any) => [a.id as string, a.name as string]));
     const salesMap = new Map((profilesRes.data || []).map((p: any) => [p.user_id, p.full_name]));
 
     const allInv = (invoiceRes.data || [])

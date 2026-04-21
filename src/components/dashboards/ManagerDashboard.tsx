@@ -107,7 +107,7 @@ export function ManagerDashboard() {
 
       // Gross Profit YTD & Cash-In from invoices
 
-      const allAccounts = accounts || [];
+      const allAccounts = (accounts || []) as any[];
 
       if (kpiData && !kpiError) {
         const d = kpiData as any;

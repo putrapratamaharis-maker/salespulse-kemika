@@ -161,7 +161,7 @@ export function LiveStatusRow() {
         ]);
 
         const nameMap = new Map((profilesRes.data || []).map(p => [p.user_id, p.full_name]));
-        const accMap = new Map((accountsRes.data || []).map(a => [a.id, a.name]));
+        const accMap = new Map(((accountsRes.data || []) as any[]).map((a: any) => [a.id as string, a.name as string]));
 
         setRecentActivities(data.map(d => ({
           ...d,

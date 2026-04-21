@@ -30,7 +30,7 @@ export function RepManagementDashboard() {
         supabase.from('deals').select('account_id, value, stage'),
       ]);
 
-      const allAccounts = accounts || [];
+      const allAccounts = (accounts || []) as any[];
       const allInvoices = invoices || [];
       const allDeals = deals || [];
 
