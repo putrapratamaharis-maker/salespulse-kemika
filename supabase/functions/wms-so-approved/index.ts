@@ -169,7 +169,18 @@ Deno.serve(async (req) => {
     // 5. Update deal
     const now = new Date().toISOString();
     const oldValue = Number(deal.value) || 0;
-    const newValue = body.total_value!;
+    const hasItems = Array.isArray(body.items) && body.items.length > 0;
+
+    // Jika items dikirim, hitung ulang total_value dari items (lebih akurat).
+    let newValue = body.total_value!;
+    if (hasItems) {
+      const computed = body.items!.reduce((sum, it) => {
+        const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
+        return sum + line;
+      }, 0);
+      newValue = computed;
+    }
+
     const valueDiffPct = oldValue > 0
       ? Math.abs(newValue - oldValue) / oldValue * 100
       : 0;
@@ -190,6 +201,38 @@ Deno.serve(async (req) => {
       .eq("id", deal.id);
 
     if (updErr) return jsonError(500, `Update deal gagal: ${updErr.message}`);
+
+    // 5b. Replace deal_products jika items dikirim
+    let itemsReplaced = 0;
+    if (hasItems) {
+      // Hapus semua produk lama
+      const { error: delErr } = await supabase
+        .from("deal_products")
+        .delete()
+        .eq("deal_id", deal.id);
+      if (delErr) {
+        return jsonError(500, `Hapus deal_products gagal: ${delErr.message}`);
+      }
+
+      // Insert produk baru dari payload SO
+      const rows = body.items!.map((it) => ({
+        deal_id: deal.id,
+        product_name: it.product_name!.trim(),
+        category: (it.category ?? "").trim(),
+        unit: (it.unit ?? "pcs").trim() || "pcs",
+        qty: Math.floor(it.qty!),
+        price_per_unit: it.price_per_unit!,
+        other_cost: it.other_cost ?? 0,
+      }));
+
+      const { error: insErr } = await supabase
+        .from("deal_products")
+        .insert(rows);
+      if (insErr) {
+        return jsonError(500, `Insert deal_products gagal: ${insErr.message}`);
+      }
+      itemsReplaced = rows.length;
+    }
 
     // 6. Koreksi nama customer (jika beda dan dikirim)
     let customerNameUpdated = false;
@@ -243,6 +286,7 @@ Deno.serve(async (req) => {
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
         customer_name_updated: customerNameUpdated,
+        items_replaced: itemsReplaced,
         synced_at: now,
       }),
       {
