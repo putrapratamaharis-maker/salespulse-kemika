@@ -1,0 +1,215 @@
+// Edge Function: wms-so-approved
+// POST /functions/v1/wms-so-approved
+// Webhook dipanggil oleh WMS saat Sales Order di-APPROVE.
+// Mengupdate kartu deal SalesPulse: stage -> po_secured, value, po_number,
+// wms_so_number, wms_so_date, dan koreksi nama customer.
+//
+// Authentication: Header `X-WMS-API-Key` harus cocok dengan WMS_INTEGRATION_API_KEY.
+//
+// Body payload:
+// {
+//   "reference_number": "REF-DSP-2026-0001",  // wajib, dari SalesPulse
+//   "so_number": "SO-2026-1234",              // wajib
+//   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
+//   "total_value": 66000000,                  // wajib (numeric)
+//   "customer_name": "PT ABCD EFGH"           // opsional, untuk koreksi nama
+// }
+
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-wms-api-key",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
+interface Payload {
+  reference_number?: string;
+  so_number?: string;
+  so_date?: string;
+  total_value?: number;
+  customer_name?: string;
+}
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  if (req.method !== "POST") {
+    return jsonError(405, "Method not allowed");
+  }
+
+  try {
+    // 1. Validasi API key
+    const expectedKey = Deno.env.get("WMS_INTEGRATION_API_KEY");
+    if (!expectedKey) {
+      return jsonError(500, "Server misconfiguration: WMS_INTEGRATION_API_KEY missing");
+    }
+    if (req.headers.get("x-wms-api-key") !== expectedKey) {
+      return jsonError(401, "Invalid or missing X-WMS-API-Key");
+    }
+
+    // 2. Parse + validasi payload
+    let body: Payload;
+    try {
+      body = await req.json();
+    } catch {
+      return jsonError(400, "Invalid JSON body");
+    }
+
+    const errs: string[] = [];
+    if (!body.reference_number || typeof body.reference_number !== "string") {
+      errs.push("reference_number wajib (string)");
+    }
+    if (!body.so_number || typeof body.so_number !== "string") {
+      errs.push("so_number wajib (string)");
+    }
+    if (!body.so_date || !/^\d{4}-\d{2}-\d{2}$/.test(body.so_date)) {
+      errs.push("so_date wajib (format YYYY-MM-DD)");
+    }
+    if (typeof body.total_value !== "number" || body.total_value < 0) {
+      errs.push("total_value wajib (number >= 0)");
+    }
+    if (errs.length) return jsonError(400, errs.join("; "));
+
+    const refNum = body.reference_number!.trim();
+    const soNum = body.so_number!.trim();
+
+    const supabase = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    );
+
+    // 3. Cari deal berdasarkan reference_number
+    const { data: deal, error: dealErr } = await supabase
+      .from("deals")
+      .select("id, account_id, value, stage, wms_so_number, wms_synced_at")
+      .eq("reference_number", refNum)
+      .maybeSingle();
+
+    if (dealErr) return jsonError(500, dealErr.message);
+    if (!deal) {
+      return jsonError(
+        404,
+        `Deal dengan reference_number '${refNum}' tidak ditemukan`,
+      );
+    }
+
+    // 4. Idempotency check
+    if (deal.wms_so_number === soNum) {
+      return new Response(
+        JSON.stringify({
+          status: "skipped",
+          reason: "Already synced (idempotent)",
+          deal_id: deal.id,
+          wms_so_number: soNum,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (deal.stage === "canceled" || deal.stage === "lost") {
+      return jsonError(
+        409,
+        `Deal sudah berstatus ${deal.stage}, tidak bisa di-sync`,
+      );
+    }
+
+    // 5. Update deal
+    const now = new Date().toISOString();
+    const oldValue = Number(deal.value) || 0;
+    const newValue = body.total_value!;
+    const valueDiffPct = oldValue > 0
+      ? Math.abs(newValue - oldValue) / oldValue * 100
+      : 0;
+
+    const { error: updErr } = await supabase
+      .from("deals")
+      .update({
+        stage: "po_secured",
+        probability: 100,
+        po_number: soNum,
+        wms_so_number: soNum,
+        wms_so_date: body.so_date,
+        wms_synced_at: now,
+        value: newValue,
+        expected_close_date: body.so_date,
+        days_in_stage: 0,
+      })
+      .eq("id", deal.id);
+
+    if (updErr) return jsonError(500, `Update deal gagal: ${updErr.message}`);
+
+    // 6. Koreksi nama customer (jika beda dan dikirim)
+    let customerNameUpdated = false;
+    if (body.customer_name && body.customer_name.trim()) {
+      const newName = body.customer_name.trim();
+      const { data: acc } = await supabase
+        .from("accounts")
+        .select("name")
+        .eq("id", deal.account_id)
+        .maybeSingle();
+
+      if (acc && acc.name !== newName) {
+        const { error: accErr } = await supabase
+          .from("accounts")
+          .update({ name: newName })
+          .eq("id", deal.account_id);
+        if (!accErr) customerNameUpdated = true;
+      }
+    }
+
+    // 7. Buat notifikasi untuk sales owner
+    const { data: dealOwner } = await supabase
+      .from("deals")
+      .select("sales_id, name")
+      .eq("id", deal.id)
+      .maybeSingle();
+
+    if (dealOwner) {
+      await supabase.from("notifications").insert({
+        user_id: dealOwner.sales_id,
+        title: "SO Disetujui di WMS",
+        message:
+          `Deal "${dealOwner.name}" telah di-link dengan SO ${soNum} (${body.so_date}).` +
+          (valueDiffPct > 5
+            ? ` ⚠️ Selisih nilai ${valueDiffPct.toFixed(1)}% dari estimasi semula.`
+            : ""),
+        type: valueDiffPct > 5 ? "warning" : "success",
+        reference_id: deal.id,
+        reference_type: "deal",
+      });
+    }
+
+    return new Response(
+      JSON.stringify({
+        status: "synced",
+        deal_id: deal.id,
+        reference_number: refNum,
+        wms_so_number: soNum,
+        wms_so_date: body.so_date,
+        old_value: oldValue,
+        new_value: newValue,
+        value_diff_pct: Number(valueDiffPct.toFixed(2)),
+        customer_name_updated: customerNameUpdated,
+        synced_at: now,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
+    );
+  } catch (err) {
+    console.error("Unhandled error:", err);
+    return jsonError(500, err instanceof Error ? err.message : "Unknown error");
+  }
+});
+
+function jsonError(status: number, message: string) {
+  return new Response(JSON.stringify({ error: message }), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}

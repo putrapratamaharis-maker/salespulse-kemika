@@ -73,6 +73,11 @@ const Pipeline = () => {
         location: d.location || '',
         notes: d.notes || '',
         products: productsMap[d.id] || [],
+        poNumber: d.po_number || '',
+        referenceNumber: (d as any).reference_number || '',
+        wmsSoNumber: (d as any).wms_so_number || '',
+        wmsSoDate: (d as any).wms_so_date || '',
+        wmsSyncedAt: (d as any).wms_synced_at || '',
       }));
       setDbDeals(mappedDeals);
 

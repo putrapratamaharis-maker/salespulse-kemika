@@ -57,6 +57,14 @@ export interface Deal {
   expectedMargin?: number;
   products?: DealProduct[];
   poNumber?: string;
+  /** Auto-generated reference number (REF-{InisialSales}-{YYYY}-{NNNN}) */
+  referenceNumber?: string;
+  /** SO number from Warehouse Management System (WMS), set after WMS approves the SO */
+  wmsSoNumber?: string;
+  /** SO date from WMS */
+  wmsSoDate?: string;
+  /** Last sync timestamp from WMS */
+  wmsSyncedAt?: string;
 }
 
 

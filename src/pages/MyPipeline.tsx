@@ -98,6 +98,10 @@ const MyPipeline = () => {
       location: d.location || '',
       notes: d.notes || '',
       products: productsMap[d.id] || [],
+      referenceNumber: d.reference_number || '',
+      wmsSoNumber: d.wms_so_number || '',
+      wmsSoDate: d.wms_so_date || '',
+      wmsSyncedAt: d.wms_synced_at || '',
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
