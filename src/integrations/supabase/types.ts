@@ -208,11 +208,15 @@ export type Database = {
           notes: string | null
           po_number: string | null
           probability: number
+          reference_number: string | null
           sales_id: string
           segment: string
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
+          wms_so_date: string | null
+          wms_so_number: string | null
+          wms_synced_at: string | null
         }
         Insert: {
           account_id: string
@@ -226,11 +230,15 @@ export type Database = {
           notes?: string | null
           po_number?: string | null
           probability?: number
+          reference_number?: string | null
           sales_id: string
           segment?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          wms_so_date?: string | null
+          wms_so_number?: string | null
+          wms_synced_at?: string | null
         }
         Update: {
           account_id?: string
@@ -244,11 +252,15 @@ export type Database = {
           notes?: string | null
           po_number?: string | null
           probability?: number
+          reference_number?: string | null
           sales_id?: string
           segment?: string
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          wms_so_date?: string | null
+          wms_so_number?: string | null
+          wms_synced_at?: string | null
         }
         Relationships: [
           {
@@ -1204,6 +1216,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_deal_reference_number: {
+        Args: { _sales_id: string; _year: number }
+        Returns: string
+      }
       get_active_sales_profiles: {
         Args: never
         Returns: {
@@ -1245,11 +1261,15 @@ export type Database = {
           notes: string | null
           po_number: string | null
           probability: number
+          reference_number: string | null
           sales_id: string
           segment: string
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
+          wms_so_date: string | null
+          wms_so_number: string | null
+          wms_synced_at: string | null
         }[]
         SetofOptions: {
           from: "*"
@@ -1262,6 +1282,7 @@ export type Database = {
         Args: { _current_month: number; _current_year: number }
         Returns: Json
       }
+      get_sales_initials: { Args: { _user_id: string }; Returns: string }
       get_segment_deals: {
         Args: never
         Returns: {
