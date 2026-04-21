@@ -351,6 +351,27 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                             </div>
                           </div>
 
+                          {/* 1b. Reference / WMS SO Number badge */}
+                          {(d.wmsSoNumber || d.referenceNumber) && (
+                            <div className="flex items-center gap-1 overflow-hidden">
+                              {d.wmsSoNumber ? (
+                                <span
+                                  className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1 py-0 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 truncate"
+                                  title={`SO WMS: ${d.wmsSoNumber}${d.wmsSoDate ? ' (' + d.wmsSoDate + ')' : ''}`}
+                                >
+                                  ✓ {d.wmsSoNumber}
+                                </span>
+                              ) : (
+                                <span
+                                  className="inline-flex items-center gap-0.5 text-[9px] font-semibold px-1 py-0 rounded bg-muted text-muted-foreground truncate"
+                                  title={`No. Referensi: ${d.referenceNumber} (akan diganti No. SO setelah approve di WMS)`}
+                                >
+                                  {d.referenceNumber}
+                                </span>
+                              )}
+                            </div>
+                          )}
+
                           {/* 2. Location (optional) */}
                           {d.location && (
                             <div className="flex items-center gap-1 overflow-hidden">
@@ -420,6 +441,25 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                               <TooltipContent side="right" align="start" className="max-w-[320px] p-3 space-y-1.5 text-xs z-[9999]">
                                 {/* 1. Account Name (header) */}
                                 <p className="font-bold text-primary text-sm leading-snug">{getAccountName(d.accountId)}</p>
+
+                                {/* Reference / SO Number */}
+                                {d.wmsSoNumber ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                                      ✓ SO WMS: {d.wmsSoNumber}
+                                    </span>
+                                    {d.wmsSoDate && (
+                                      <span className="text-[10px] text-muted-foreground">{d.wmsSoDate}</span>
+                                    )}
+                                  </div>
+                                ) : d.referenceNumber ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                                      Ref: {d.referenceNumber}
+                                    </span>
+                                    <span className="text-[9px] text-muted-foreground/70 italic">menunggu SO WMS</span>
+                                  </div>
+                                ) : null}
 
                                 {/* 2. Location */}
                                 {d.location && (
