@@ -175,6 +175,7 @@ curl -X POST \
   "new_value": 66000000,
   "value_diff_pct": 45.74,
   "customer_name_updated": false,
+  "items_replaced": 2,
   "synced_at": "2026-04-21T10:15:30.000Z"
 }
 ```
