@@ -12,6 +12,7 @@
 //   "so_number": "SO-2026-1234",              // wajib
 //   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
 //   "total_value": 66000000,                  // wajib (numeric)
+//   "customer_po": "SPK/123/2026",            // opsional, No. PO dari customer (SP/SPK/PO)
 //   "customer_name": "PT ABCD EFGH",          // opsional, untuk koreksi nama
 //   "items": [                                // opsional tapi DIREKOMENDASIKAN
 //     {
@@ -25,6 +26,11 @@
 //     }
 //   ]
 // }
+//
+// Pemetaan kolom deals:
+// - po_number       <- customer_po (No. PO/SP/SPK customer). Tidak di-overwrite jika customer_po tidak dikirim/kosong.
+// - wms_so_number   <- so_number   (No. SO internal warehouse).
+// - wms_so_date     <- so_date.
 //
 // Catatan items:
 // - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
