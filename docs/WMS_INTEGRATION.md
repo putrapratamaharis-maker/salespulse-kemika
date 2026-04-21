@@ -95,7 +95,8 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 
 - Pindahkan kartu kanban ke stage **PO Secured/Won**
 - Set `probability = 100%`
-- Update `po_number` dengan `so_number`
+- Update `po_number` dengan **`customer_po`** (No. PO/SP/SPK customer). Jika `customer_po` tidak dikirim, `po_number` existing TIDAK di-overwrite.
+- Simpan `so_number` ke kolom **`wms_so_number`** (No. SO internal warehouse, tampil terpisah di kartu deal).
 - Update `value` dengan `total_value` dari WMS
 - Update `expected_close_date` dengan `so_date`
 - Koreksi nama customer (jika dikirim & berbeda)
@@ -108,9 +109,10 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 | Field | Tipe | Wajib | Keterangan |
 |---|---|---|---|
 | `reference_number` | string | ✅ | No. Referensi SalesPulse (misal `REF-DSP-2026-0001`) |
-| `so_number` | string | ✅ | No. Sales Order dari WMS |
+| `so_number` | string | ✅ | No. Sales Order **internal WMS** (misal `SO/20260421.03`). Disimpan di kolom `wms_so_number`. |
 | `so_date` | string | ✅ | Format `YYYY-MM-DD` |
 | `total_value` | number | ✅ | Nilai total SO (Rupiah, tanpa desimal) |
+| `customer_po` | string | ❌ | **No. PO/SP/SPK dari customer** (misal `SPK/123/2026`). Disimpan di kolom `po_number`. Jika kosong/tidak dikirim, `po_number` existing tidak di-overwrite. |
 | `customer_name` | string | ❌ | Nama customer di WMS (untuk koreksi penamaan) |
 | `items` | array | ❌ | Daftar produk SO. **Sangat direkomendasikan.** Jika dikirim, `deal_products` lama akan **di-REPLACE TOTAL** dan `total_value` di-recalculate otomatis. |
 
