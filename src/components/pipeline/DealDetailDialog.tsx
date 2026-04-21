@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink, Warehouse } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -74,6 +74,27 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
             {deal.location && <InfoRow icon={MapPin} label="Location" value={deal.location} />}
             {deal.poNumber && (deal.stage === 'po_secured') && (
               <InfoRow icon={Hash} label="No. PO/SP/SPK" value={deal.poNumber} highlight />
+            )}
+            {deal.wmsSoNumber && (deal.stage === 'po_secured' || deal.stage === 'invoice_issued') && (
+              <div className="flex items-start gap-2 col-span-2">
+                <Warehouse className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[10px] text-muted-foreground leading-tight">No. SO WMS</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-xs font-bold text-emerald-700 dark:text-emerald-300 break-words">
+                      {deal.wmsSoNumber}
+                    </span>
+                    {deal.wmsSoDate && (
+                      <span className="text-[10px] text-muted-foreground">
+                        ({formatDate(deal.wmsSoDate)})
+                      </span>
+                    )}
+                    <Badge variant="outline" className="text-[9px] px-1 py-0 border-emerald-300 text-emerald-700 dark:text-emerald-300">
+                      Synced
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             )}
             {deal.poNumber && deal.stage === 'invoice_issued' && (
               <div className="flex items-start gap-2 col-span-2">

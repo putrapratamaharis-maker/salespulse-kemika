@@ -12,6 +12,7 @@
 //   "so_number": "SO-2026-1234",              // wajib
 //   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
 //   "total_value": 66000000,                  // wajib (numeric)
+//   "customer_po": "SPK/123/2026",            // opsional, No. PO dari customer (SP/SPK/PO)
 //   "customer_name": "PT ABCD EFGH",          // opsional, untuk koreksi nama
 //   "items": [                                // opsional tapi DIREKOMENDASIKAN
 //     {
@@ -25,6 +26,11 @@
 //     }
 //   ]
 // }
+//
+// Pemetaan kolom deals:
+// - po_number       <- customer_po (No. PO/SP/SPK customer). Tidak di-overwrite jika customer_po tidak dikirim/kosong.
+// - wms_so_number   <- so_number   (No. SO internal warehouse).
+// - wms_so_date     <- so_date.
 //
 // Catatan items:
 // - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
@@ -46,6 +52,7 @@ interface Payload {
   so_number?: string;
   so_date?: string;
   total_value?: number;
+  customer_po?: string;
   customer_name?: string;
   items?: WmsItem[];
 }
@@ -125,6 +132,7 @@ Deno.serve(async (req) => {
 
     const refNum = body.reference_number!.trim();
     const soNum = body.so_number!.trim();
+    const customerPo = (body.customer_po ?? "").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -190,7 +198,9 @@ Deno.serve(async (req) => {
       .update({
         stage: "po_secured",
         probability: 100,
-        po_number: soNum,
+        // po_number diisi dari customer_po (No. PO/SP/SPK dari customer).
+        // Jika WMS tidak kirim, jangan di-overwrite (kirim undefined supaya field tidak berubah).
+        ...(customerPo ? { po_number: customerPo } : {}),
         wms_so_number: soNum,
         wms_so_date: body.so_date,
         wms_synced_at: now,
@@ -285,6 +295,8 @@ Deno.serve(async (req) => {
         reference_number: refNum,
         wms_so_number: soNum,
         wms_so_date: body.so_date,
+        customer_po: customerPo || null,
+        po_number_updated: Boolean(customerPo),
         old_value: oldValue,
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
