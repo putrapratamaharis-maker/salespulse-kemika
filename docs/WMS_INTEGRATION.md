@@ -138,7 +138,27 @@ curl -X POST \
     "so_number": "SO-2026-1234",
     "so_date": "2026-04-21",
     "total_value": 66000000,
-    "customer_name": "PT ABCD EFGH"
+    "customer_name": "PT ABCD EFGH",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "product_name": "Pompa Sentrifugal 5HP",
+        "category": "Pompa",
+        "unit": "unit",
+        "qty": 2,
+        "price_per_unit": 25000000,
+        "other_cost": 0
+      },
+      {
+        "sku": "SKU-002",
+        "product_name": "Pipa PVC 4 inch",
+        "category": "Pipa",
+        "unit": "batang",
+        "qty": 40,
+        "price_per_unit": 400000,
+        "other_cost": 0
+      }
+    ]
   }'
 ```
 
