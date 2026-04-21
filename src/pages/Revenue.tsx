@@ -62,7 +62,7 @@ const Revenue = () => {
 
     const [invoiceRes, accountsRes, dealsRes, profilesRes] = await Promise.all([
       supabase.rpc('get_segment_invoices'),
-      supabase.from('accounts').select('id, name'),
+      (supabase.rpc as any)('get_accounts_basic'),
       supabase.rpc('get_all_deals_pipeline'),
       supabase.rpc('get_active_sales_profiles'),
     ]);

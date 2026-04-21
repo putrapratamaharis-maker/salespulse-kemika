@@ -156,7 +156,7 @@ export function LiveStatusRow() {
         const [profilesRes, accountsRes] = await Promise.all([
           supabase.from('profiles').select('user_id, full_name').in('user_id', salesIds),
           accountIds.length > 0
-            ? supabase.from('accounts').select('id, name').in('id', accountIds)
+            ? (supabase.rpc as any)('get_accounts_basic')
             : { data: [] },
         ]);
 

@@ -87,7 +87,7 @@ export function ManagerDashboard() {
           _current_year: selYear,
           _current_month: selMonth,
         }),
-        supabase.from('accounts').select('id, name, segment, region'),
+        (supabase.rpc as any)('get_accounts_basic'),
         supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
         supabase.rpc('get_all_deals_pipeline'),
       ]);

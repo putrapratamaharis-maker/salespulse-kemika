@@ -25,7 +25,7 @@ export function RepManagementDashboard() {
     async function fetchData() {
       setLoading(true);
       const [{ data: accounts }, { data: invoices }, { data: deals }] = await Promise.all([
-        supabase.from('accounts').select('id, type, region'),
+        (supabase.rpc as any)('get_accounts_basic'),
         supabase.from('invoices').select('account_id, net_sales, gross_profit, paid_date'),
         supabase.from('deals').select('account_id, value, stage'),
       ]);

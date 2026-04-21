@@ -165,7 +165,7 @@ const MyActivities = () => {
         .select('*')
         .eq('sales_id', user.id)
         .order('activity_date', { ascending: false }),
-      supabase.from('accounts').select('id, name'),
+      (supabase.rpc as any)('get_accounts_basic'),
     ]);
 
     if (actRes.data) setActivities(actRes.data as SalesActivity[]);

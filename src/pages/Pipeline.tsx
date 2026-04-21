@@ -25,7 +25,7 @@ const Pipeline = () => {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.rpc('get_all_deals_pipeline'),
-        supabase.from('accounts').select('id, name, pic_name, pic_contact, pic_email'),
+        (supabase.rpc as any)('get_accounts_with_pic_for_user'),
         supabase.rpc('get_active_sales_profiles'),
         supabase.rpc('get_all_deal_products_pipeline'),
       ]);
