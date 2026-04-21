@@ -266,6 +266,9 @@ Deno.serve(async (req) => {
         title: "SO Disetujui di WMS",
         message:
           `Deal "${dealOwner.name}" telah di-link dengan SO ${soNum} (${body.so_date}).` +
+          (itemsReplaced > 0
+            ? ` ${itemsReplaced} item produk diperbarui dari SO.`
+            : "") +
           (valueDiffPct > 5
             ? ` ⚠️ Selisih nilai ${valueDiffPct.toFixed(1)}% dari estimasi semula.`
             : ""),
