@@ -1234,6 +1234,23 @@ export type Database = {
           type: string
         }[]
       }
+      get_accounts_with_pic_for_user: {
+        Args: never
+        Returns: {
+          city: string
+          customer_id: string
+          id: string
+          name: string
+          pic_contact: string
+          pic_email: string
+          pic_name: string
+          region: string
+          sales_id: string
+          segment: string
+          status: string
+          type: string
+        }[]
+      }
       get_active_sales_profiles: {
         Args: never
         Returns: {
