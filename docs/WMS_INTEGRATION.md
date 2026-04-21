@@ -99,6 +99,8 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 - Update `value` dengan `total_value` dari WMS
 - Update `expected_close_date` dengan `so_date`
 - Koreksi nama customer (jika dikirim & berbeda)
+- **Replace total daftar produk** di deal dengan items dari SO (jika `items[]` dikirim)
+- Recalculate `value` otomatis dari `Σ(qty × price_per_unit) + Σ(other_cost)` saat items dikirim
 - Kirim notifikasi ke sales owner
 
 ### Request body
@@ -110,6 +112,19 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 | `so_date` | string | ✅ | Format `YYYY-MM-DD` |
 | `total_value` | number | ✅ | Nilai total SO (Rupiah, tanpa desimal) |
 | `customer_name` | string | ❌ | Nama customer di WMS (untuk koreksi penamaan) |
+| `items` | array | ❌ | Daftar produk SO. **Sangat direkomendasikan.** Jika dikirim, `deal_products` lama akan **di-REPLACE TOTAL** dan `total_value` di-recalculate otomatis. |
+
+#### Field per item (`items[]`)
+
+| Field | Tipe | Wajib | Keterangan |
+|---|---|---|---|
+| `product_name` | string | ✅ | Nama produk (sesuai di WMS) |
+| `qty` | integer | ✅ | Kuantitas (>= 1) |
+| `price_per_unit` | number | ✅ | Harga jual per unit (Rupiah) |
+| `sku` | string | ❌ | SKU produk (untuk traceability) |
+| `category` | string | ❌ | Nama kategori |
+| `unit` | string | ❌ | Satuan, default `pcs` |
+| `other_cost` | number | ❌ | Biaya tambahan per line, default `0` |
 
 ### Contoh request
 
@@ -123,7 +138,27 @@ curl -X POST \
     "so_number": "SO-2026-1234",
     "so_date": "2026-04-21",
     "total_value": 66000000,
-    "customer_name": "PT ABCD EFGH"
+    "customer_name": "PT ABCD EFGH",
+    "items": [
+      {
+        "sku": "SKU-001",
+        "product_name": "Pompa Sentrifugal 5HP",
+        "category": "Pompa",
+        "unit": "unit",
+        "qty": 2,
+        "price_per_unit": 25000000,
+        "other_cost": 0
+      },
+      {
+        "sku": "SKU-002",
+        "product_name": "Pipa PVC 4 inch",
+        "category": "Pipa",
+        "unit": "batang",
+        "qty": 40,
+        "price_per_unit": 400000,
+        "other_cost": 0
+      }
+    ]
   }'
 ```
 
@@ -140,6 +175,7 @@ curl -X POST \
   "new_value": 66000000,
   "value_diff_pct": 45.74,
   "customer_name_updated": false,
+  "items_replaced": 2,
   "synced_at": "2026-04-21T10:15:30.000Z"
 }
 ```

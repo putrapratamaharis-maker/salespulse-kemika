@@ -12,7 +12,24 @@
 //   "so_number": "SO-2026-1234",              // wajib
 //   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
 //   "total_value": 66000000,                  // wajib (numeric)
-//   "customer_name": "PT ABCD EFGH"           // opsional, untuk koreksi nama
+//   "customer_name": "PT ABCD EFGH",          // opsional, untuk koreksi nama
+//   "items": [                                // opsional tapi DIREKOMENDASIKAN
+//     {
+//       "sku": "SKU-001",                     // opsional, untuk match ke products
+//       "product_name": "Produk A",           // wajib
+//       "category": "Kategori X",             // opsional
+//       "unit": "pcs",                        // opsional, default 'pcs'
+//       "qty": 10,                            // wajib (integer >= 1)
+//       "price_per_unit": 6000000,            // wajib (number >= 0) — harga jual final SO
+//       "other_cost": 0                       // opsional, default 0
+//     }
+//   ]
+// }
+//
+// Catatan items:
+// - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
+// - total_value akan otomatis di-recalculate dari sum(qty * price_per_unit) + sum(other_cost).
+// - Jika items[] tidak dikirim atau kosong, deal_products tidak diubah & total_value pakai field root.
 // }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -30,6 +47,17 @@ interface Payload {
   so_date?: string;
   total_value?: number;
   customer_name?: string;
+  items?: WmsItem[];
+}
+
+interface WmsItem {
+  sku?: string;
+  product_name?: string;
+  category?: string;
+  unit?: string;
+  qty?: number;
+  price_per_unit?: number;
+  other_cost?: number;
 }
 
 Deno.serve(async (req) => {
@@ -71,6 +99,27 @@ Deno.serve(async (req) => {
     }
     if (typeof body.total_value !== "number" || body.total_value < 0) {
       errs.push("total_value wajib (number >= 0)");
+    }
+    // Validasi items (jika dikirim)
+    if (body.items !== undefined) {
+      if (!Array.isArray(body.items)) {
+        errs.push("items harus array");
+      } else {
+        body.items.forEach((it, idx) => {
+          if (!it.product_name || typeof it.product_name !== "string") {
+            errs.push(`items[${idx}].product_name wajib (string)`);
+          }
+          if (typeof it.qty !== "number" || !Number.isFinite(it.qty) || it.qty < 1) {
+            errs.push(`items[${idx}].qty wajib (number >= 1)`);
+          }
+          if (typeof it.price_per_unit !== "number" || it.price_per_unit < 0) {
+            errs.push(`items[${idx}].price_per_unit wajib (number >= 0)`);
+          }
+          if (it.other_cost !== undefined && (typeof it.other_cost !== "number" || it.other_cost < 0)) {
+            errs.push(`items[${idx}].other_cost harus number >= 0`);
+          }
+        });
+      }
     }
     if (errs.length) return jsonError(400, errs.join("; "));
 
@@ -120,7 +169,18 @@ Deno.serve(async (req) => {
     // 5. Update deal
     const now = new Date().toISOString();
     const oldValue = Number(deal.value) || 0;
-    const newValue = body.total_value!;
+    const hasItems = Array.isArray(body.items) && body.items.length > 0;
+
+    // Jika items dikirim, hitung ulang total_value dari items (lebih akurat).
+    let newValue = body.total_value!;
+    if (hasItems) {
+      const computed = body.items!.reduce((sum, it) => {
+        const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
+        return sum + line;
+      }, 0);
+      newValue = computed;
+    }
+
     const valueDiffPct = oldValue > 0
       ? Math.abs(newValue - oldValue) / oldValue * 100
       : 0;
@@ -141,6 +201,38 @@ Deno.serve(async (req) => {
       .eq("id", deal.id);
 
     if (updErr) return jsonError(500, `Update deal gagal: ${updErr.message}`);
+
+    // 5b. Replace deal_products jika items dikirim
+    let itemsReplaced = 0;
+    if (hasItems) {
+      // Hapus semua produk lama
+      const { error: delErr } = await supabase
+        .from("deal_products")
+        .delete()
+        .eq("deal_id", deal.id);
+      if (delErr) {
+        return jsonError(500, `Hapus deal_products gagal: ${delErr.message}`);
+      }
+
+      // Insert produk baru dari payload SO
+      const rows = body.items!.map((it) => ({
+        deal_id: deal.id,
+        product_name: it.product_name!.trim(),
+        category: (it.category ?? "").trim(),
+        unit: (it.unit ?? "pcs").trim() || "pcs",
+        qty: Math.floor(it.qty!),
+        price_per_unit: it.price_per_unit!,
+        other_cost: it.other_cost ?? 0,
+      }));
+
+      const { error: insErr } = await supabase
+        .from("deal_products")
+        .insert(rows);
+      if (insErr) {
+        return jsonError(500, `Insert deal_products gagal: ${insErr.message}`);
+      }
+      itemsReplaced = rows.length;
+    }
 
     // 6. Koreksi nama customer (jika beda dan dikirim)
     let customerNameUpdated = false;
@@ -174,6 +266,9 @@ Deno.serve(async (req) => {
         title: "SO Disetujui di WMS",
         message:
           `Deal "${dealOwner.name}" telah di-link dengan SO ${soNum} (${body.so_date}).` +
+          (itemsReplaced > 0
+            ? ` ${itemsReplaced} item produk diperbarui dari SO.`
+            : "") +
           (valueDiffPct > 5
             ? ` ⚠️ Selisih nilai ${valueDiffPct.toFixed(1)}% dari estimasi semula.`
             : ""),
@@ -194,6 +289,7 @@ Deno.serve(async (req) => {
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
         customer_name_updated: customerNameUpdated,
+        items_replaced: itemsReplaced,
         synced_at: now,
       }),
       {
