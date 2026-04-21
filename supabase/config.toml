@@ -6,3 +6,9 @@ verify_jwt = false
 
 [functions.wms-so-approved]
 verify_jwt = false
+
+[functions.wms-customer-upsert]
+verify_jwt = false
+
+[functions.wms-product-upsert]
+verify_jwt = false
