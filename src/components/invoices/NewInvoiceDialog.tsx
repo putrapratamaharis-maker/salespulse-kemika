@@ -39,8 +39,9 @@ const NewInvoiceDialog = ({ onCreated }: NewInvoiceDialogProps) => {
 
   useEffect(() => {
     if (open) {
-      supabase.from('accounts').select('id, name').order('name').then(({ data }) => {
-        setAccounts((data || []) as Account[]);
+      (supabase.rpc as any)('get_accounts_basic').then(({ data }: { data: any[] | null }) => {
+        const sorted = (data || []).slice().sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+        setAccounts(sorted as Account[]);
       });
     }
   }, [open]);

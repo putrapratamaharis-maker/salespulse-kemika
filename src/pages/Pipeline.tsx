@@ -25,7 +25,7 @@ const Pipeline = () => {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.rpc('get_all_deals_pipeline'),
-        supabase.from('accounts').select('id, name, pic_name, pic_contact, pic_email'),
+        (supabase.rpc as any)('get_accounts_with_pic_for_user'),
         supabase.rpc('get_active_sales_profiles'),
         supabase.rpc('get_all_deal_products_pipeline'),
       ]);
@@ -46,9 +46,10 @@ const Pipeline = () => {
       });
 
       // Map accounts
-      const accMap = new Map((accounts || []).map(a => [a.id, a.name]));
+      const accountList = (accounts || []) as any[];
+      const accMap = new Map(accountList.map((a: any) => [a.id as string, a.name as string]));
       setAccountMap(accMap);
-      const picMap = new Map((accounts || []).map(a => [a.id, { picName: a.pic_name, picEmail: a.pic_email, picContact: a.pic_contact }]));
+      const picMap = new Map(accountList.map((a: any) => [a.id as string, { picName: a.pic_name as string | undefined, picEmail: a.pic_email as string | undefined, picContact: a.pic_contact as string | undefined }]));
       setAccountPICMap(picMap);
 
       // Map profiles for sales names

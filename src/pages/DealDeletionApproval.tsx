@@ -70,7 +70,7 @@ export default function DealDeletionApproval() {
     const [{ data: profiles }, { data: deals }, { data: accounts }] = await Promise.all([
       supabase.from('profiles').select('user_id, full_name').in('user_id', userIds),
       supabase.from('deals').select('id, name, account_id'),
-      supabase.from('accounts').select('id, name'),
+      (supabase.rpc as any)('get_accounts_basic'),
     ]);
 
     const profileMap = new Map((profiles || []).map(p => [p.user_id, p.full_name]));

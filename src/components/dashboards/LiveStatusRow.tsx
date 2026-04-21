@@ -156,12 +156,12 @@ export function LiveStatusRow() {
         const [profilesRes, accountsRes] = await Promise.all([
           supabase.from('profiles').select('user_id, full_name').in('user_id', salesIds),
           accountIds.length > 0
-            ? supabase.from('accounts').select('id, name').in('id', accountIds)
+            ? (supabase.rpc as any)('get_accounts_basic')
             : { data: [] },
         ]);
 
         const nameMap = new Map((profilesRes.data || []).map(p => [p.user_id, p.full_name]));
-        const accMap = new Map((accountsRes.data || []).map(a => [a.id, a.name]));
+        const accMap = new Map(((accountsRes.data || []) as any[]).map((a: any) => [a.id as string, a.name as string]));
 
         setRecentActivities(data.map(d => ({
           ...d,

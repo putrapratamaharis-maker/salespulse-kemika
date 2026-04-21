@@ -1220,6 +1220,37 @@ export type Database = {
         Args: { _sales_id: string; _year: number }
         Returns: string
       }
+      get_accounts_basic: {
+        Args: never
+        Returns: {
+          city: string
+          customer_id: string
+          id: string
+          name: string
+          region: string
+          sales_id: string
+          segment: string
+          status: string
+          type: string
+        }[]
+      }
+      get_accounts_with_pic_for_user: {
+        Args: never
+        Returns: {
+          city: string
+          customer_id: string
+          id: string
+          name: string
+          pic_contact: string
+          pic_email: string
+          pic_name: string
+          region: string
+          sales_id: string
+          segment: string
+          status: string
+          type: string
+        }[]
+      }
       get_active_sales_profiles: {
         Args: never
         Returns: {
