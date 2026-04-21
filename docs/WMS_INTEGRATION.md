@@ -112,6 +112,19 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 | `so_date` | string | ✅ | Format `YYYY-MM-DD` |
 | `total_value` | number | ✅ | Nilai total SO (Rupiah, tanpa desimal) |
 | `customer_name` | string | ❌ | Nama customer di WMS (untuk koreksi penamaan) |
+| `items` | array | ❌ | Daftar produk SO. **Sangat direkomendasikan.** Jika dikirim, `deal_products` lama akan **di-REPLACE TOTAL** dan `total_value` di-recalculate otomatis. |
+
+#### Field per item (`items[]`)
+
+| Field | Tipe | Wajib | Keterangan |
+|---|---|---|---|
+| `product_name` | string | ✅ | Nama produk (sesuai di WMS) |
+| `qty` | integer | ✅ | Kuantitas (>= 1) |
+| `price_per_unit` | number | ✅ | Harga jual per unit (Rupiah) |
+| `sku` | string | ❌ | SKU produk (untuk traceability) |
+| `category` | string | ❌ | Nama kategori |
+| `unit` | string | ❌ | Satuan, default `pcs` |
+| `other_cost` | number | ❌ | Biaya tambahan per line, default `0` |
 
 ### Contoh request
 
