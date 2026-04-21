@@ -1,1 +1,8 @@
 project_id = "ggzttrxpkbpjbymrzpsg"
+
+# WMS Integration: skip JWT verification, autentikasi via X-WMS-API-Key header
+[functions.list-open-references]
+verify_jwt = false
+
+[functions.wms-so-approved]
+verify_jwt = false
