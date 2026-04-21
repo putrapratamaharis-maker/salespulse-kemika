@@ -1,9 +1,11 @@
 # Integrasi SalesPulse ↔ Warehouse Management System (WMS)
 
-Dokumentasi ini menjelaskan cara WMS terhubung dengan SalesPulse melalui dua endpoint utama:
+Dokumentasi ini menjelaskan cara WMS terhubung dengan SalesPulse melalui empat endpoint:
 
 1. **`GET /list-open-references`** — Mengambil daftar deal aktif untuk ditampilkan di dropdown form Sales Order WMS.
 2. **`POST /wms-so-approved`** — Memberi tahu SalesPulse bahwa SO telah di-approve, sehingga kartu kanban auto-update.
+3. **`POST /wms-customer-upsert`** — Sinkronkan customer baru/update dari WMS ke SalesPulse Accounts.
+4. **`POST /wms-product-upsert`** — Sinkronkan produk baru/update dari WMS ke SalesPulse Products.
 
 ---
 
