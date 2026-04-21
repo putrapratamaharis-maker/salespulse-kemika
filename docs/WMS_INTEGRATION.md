@@ -137,9 +137,10 @@ curl -X POST \
   -H "Content-Type: application/json" \
   -d '{
     "reference_number": "REF-DSP-2026-0001",
-    "so_number": "SO-2026-1234",
+    "so_number": "SO/20260421.03",
     "so_date": "2026-04-21",
     "total_value": 66000000,
+    "customer_po": "SPK/123/2026",
     "customer_name": "PT ABCD EFGH",
     "items": [
       {
