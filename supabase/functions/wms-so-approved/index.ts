@@ -52,6 +52,7 @@ interface Payload {
   so_number?: string;
   so_date?: string;
   total_value?: number;
+  customer_po?: string;
   customer_name?: string;
   items?: WmsItem[];
 }
