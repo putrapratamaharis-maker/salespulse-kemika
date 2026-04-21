@@ -12,7 +12,24 @@
 //   "so_number": "SO-2026-1234",              // wajib
 //   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
 //   "total_value": 66000000,                  // wajib (numeric)
-//   "customer_name": "PT ABCD EFGH"           // opsional, untuk koreksi nama
+//   "customer_name": "PT ABCD EFGH",          // opsional, untuk koreksi nama
+//   "items": [                                // opsional tapi DIREKOMENDASIKAN
+//     {
+//       "sku": "SKU-001",                     // opsional, untuk match ke products
+//       "product_name": "Produk A",           // wajib
+//       "category": "Kategori X",             // opsional
+//       "unit": "pcs",                        // opsional, default 'pcs'
+//       "qty": 10,                            // wajib (integer >= 1)
+//       "price_per_unit": 6000000,            // wajib (number >= 0) — harga jual final SO
+//       "other_cost": 0                       // opsional, default 0
+//     }
+//   ]
+// }
+//
+// Catatan items:
+// - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
+// - total_value akan otomatis di-recalculate dari sum(qty * price_per_unit) + sum(other_cost).
+// - Jika items[] tidak dikirim atau kosong, deal_products tidak diubah & total_value pakai field root.
 // }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -30,6 +47,17 @@ interface Payload {
   so_date?: string;
   total_value?: number;
   customer_name?: string;
+  items?: WmsItem[];
+}
+
+interface WmsItem {
+  sku?: string;
+  product_name?: string;
+  category?: string;
+  unit?: string;
+  qty?: number;
+  price_per_unit?: number;
+  other_cost?: number;
 }
 
 Deno.serve(async (req) => {
