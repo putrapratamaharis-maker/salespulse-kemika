@@ -295,6 +295,8 @@ Deno.serve(async (req) => {
         reference_number: refNum,
         wms_so_number: soNum,
         wms_so_date: body.so_date,
+        customer_po: customerPo || null,
+        po_number_updated: Boolean(customerPo),
         old_value: oldValue,
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
