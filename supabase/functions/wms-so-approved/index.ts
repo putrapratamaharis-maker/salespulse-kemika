@@ -132,6 +132,7 @@ Deno.serve(async (req) => {
 
     const refNum = body.reference_number!.trim();
     const soNum = body.so_number!.trim();
+    const customerPo = (body.customer_po ?? "").trim();
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -197,7 +198,9 @@ Deno.serve(async (req) => {
       .update({
         stage: "po_secured",
         probability: 100,
-        po_number: soNum,
+        // po_number diisi dari customer_po (No. PO/SP/SPK dari customer).
+        // Jika WMS tidak kirim, jangan di-overwrite (kirim undefined supaya field tidak berubah).
+        ...(customerPo ? { po_number: customerPo } : {}),
         wms_so_number: soNum,
         wms_so_date: body.so_date,
         wms_synced_at: now,
