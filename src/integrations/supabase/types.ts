@@ -1278,6 +1278,7 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_default_sync_sales_id: { Args: never; Returns: string }
       get_executive_summary_kpis: {
         Args: { _current_month: number; _current_year: number }
         Returns: Json
