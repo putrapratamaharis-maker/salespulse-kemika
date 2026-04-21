@@ -99,6 +99,8 @@ Webhook yang dipanggil **WMS** saat Sales Order di-**APPROVE**. SalesPulse akan 
 - Update `value` dengan `total_value` dari WMS
 - Update `expected_close_date` dengan `so_date`
 - Koreksi nama customer (jika dikirim & berbeda)
+- **Replace total daftar produk** di deal dengan items dari SO (jika `items[]` dikirim)
+- Recalculate `value` otomatis dari `Σ(qty × price_per_unit) + Σ(other_cost)` saat items dikirim
 - Kirim notifikasi ke sales owner
 
 ### Request body
