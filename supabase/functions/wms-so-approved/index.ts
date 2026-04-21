@@ -100,6 +100,27 @@ Deno.serve(async (req) => {
     if (typeof body.total_value !== "number" || body.total_value < 0) {
       errs.push("total_value wajib (number >= 0)");
     }
+    // Validasi items (jika dikirim)
+    if (body.items !== undefined) {
+      if (!Array.isArray(body.items)) {
+        errs.push("items harus array");
+      } else {
+        body.items.forEach((it, idx) => {
+          if (!it.product_name || typeof it.product_name !== "string") {
+            errs.push(`items[${idx}].product_name wajib (string)`);
+          }
+          if (typeof it.qty !== "number" || !Number.isFinite(it.qty) || it.qty < 1) {
+            errs.push(`items[${idx}].qty wajib (number >= 1)`);
+          }
+          if (typeof it.price_per_unit !== "number" || it.price_per_unit < 0) {
+            errs.push(`items[${idx}].price_per_unit wajib (number >= 0)`);
+          }
+          if (it.other_cost !== undefined && (typeof it.other_cost !== "number" || it.other_cost < 0)) {
+            errs.push(`items[${idx}].other_cost harus number >= 0`);
+          }
+        });
+      }
+    }
     if (errs.length) return jsonError(400, errs.join("; "));
 
     const refNum = body.reference_number!.trim();
