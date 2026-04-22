@@ -12,3 +12,12 @@ verify_jwt = false
 
 [functions.wms-product-upsert]
 verify_jwt = false
+
+[functions.wms-so-updated]
+verify_jwt = false
+
+[functions.wms-so-cancelled]
+verify_jwt = false
+
+[functions.wms-so-deleted]
+verify_jwt = false
