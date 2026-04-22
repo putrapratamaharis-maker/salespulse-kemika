@@ -224,13 +224,17 @@ Deno.serve(async (req) => {
         wms_so_number: soNum,
         wms_so_date: body.so_date,
         wms_synced_at: now,
+        wms_last_event_at: now,
         value: newValue,
         expected_close_date: body.so_date,
         days_in_stage: 0,
       })
       .eq("id", deal.id);
 
-    if (updErr) return jsonError(500, `Update deal gagal: ${updErr.message}`);
+    if (updErr) {
+      await markLog(supabase, logId, "failed", updErr.message);
+      return jsonError(500, "Update deal gagal");
+    }
 
     // 5b. Replace deal_products jika items dikirim
     let itemsReplaced = 0;
@@ -308,6 +312,7 @@ Deno.serve(async (req) => {
       });
     }
 
+    await markLog(supabase, logId, "processed", null);
     return new Response(
       JSON.stringify({
         status: "synced",
@@ -331,7 +336,7 @@ Deno.serve(async (req) => {
     );
   } catch (err) {
     console.error("Unhandled error:", err);
-    return jsonError(500, err instanceof Error ? err.message : "Unknown error");
+    return jsonError(500, "Internal error");
   }
 });
 
@@ -340,4 +345,17 @@ function jsonError(status: number, message: string) {
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+}
+
+// deno-lint-ignore no-explicit-any
+async function markLog(supabase: any, logId: string | null, status: string, errorMsg: string | null) {
+  if (!logId) return;
+  await supabase
+    .from("wms_sync_log")
+    .update({
+      status,
+      error_message: errorMsg,
+      processed_at: new Date().toISOString(),
+    })
+    .eq("id", logId);
 }
