@@ -8,9 +8,12 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink, Warehouse, Receipt, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink, Warehouse, Receipt, CheckCircle2, AlertTriangle, RefreshCw, Loader2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface AccountPIC {
   picName?: string;
@@ -41,6 +44,61 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
   const navigate = useNavigate();
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
   const pic = deal && getAccountPIC ? getAccountPIC(deal.accountId) : undefined;
+
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    ok: boolean;
+    status: string;
+    message: string;
+    eventType?: string;
+    timestamp?: string;
+  } | null>(null);
+
+  const handleResyncAR = async () => {
+    if (!deal) return;
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('apar-resync-deal', {
+        body: { deal_id: deal.id },
+      });
+      if (error) {
+        const msg = error.message || 'Gagal memanggil sync';
+        setSyncResult({ ok: false, status: 'error', message: msg });
+        toast.error('Sync AR gagal', { description: msg });
+        return;
+      }
+      const status = data?.status as string | undefined;
+      if (status === 'resynced') {
+        const ts = data?.last_event_at ? new Date(data.last_event_at).toLocaleString('id-ID') : '';
+        const msg = `Event "${data?.event_type}" berhasil di-replay${ts ? ` pada ${ts}` : ''}.`;
+        setSyncResult({
+          ok: true,
+          status: 'resynced',
+          message: msg,
+          eventType: data?.event_type,
+          timestamp: data?.last_event_at,
+        });
+        toast.success('AR Status tersinkron', { description: msg });
+      } else if (status === 'no_log' || status === 'no_so') {
+        const msg = data?.message ?? 'Tidak ada event AR untuk di-resync.';
+        setSyncResult({ ok: false, status, message: msg });
+        toast.info('Tidak ada event AR', { description: msg });
+      } else {
+        const msg = data?.error ?? data?.message ?? 'Respons tidak dikenali.';
+        setSyncResult({ ok: false, status: status ?? 'unknown', message: msg });
+        toast.warning('Sync AR', { description: msg });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setSyncResult({ ok: false, status: 'error', message: msg });
+      toast.error('Sync AR gagal', { description: msg });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const showSyncSection = !!deal?.wmsSoNumber;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
