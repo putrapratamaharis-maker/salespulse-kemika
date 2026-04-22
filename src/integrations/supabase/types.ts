@@ -198,6 +198,14 @@ export type Database = {
       deals: {
         Row: {
           account_id: string
+          ar_due_date: string | null
+          ar_invoice_amount: number | null
+          ar_invoice_date: string | null
+          ar_invoice_number: string | null
+          ar_last_event_at: string | null
+          ar_paid_amount: number | null
+          ar_paid_date: string | null
+          ar_status: string | null
           created_at: string
           days_in_stage: number
           expected_close_date: string
@@ -223,6 +231,14 @@ export type Database = {
         }
         Insert: {
           account_id: string
+          ar_due_date?: string | null
+          ar_invoice_amount?: number | null
+          ar_invoice_date?: string | null
+          ar_invoice_number?: string | null
+          ar_last_event_at?: string | null
+          ar_paid_amount?: number | null
+          ar_paid_date?: string | null
+          ar_status?: string | null
           created_at?: string
           days_in_stage?: number
           expected_close_date: string
@@ -248,6 +264,14 @@ export type Database = {
         }
         Update: {
           account_id?: string
+          ar_due_date?: string | null
+          ar_invoice_amount?: number | null
+          ar_invoice_date?: string | null
+          ar_invoice_number?: string | null
+          ar_last_event_at?: string | null
+          ar_paid_amount?: number | null
+          ar_paid_date?: string | null
+          ar_status?: string | null
           created_at?: string
           days_in_stage?: number
           expected_close_date?: string
@@ -1327,6 +1351,14 @@ export type Database = {
         Args: never
         Returns: {
           account_id: string
+          ar_due_date: string | null
+          ar_invoice_amount: number | null
+          ar_invoice_date: string | null
+          ar_invoice_number: string | null
+          ar_last_event_at: string | null
+          ar_paid_amount: number | null
+          ar_paid_date: string | null
+          ar_status: string | null
           created_at: string
           days_in_stage: number
           expected_close_date: string
