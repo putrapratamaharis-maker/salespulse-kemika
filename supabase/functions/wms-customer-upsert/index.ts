@@ -69,7 +69,7 @@ serve(async (req) => {
 
   if (findErr) {
     console.error("[wms-customer-upsert] find error:", findErr);
-    return json({ error: "Lookup failed", detail: findErr.message }, 500);
+    return json({ error: "Lookup failed. Contact SalesPulse administrator." }, 500);
   }
 
   const customerType = clean(body.customer_type, 50) || "Corporate";
@@ -95,7 +95,7 @@ serve(async (req) => {
 
     if (updErr) {
       console.error("[wms-customer-upsert] update error:", updErr);
-      return json({ error: "Update failed", detail: updErr.message }, 500);
+      return json({ error: "Update failed. Contact SalesPulse administrator." }, 500);
     }
 
     return json({
@@ -124,7 +124,7 @@ serve(async (req) => {
 
   if (insErr) {
     console.error("[wms-customer-upsert] insert error:", insErr);
-    return json({ error: "Insert failed", detail: insErr.message }, 500);
+    return json({ error: "Insert failed. Contact SalesPulse administrator." }, 500);
   }
 
   return json({

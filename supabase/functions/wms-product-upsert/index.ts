@@ -86,7 +86,7 @@ serve(async (req) => {
 
   if (findErr) {
     console.error("[wms-product-upsert] find error:", findErr);
-    return json({ error: "Lookup failed", detail: findErr.message }, 500);
+    return json({ error: "Lookup failed. Contact SalesPulse administrator." }, 500);
   }
 
   // Logic: selling_price di SalesPulse adalah harga jual yang bisa diatur sales.
@@ -116,7 +116,7 @@ serve(async (req) => {
 
     if (updErr) {
       console.error("[wms-product-upsert] update error:", updErr);
-      return json({ error: "Update failed", detail: updErr.message }, 500);
+      return json({ error: "Update failed. Contact SalesPulse administrator." }, 500);
     }
 
     return json({
@@ -137,7 +137,7 @@ serve(async (req) => {
 
   if (insErr) {
     console.error("[wms-product-upsert] insert error:", insErr);
-    return json({ error: "Insert failed", detail: insErr.message }, 500);
+    return json({ error: "Insert failed. Contact SalesPulse administrator." }, 500);
   }
 
   return json({
