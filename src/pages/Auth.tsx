@@ -52,7 +52,9 @@ export default function Auth() {
     } else {
       toast({
         title: 'Registrasi berhasil!',
-        description: 'Silakan cek email Anda untuk verifikasi akun.',
+        description:
+          'Silakan cek email Anda untuk verifikasi. Akun Anda akan diaktifkan oleh administrator sebelum dapat digunakan.',
+        duration: 8000,
       });
     }
   };

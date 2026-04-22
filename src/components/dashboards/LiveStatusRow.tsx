@@ -82,9 +82,14 @@ export function LiveStatusRow() {
             .select('full_name, avatar_url')
             .eq('user_id', user.id)
             .single();
+          let signedAvatar: string | null = null;
+          if (profile?.avatar_url) {
+            const { resolveAvatarUrl } = await import('@/lib/avatarUrl');
+            signedAvatar = await resolveAvatarUrl(profile.avatar_url);
+          }
           await channel.track({
             full_name: profile?.full_name || 'User',
-            avatar_url: profile?.avatar_url || null,
+            avatar_url: signedAvatar,
             online_at: new Date().toISOString(),
           });
         }
