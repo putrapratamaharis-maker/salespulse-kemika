@@ -139,6 +139,20 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
+    // Catat event mentah ke audit log
+    const { data: logRow } = await supabase
+      .from("wms_sync_log")
+      .insert({
+        event_type: "so_approved",
+        reference_number: refNum,
+        wms_so_number: soNum,
+        payload: body as unknown as Record<string, unknown>,
+        status: "received",
+      })
+      .select("id")
+      .single();
+    const logId = logRow?.id ?? null;
+
     // 3. Cari deal berdasarkan reference_number
     const { data: deal, error: dealErr } = await supabase
       .from("deals")
@@ -146,8 +160,12 @@ Deno.serve(async (req) => {
       .eq("reference_number", refNum)
       .maybeSingle();
 
-    if (dealErr) return jsonError(500, dealErr.message);
+    if (dealErr) {
+      await markLog(supabase, logId, "failed", dealErr.message);
+      return jsonError(500, "Database error");
+    }
     if (!deal) {
+      await markLog(supabase, logId, "failed", `Deal not found: ${refNum}`);
       return jsonError(
         404,
         `Deal dengan reference_number '${refNum}' tidak ditemukan`,
@@ -156,6 +174,7 @@ Deno.serve(async (req) => {
 
     // 4. Idempotency check
     if (deal.wms_so_number === soNum) {
+      await markLog(supabase, logId, "ignored", "Already synced (idempotent)");
       return new Response(
         JSON.stringify({
           status: "skipped",
@@ -168,6 +187,7 @@ Deno.serve(async (req) => {
     }
 
     if (deal.stage === "canceled" || deal.stage === "lost") {
+      await markLog(supabase, logId, "ignored", `Deal already ${deal.stage}`);
       return jsonError(
         409,
         `Deal sudah berstatus ${deal.stage}, tidak bisa di-sync`,
