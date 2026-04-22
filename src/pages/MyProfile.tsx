@@ -140,11 +140,12 @@ const MyProfile = () => {
       return;
     }
 
-    const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path);
-    const newUrl = `${urlData.publicUrl}?t=${Date.now()}`;
-
-    await supabase.from('profiles').update({ avatar_url: newUrl }).eq('user_id', user!.id);
-    setAvatarUrl(newUrl);
+    // Store the storage path; UI resolves to a short-lived signed URL on read.
+    await supabase.from('profiles').update({ avatar_url: path }).eq('user_id', user!.id);
+    const { data: signed } = await supabase.storage
+      .from('avatars')
+      .createSignedUrl(path, 60 * 60 * 24 * 7);
+    setAvatarUrl(signed?.signedUrl ?? null);
     toast({ title: 'Foto profil berhasil diperbarui' });
     setUploadingAvatar(false);
   }

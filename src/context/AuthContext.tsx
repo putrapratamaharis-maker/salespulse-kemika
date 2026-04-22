@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User, Session } from '@supabase/supabase-js';
+import { resolveAvatarUrl } from '@/lib/avatarUrl';
 
 interface AuthContextType {
   user: User | null;
@@ -58,13 +59,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ]);
 
       if (profileRes.data) {
+        // Block inactive accounts (pending admin approval) from using the app.
+        if (profileRes.data.is_active === false) {
+          await supabase.auth.signOut();
+          if (typeof window !== 'undefined') {
+            window.alert(
+              'Akun Anda belum aktif. Silakan tunggu persetujuan dari administrator sebelum dapat masuk ke aplikasi.',
+            );
+          }
+          setProfile(null);
+          setUserRole(null);
+          setLoading(false);
+          return;
+        }
+
+        const signedAvatar = await resolveAvatarUrl(profileRes.data.avatar_url as string | null);
         setProfile({
           id: profileRes.data.id as string,
           full_name: profileRes.data.full_name as string,
           email: profileRes.data.email as string,
           segment: profileRes.data.segment as string,
           region: profileRes.data.region as string,
-          avatar_url: profileRes.data.avatar_url as string | null,
+          avatar_url: signedAvatar,
         });
       }
 
