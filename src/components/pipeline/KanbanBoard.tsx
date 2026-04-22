@@ -369,6 +369,31 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                                   {d.referenceNumber}
                                 </span>
                               )}
+                              {/* AR Invoice badge */}
+                              {d.arInvoiceNumber && (
+                                <span
+                                  className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1 py-0 rounded bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 truncate"
+                                  title={`No. Invoice: ${d.arInvoiceNumber}${d.arInvoiceDate ? ' (' + d.arInvoiceDate + ')' : ''}`}
+                                >
+                                  📄 {d.arInvoiceNumber}
+                                </span>
+                              )}
+                              {/* AR Status badge */}
+                              {d.arStatus === 'paid' && (
+                                <span className="inline-flex items-center text-[9px] font-bold px-1 py-0 rounded bg-emerald-500 text-white" title={`LUNAS pada ${d.arPaidDate || ''}`}>
+                                  ✓ LUNAS
+                                </span>
+                              )}
+                              {d.arStatus === 'partial_paid' && (
+                                <span className="inline-flex items-center text-[9px] font-bold px-1 py-0 rounded bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300" title="Pembayaran sebagian">
+                                  Partial
+                                </span>
+                              )}
+                              {d.arStatus === 'overdue' && (
+                                <span className="inline-flex items-center text-[9px] font-bold px-1 py-0 rounded bg-rose-500 text-white" title="Overdue">
+                                  Overdue
+                                </span>
+                              )}
                             </div>
                           )}
 
