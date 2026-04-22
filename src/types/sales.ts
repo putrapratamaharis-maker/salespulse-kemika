@@ -65,6 +65,23 @@ export interface Deal {
   wmsSoDate?: string;
   /** Last sync timestamp from WMS */
   wmsSyncedAt?: string;
+  // ===== AP/AR Nexus integration =====
+  /** Invoice number from AP/AR Nexus (issued after AR approval, distinct from PO/SO) */
+  arInvoiceNumber?: string;
+  /** Invoice issue date from AR */
+  arInvoiceDate?: string;
+  /** Official invoice amount from AR */
+  arInvoiceAmount?: number;
+  /** Due date from AR */
+  arDueDate?: string;
+  /** Paid date (filled when status = paid) */
+  arPaidDate?: string;
+  /** Total paid amount (running total for partial payments) */
+  arPaidAmount?: number;
+  /** AR status: approved | partial_paid | paid | overdue | cancelled */
+  arStatus?: string;
+  /** Last AR event timestamp */
+  arLastEventAt?: string;
 }
 
 

@@ -79,6 +79,14 @@ const Pipeline = () => {
         wmsSoNumber: (d as any).wms_so_number || '',
         wmsSoDate: (d as any).wms_so_date || '',
         wmsSyncedAt: (d as any).wms_synced_at || '',
+        arInvoiceNumber: (d as any).ar_invoice_number || '',
+        arInvoiceDate: (d as any).ar_invoice_date || '',
+        arInvoiceAmount: Number((d as any).ar_invoice_amount ?? 0) || 0,
+        arDueDate: (d as any).ar_due_date || '',
+        arPaidDate: (d as any).ar_paid_date || '',
+        arPaidAmount: Number((d as any).ar_paid_amount ?? 0) || 0,
+        arStatus: (d as any).ar_status || '',
+        arLastEventAt: (d as any).ar_last_event_at || '',
       }));
       setDbDeals(mappedDeals);
 

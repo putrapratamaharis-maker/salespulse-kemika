@@ -21,3 +21,7 @@ verify_jwt = false
 
 [functions.wms-so-deleted]
 verify_jwt = false
+
+# AP/AR Nexus Integration: skip JWT verification, autentikasi via X-APAR-API-Key header
+[functions.apar-invoice-event]
+verify_jwt = false

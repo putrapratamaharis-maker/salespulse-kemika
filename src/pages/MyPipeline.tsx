@@ -102,6 +102,14 @@ const MyPipeline = () => {
       wmsSoNumber: d.wms_so_number || '',
       wmsSoDate: d.wms_so_date || '',
       wmsSyncedAt: d.wms_synced_at || '',
+      arInvoiceNumber: (d as any).ar_invoice_number || '',
+      arInvoiceDate: (d as any).ar_invoice_date || '',
+      arInvoiceAmount: Number((d as any).ar_invoice_amount ?? 0) || 0,
+      arDueDate: (d as any).ar_due_date || '',
+      arPaidDate: (d as any).ar_paid_date || '',
+      arPaidAmount: Number((d as any).ar_paid_amount ?? 0) || 0,
+      arStatus: (d as any).ar_status || '',
+      arLastEventAt: (d as any).ar_last_event_at || '',
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
