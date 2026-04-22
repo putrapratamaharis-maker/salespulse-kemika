@@ -8,9 +8,12 @@ import {
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink, Warehouse, Receipt, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { CalendarDays, Building2, User, MapPin, TrendingUp, Clock, FileText, Package, Hash, Phone, Mail, Contact, ExternalLink, Warehouse, Receipt, CheckCircle2, AlertTriangle, RefreshCw, Loader2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export interface AccountPIC {
   picName?: string;
@@ -41,6 +44,61 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
   const navigate = useNavigate();
   const stageStatus = deal ? (deal.daysInStage > 14 ? 'red' : deal.daysInStage > 7 ? 'yellow' : 'green') : 'green';
   const pic = deal && getAccountPIC ? getAccountPIC(deal.accountId) : undefined;
+
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<{
+    ok: boolean;
+    status: string;
+    message: string;
+    eventType?: string;
+    timestamp?: string;
+  } | null>(null);
+
+  const handleResyncAR = async () => {
+    if (!deal) return;
+    setSyncing(true);
+    setSyncResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('apar-resync-deal', {
+        body: { deal_id: deal.id },
+      });
+      if (error) {
+        const msg = error.message || 'Gagal memanggil sync';
+        setSyncResult({ ok: false, status: 'error', message: msg });
+        toast.error('Sync AR gagal', { description: msg });
+        return;
+      }
+      const status = data?.status as string | undefined;
+      if (status === 'resynced') {
+        const ts = data?.last_event_at ? new Date(data.last_event_at).toLocaleString('id-ID') : '';
+        const msg = `Event "${data?.event_type}" berhasil di-replay${ts ? ` pada ${ts}` : ''}.`;
+        setSyncResult({
+          ok: true,
+          status: 'resynced',
+          message: msg,
+          eventType: data?.event_type,
+          timestamp: data?.last_event_at,
+        });
+        toast.success('AR Status tersinkron', { description: msg });
+      } else if (status === 'no_log' || status === 'no_so') {
+        const msg = data?.message ?? 'Tidak ada event AR untuk di-resync.';
+        setSyncResult({ ok: false, status, message: msg });
+        toast.info('Tidak ada event AR', { description: msg });
+      } else {
+        const msg = data?.error ?? data?.message ?? 'Respons tidak dikenali.';
+        setSyncResult({ ok: false, status: status ?? 'unknown', message: msg });
+        toast.warning('Sync AR', { description: msg });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setSyncResult({ ok: false, status: 'error', message: msg });
+      toast.error('Sync AR gagal', { description: msg });
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const showSyncSection = !!deal?.wmsSoNumber;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,7 +173,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
           </div>
 
           {/* AR Invoice section (from AP/AR Nexus) */}
-          {deal.arInvoiceNumber && (
+          {(deal.arInvoiceNumber || showSyncSection) && (
             <>
               <Separator />
               <div className="space-y-2">
@@ -143,6 +201,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
                     </Badge>
                   )}
                 </div>
+                {deal.arInvoiceNumber && (
                 <div className="grid grid-cols-2 gap-3">
                   <InfoRow icon={Hash} label="No. Invoice" value={deal.arInvoiceNumber} highlight />
                   {deal.arInvoiceAmount != null && deal.arInvoiceAmount > 0 && (
@@ -159,6 +218,60 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
                   )}
                   {deal.arPaidDate && (
                     <InfoRow icon={CheckCircle2} label="Tanggal Lunas" value={formatDate(deal.arPaidDate)} highlight />
+                  )}
+                </div>
+                )}
+                {deal.arLastEventAt && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Update terakhir: {new Date(deal.arLastEventAt).toLocaleString('id-ID')}
+                  </p>
+                )}
+
+                {/* Sync AR Status button + result */}
+                <div className="space-y-1.5 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResyncAR}
+                    disabled={syncing}
+                    className="w-full gap-2"
+                  >
+                    {syncing ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    )}
+                    {syncing ? 'Menyinkronkan...' : 'Sync AR Status'}
+                  </Button>
+                  {syncResult && (
+                    <div
+                      className={`flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-[11px] leading-snug ${
+                        syncResult.ok
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                          : syncResult.status === 'no_log' || syncResult.status === 'no_so'
+                          ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                          : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                      }`}
+                    >
+                      {syncResult.ok ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      ) : syncResult.status === 'no_log' || syncResult.status === 'no_so' ? (
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">
+                          {syncResult.ok
+                            ? `Sync OK${syncResult.eventType ? ` · ${syncResult.eventType}` : ''}`
+                            : syncResult.status === 'no_log' || syncResult.status === 'no_so'
+                            ? 'Tidak ada event AR'
+                            : 'Sync gagal'}
+                        </p>
+                        <p className="break-words">{syncResult.message}</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
