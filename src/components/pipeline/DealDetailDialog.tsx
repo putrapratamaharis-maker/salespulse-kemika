@@ -114,6 +114,57 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
             )}
           </div>
 
+          {/* AR Invoice section (from AP/AR Nexus) */}
+          {deal.arInvoiceNumber && (
+            <>
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                  <Receipt className="h-3.5 w-3.5" />
+                  AR Invoice (AP/AR Nexus)
+                  {deal.arStatus === 'paid' && (
+                    <Badge className="bg-emerald-500 text-white text-[9px] px-1.5 py-0 ml-auto">
+                      <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" /> LUNAS
+                    </Badge>
+                  )}
+                  {deal.arStatus === 'partial_paid' && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 ml-auto border-amber-400 text-amber-700 dark:text-amber-300">
+                      Partial Paid
+                    </Badge>
+                  )}
+                  {deal.arStatus === 'overdue' && (
+                    <Badge className="bg-rose-500 text-white text-[9px] px-1.5 py-0 ml-auto">
+                      <AlertTriangle className="h-2.5 w-2.5 mr-0.5" /> Overdue
+                    </Badge>
+                  )}
+                  {deal.arStatus === 'approved' && (
+                    <Badge variant="outline" className="text-[9px] px-1.5 py-0 ml-auto border-blue-400 text-blue-700 dark:text-blue-300">
+                      Approved
+                    </Badge>
+                  )}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <InfoRow icon={Hash} label="No. Invoice" value={deal.arInvoiceNumber} highlight />
+                  {deal.arInvoiceAmount != null && deal.arInvoiceAmount > 0 && (
+                    <InfoRow icon={TrendingUp} label="Nilai Invoice" value={formatIDRFull(deal.arInvoiceAmount)} highlight />
+                  )}
+                  {deal.arInvoiceDate && (
+                    <InfoRow icon={CalendarDays} label="Tanggal Terbit" value={formatDate(deal.arInvoiceDate)} />
+                  )}
+                  {deal.arDueDate && (
+                    <InfoRow icon={Clock} label="Jatuh Tempo" value={formatDate(deal.arDueDate)} />
+                  )}
+                  {deal.arPaidAmount != null && deal.arPaidAmount > 0 && deal.arStatus !== 'paid' && (
+                    <InfoRow icon={TrendingUp} label="Sudah Dibayar" value={formatIDRFull(deal.arPaidAmount)} />
+                  )}
+                  {deal.arPaidDate && (
+                    <InfoRow icon={CheckCircle2} label="Tanggal Lunas" value={formatDate(deal.arPaidDate)} highlight />
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
           {/* PIC Info & WhatsApp */}
           {pic && (pic.picName || pic.picEmail || pic.picContact) && (
             <>
