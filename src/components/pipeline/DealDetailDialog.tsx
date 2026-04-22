@@ -173,7 +173,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
           </div>
 
           {/* AR Invoice section (from AP/AR Nexus) */}
-          {deal.arInvoiceNumber && (
+          {(deal.arInvoiceNumber || showSyncSection) && (
             <>
               <Separator />
               <div className="space-y-2">
@@ -201,6 +201,7 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
                     </Badge>
                   )}
                 </div>
+                {deal.arInvoiceNumber && (
                 <div className="grid grid-cols-2 gap-3">
                   <InfoRow icon={Hash} label="No. Invoice" value={deal.arInvoiceNumber} highlight />
                   {deal.arInvoiceAmount != null && deal.arInvoiceAmount > 0 && (
@@ -217,6 +218,60 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
                   )}
                   {deal.arPaidDate && (
                     <InfoRow icon={CheckCircle2} label="Tanggal Lunas" value={formatDate(deal.arPaidDate)} highlight />
+                  )}
+                </div>
+                )}
+                {deal.arLastEventAt && (
+                  <p className="text-[10px] text-muted-foreground">
+                    Update terakhir: {new Date(deal.arLastEventAt).toLocaleString('id-ID')}
+                  </p>
+                )}
+
+                {/* Sync AR Status button + result */}
+                <div className="space-y-1.5 pt-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResyncAR}
+                    disabled={syncing}
+                    className="w-full gap-2"
+                  >
+                    {syncing ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <RefreshCw className="h-3.5 w-3.5" />
+                    )}
+                    {syncing ? 'Menyinkronkan...' : 'Sync AR Status'}
+                  </Button>
+                  {syncResult && (
+                    <div
+                      className={`flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-[11px] leading-snug ${
+                        syncResult.ok
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                          : syncResult.status === 'no_log' || syncResult.status === 'no_so'
+                          ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                          : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                      }`}
+                    >
+                      {syncResult.ok ? (
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      ) : syncResult.status === 'no_log' || syncResult.status === 'no_so' ? (
+                        <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      ) : (
+                        <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold">
+                          {syncResult.ok
+                            ? `Sync OK${syncResult.eventType ? ` · ${syncResult.eventType}` : ''}`
+                            : syncResult.status === 'no_log' || syncResult.status === 'no_so'
+                            ? 'Tidak ada event AR'
+                            : 'Sync gagal'}
+                        </p>
+                        <p className="break-words">{syncResult.message}</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
