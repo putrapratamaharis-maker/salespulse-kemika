@@ -214,6 +214,9 @@ export type Database = {
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
+          wms_cancel_reason: string | null
+          wms_cancelled_at: string | null
+          wms_last_event_at: string | null
           wms_so_date: string | null
           wms_so_number: string | null
           wms_synced_at: string | null
@@ -236,6 +239,9 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          wms_cancel_reason?: string | null
+          wms_cancelled_at?: string | null
+          wms_last_event_at?: string | null
           wms_so_date?: string | null
           wms_so_number?: string | null
           wms_synced_at?: string | null
@@ -258,6 +264,9 @@ export type Database = {
           stage?: Database["public"]["Enums"]["deal_stage"]
           updated_at?: string
           value?: number
+          wms_cancel_reason?: string | null
+          wms_cancelled_at?: string | null
+          wms_last_event_at?: string | null
           wms_so_date?: string | null
           wms_so_number?: string | null
           wms_synced_at?: string | null
@@ -1211,6 +1220,42 @@ export type Database = {
         }
         Relationships: []
       }
+      wms_sync_log: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed_at: string | null
+          reference_number: string | null
+          status: string
+          wms_so_number: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          reference_number?: string | null
+          status?: string
+          wms_so_number?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          reference_number?: string | null
+          status?: string
+          wms_so_number?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1298,6 +1343,9 @@ export type Database = {
           stage: Database["public"]["Enums"]["deal_stage"]
           updated_at: string
           value: number
+          wms_cancel_reason: string | null
+          wms_cancelled_at: string | null
+          wms_last_event_at: string | null
           wms_so_date: string | null
           wms_so_number: string | null
           wms_synced_at: string | null
