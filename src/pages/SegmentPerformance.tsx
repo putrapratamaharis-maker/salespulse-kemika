@@ -210,7 +210,7 @@ const SegmentPerformance = () => {
 
       const [{ data: invoices }, { data: deals }, { data: targets }] = await Promise.all([
         supabase.rpc('get_segment_invoices'),
-        supabase.rpc('get_segment_deals'),
+        supabase.rpc('get_all_deals_pipeline'),
         supabase.rpc('get_segment_targets'),
       ]);
 
@@ -223,11 +223,19 @@ const SegmentPerformance = () => {
 
       for (const seg of ['B2G', 'B2B', 'B2C']) {
         const allSegInv = (invoices || []).filter((i: any) => i.segment === seg);
-        const ytdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(yearStr));
         const mtdInv = allSegInv.filter((i: any) => i.issue_date?.startsWith(currentMonth));
         const segDeals = (deals || []).filter((d: any) => d.segment === seg);
-        result[seg] = computeSegment(mtdInv, ytdInv, segDeals);
-        movement[seg] = buildMovementData(invoices || [], targets || [], seg, year);
+        const wonSegDeals = segDeals.filter((d: any) =>
+          (WON_STAGES as readonly string[]).includes(d.stage)
+        );
+        const ytdWonDeals = wonSegDeals.filter((d: any) =>
+          d.expected_close_date?.startsWith(yearStr)
+        );
+        const mtdWonDeals = wonSegDeals.filter((d: any) =>
+          d.expected_close_date?.startsWith(currentMonth)
+        );
+        result[seg] = computeSegment(mtdWonDeals, ytdWonDeals, mtdInv, segDeals);
+        movement[seg] = buildMovementData(deals || [], targets || [], seg, year);
       }
 
       setSegmentData(result);
