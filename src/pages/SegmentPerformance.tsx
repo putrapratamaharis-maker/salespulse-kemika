@@ -171,7 +171,7 @@ function computeSegment(
 }
 
 function buildMovementData(
-  invoices: any[],
+  deals: any[],
   targets: any[],
   segment: string,
   year: number
@@ -180,10 +180,14 @@ function buildMovementData(
     const month = idx + 1;
     const monthStr = `${year}-${String(month).padStart(2, '0')}`;
 
-    // Realisasi = net_sales from invoices in this segment & month
-    const realisasi = invoices
-      .filter((inv: any) => inv.segment === segment && inv.issue_date?.startsWith(monthStr))
-      .reduce((s: number, inv: any) => s + (inv.net_sales || 0), 0);
+    // Realisasi = total value deal Won (PO Secured + Invoice Issued) per bulan
+    const realisasi = deals
+      .filter((d: any) =>
+        d.segment === segment &&
+        (WON_STAGES as readonly string[]).includes(d.stage) &&
+        d.expected_close_date?.startsWith(monthStr)
+      )
+      .reduce((s: number, d: any) => s + Number(d.value || 0), 0);
 
     // Target = revenue_target from targets table for this segment & month
     const target = targets
