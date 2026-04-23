@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -41,21 +41,26 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
   const [saving, setSaving] = useState(false);
 
   // Auto-generate Customer ID on mount
-  useState(() => {
+  // Uses ORDER BY DESC + LIMIT 1 to avoid the 1000-row default limit and
+  // ensure the highest existing number is found even with large datasets.
+  useEffect(() => {
     const generateId = async () => {
       const year = new Date().getFullYear();
+      const prefix = `CUST${year}-`;
       const { data } = await supabase
         .from('accounts')
         .select('customer_id')
-        .like('customer_id', `CUST${year}-%`);
-      const nums = (data || [])
-        .map(a => parseInt(a.customer_id?.replace(`CUST${year}-`, '') || '0', 10))
-        .filter(n => !isNaN(n));
-      const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-      setCustomerId(`CUST${year}-${String(next).padStart(4, '0')}`);
+        .like('customer_id', `${prefix}%`)
+        .order('customer_id', { ascending: false })
+        .limit(1);
+      const lastNum = data && data.length > 0
+        ? parseInt(data[0].customer_id?.replace(prefix, '') || '0', 10)
+        : 0;
+      const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
+      setCustomerId(`${prefix}${String(next).padStart(4, '0')}`);
     };
     generateId();
-  });
+  }, []);
 
   const handleSave = async () => {
     if (!name.trim()) {
@@ -98,23 +103,58 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         }
       }
 
-      const { data, error } = await supabase
-        .from('accounts')
-        .insert({
-          customer_id: customerId.trim(),
-          name: name.trim(),
-          pic_name: picName.trim(),
-          pic_contact: picContact.trim(),
-          pic_email: picEmail.trim(),
-          region,
-          type,
-          status,
-          sales_id: salesId,
-        })
-        .select()
-        .single();
+      // Try insert with retry on duplicate customer_id (race condition safety)
+      let attemptId = customerId.trim();
+      let data: any = null;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const result = await supabase
+          .from('accounts')
+          .insert({
+            customer_id: attemptId,
+            name: name.trim(),
+            pic_name: picName.trim(),
+            pic_contact: picContact.trim(),
+            pic_email: picEmail.trim(),
+            region,
+            type,
+            status,
+            sales_id: salesId,
+          })
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (!result.error) {
+          data = result.data;
+          break;
+        }
+
+        lastError = result.error;
+        // Only retry on duplicate customer_id constraint
+        const isDupCustomerId =
+          result.error.code === '23505' &&
+          (result.error.message?.includes('accounts_customer_id_unique') ||
+            result.error.message?.includes('customer_id'));
+        if (!isDupCustomerId) break;
+
+        // Re-fetch latest max and bump
+        const year = new Date().getFullYear();
+        const prefix = `CUST${year}-`;
+        const { data: latest } = await supabase
+          .from('accounts')
+          .select('customer_id')
+          .like('customer_id', `${prefix}%`)
+          .order('customer_id', { ascending: false })
+          .limit(1);
+        const lastNum = latest && latest.length > 0
+          ? parseInt(latest[0].customer_id?.replace(prefix, '') || '0', 10)
+          : 0;
+        const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
+        attemptId = `${prefix}${String(next).padStart(4, '0')}`;
+        setCustomerId(attemptId);
+      }
+
+      if (!data) throw lastError ?? new Error('Gagal membuat akun setelah beberapa percobaan');
 
       onAccountCreated({ id: data.id, name: data.name });
       toast({ title: `Akun "${data.name}" berhasil dibuat` });
