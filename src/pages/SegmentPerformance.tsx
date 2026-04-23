@@ -141,15 +141,32 @@ function RevenueMovementChart({ data }: { data: MonthlyMovement[] }) {
   );
 }
 
-function computeSegment(mtdInvoices: any[], ytdInvoices: any[], deals: any[]): SegmentData {
-  const revenue = mtdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
-  const revenueYTD = ytdInvoices.reduce((s: number, i: any) => s + (i.net_sales || 0), 0);
-  const grossProfit = mtdInvoices.reduce((s: number, i: any) => s + (i.gross_profit || 0), 0);
-  const marginPct = revenue > 0 ? (grossProfit / revenue) * 100 : 0;
-  const closedWon = deals.filter((d: any) => d.stage === 'po_secured').length;
-  const avgDealSize = closedWon > 0 ? deals.filter((d: any) => d.stage === 'po_secured').reduce((s: number, d: any) => s + d.value, 0) / closedWon : 0;
-  const paidInvoices = ytdInvoices.filter((i: any) => i.paid_date).length;
-  const conversionRate = ytdInvoices.length > 0 ? (paidInvoices / ytdInvoices.length) * 100 : 0;
+const WON_STAGES = ['po_secured', 'invoice_issued'] as const;
+
+function computeSegment(
+  mtdWonDeals: any[],
+  ytdWonDeals: any[],
+  mtdInvoices: any[],
+  allSegDeals: any[]
+): SegmentData {
+  // Revenue = total value dari deals di stage PO Secured + Invoice Issued
+  const revenue = mtdWonDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+  const revenueYTD = ytdWonDeals.reduce((s: number, d: any) => s + Number(d.value || 0), 0);
+
+  // Gross Profit tetap dari invoices (sumber data margin aktual)
+  const grossProfit = mtdInvoices.reduce((s: number, i: any) => s + Number(i.gross_profit || 0), 0);
+  const invoiceRevenueMTD = mtdInvoices.reduce((s: number, i: any) => s + Number(i.net_sales || 0), 0);
+  const marginPct = invoiceRevenueMTD > 0 ? (grossProfit / invoiceRevenueMTD) * 100 : 0;
+
+  // Avg Deal Size = rata-rata value deal yang sudah Won (PO Secured + Invoice Issued) YTD
+  const wonCount = ytdWonDeals.length;
+  const avgDealSize = wonCount > 0 ? revenueYTD / wonCount : 0;
+
+  // Conversion Rate = Won deals ÷ Total deals aktif (exclude canceled/lost) × 100%
+  const activeDeals = allSegDeals.filter((d: any) => !['canceled', 'lost'].includes(d.stage));
+  const wonInActive = activeDeals.filter((d: any) => (WON_STAGES as readonly string[]).includes(d.stage)).length;
+  const conversionRate = activeDeals.length > 0 ? (wonInActive / activeDeals.length) * 100 : 0;
+
   return { revenueYTD, revenue, grossProfit, marginPct, avgDealSize, conversionRate };
 }
 
