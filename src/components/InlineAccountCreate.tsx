@@ -54,19 +54,11 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
     }
     setSaving(true);
 
-    // Duplicate detection
+    // Duplicate detection (NAME ONLY — customer_id is auto-generated and
+    // handled by the retry loop below; pre-checking it causes false positives
+    // when the cached state is stale.)
     try {
       const duplicateWarnings: string[] = [];
-
-      if (customerId.trim()) {
-        const { data: cidDups } = await supabase
-          .from('accounts')
-          .select('id, customer_id, name')
-          .eq('customer_id', customerId.trim());
-        if (cidDups && cidDups.length > 0) {
-          duplicateWarnings.push(`Customer ID "${customerId.trim()}" sudah digunakan oleh akun "${cidDups[0].name}".`);
-        }
-      }
 
       if (name.trim()) {
         const { data: nameDups } = await supabase
@@ -88,11 +80,20 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         }
       }
 
-      // Try insert with retry on duplicate customer_id (race condition safety)
+      // ALWAYS regenerate the next customer_id immediately before insert so
+      // the form's cached value can't go stale while the dialog was open.
+      // The retry loop then handles any concurrent writers.
       let attemptId = customerId.trim();
+      try {
+        attemptId = await generateNextCustomerId(supabase);
+        setCustomerId(attemptId);
+      } catch {
+        // fall back to whatever is in state
+      }
+
       let data: any = null;
       let lastError: any = null;
-      for (let attempt = 0; attempt < 5; attempt++) {
+      for (let attempt = 0; attempt < 10; attempt++) {
         const result = await supabase
           .from('accounts')
           .insert({
@@ -115,14 +116,17 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         }
 
         lastError = result.error;
-        // Only retry on duplicate customer_id constraint
+        // Retry on ANY 23505 that mentions customer_id (covers
+        // accounts_customer_id_unique, accounts_customer_id_key, etc.)
+        const msg = (result.error.message || '').toLowerCase();
         const isDupCustomerId =
           result.error.code === '23505' &&
-          (result.error.message?.includes('accounts_customer_id_unique') ||
-            result.error.message?.includes('customer_id'));
+          (msg.includes('customer_id') || msg.includes('accounts_customer_id'));
         if (!isDupCustomerId) break;
 
-        // Re-fetch latest max and bump (uses idx_accounts_customer_id_pattern)
+        // Re-fetch latest max and bump (uses idx_accounts_customer_id_pattern).
+        // Add small jitter so concurrent dialogs don't lockstep onto the same id.
+        await new Promise((r) => setTimeout(r, 50 + Math.random() * 100));
         attemptId = await generateNextCustomerId(supabase);
         setCustomerId(attemptId);
       }
