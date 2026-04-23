@@ -123,21 +123,7 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         if (!isDupCustomerId) break;
 
         // Re-fetch latest max and bump (uses idx_accounts_customer_id_pattern)
-        const year = new Date().getFullYear();
-        const prefix = `CUST${year}-`;
-        const upperBound = `CUST${year}.`;
-        const { data: latest } = await supabase
-          .from('accounts')
-          .select('customer_id')
-          .gte('customer_id', prefix)
-          .lt('customer_id', upperBound)
-          .order('customer_id', { ascending: false })
-          .limit(1);
-        const lastNum = latest && latest.length > 0
-          ? parseInt(latest[0].customer_id?.replace(prefix, '') || '0', 10)
-          : 0;
-        const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
-        attemptId = `${prefix}${String(next).padStart(4, '0')}`;
+        attemptId = await generateNextCustomerId(supabase);
         setCustomerId(attemptId);
       }
 
