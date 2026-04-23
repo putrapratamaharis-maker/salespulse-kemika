@@ -40,17 +40,23 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
   const [status, setStatus] = useState('Active');
   const [saving, setSaving] = useState(false);
 
-  // Auto-generate Customer ID on mount
-  // Uses ORDER BY DESC + LIMIT 1 to avoid the 1000-row default limit and
-  // ensure the highest existing number is found even with large datasets.
+  // Auto-generate Customer ID on mount.
+  //
+  // Performance: query is sargable against the partial index
+  // `idx_accounts_customer_id_pattern` (text_pattern_ops). We use a range
+  // filter (gte / lt) instead of LIKE so the planner can do an index range
+  // scan + ORDER BY DESC LIMIT 1 → effectively O(log n) regardless of
+  // dataset size. Only the `customer_id` column is selected.
   useEffect(() => {
     const generateId = async () => {
       const year = new Date().getFullYear();
       const prefix = `CUST${year}-`;
+      const upperBound = `CUST${year}.`; // '.' is the next ASCII char after '-'
       const { data } = await supabase
         .from('accounts')
         .select('customer_id')
-        .like('customer_id', `${prefix}%`)
+        .gte('customer_id', prefix)
+        .lt('customer_id', upperBound)
         .order('customer_id', { ascending: false })
         .limit(1);
       const lastNum = data && data.length > 0
