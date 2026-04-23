@@ -41,21 +41,26 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
   const [saving, setSaving] = useState(false);
 
   // Auto-generate Customer ID on mount
-  useState(() => {
+  // Uses ORDER BY DESC + LIMIT 1 to avoid the 1000-row default limit and
+  // ensure the highest existing number is found even with large datasets.
+  useEffect(() => {
     const generateId = async () => {
       const year = new Date().getFullYear();
+      const prefix = `CUST${year}-`;
       const { data } = await supabase
         .from('accounts')
         .select('customer_id')
-        .like('customer_id', `CUST${year}-%`);
-      const nums = (data || [])
-        .map(a => parseInt(a.customer_id?.replace(`CUST${year}-`, '') || '0', 10))
-        .filter(n => !isNaN(n));
-      const next = nums.length > 0 ? Math.max(...nums) + 1 : 1;
-      setCustomerId(`CUST${year}-${String(next).padStart(4, '0')}`);
+        .like('customer_id', `${prefix}%`)
+        .order('customer_id', { ascending: false })
+        .limit(1);
+      const lastNum = data && data.length > 0
+        ? parseInt(data[0].customer_id?.replace(prefix, '') || '0', 10)
+        : 0;
+      const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
+      setCustomerId(`${prefix}${String(next).padStart(4, '0')}`);
     };
     generateId();
-  });
+  }, []);
 
   const handleSave = async () => {
     if (!name.trim()) {
