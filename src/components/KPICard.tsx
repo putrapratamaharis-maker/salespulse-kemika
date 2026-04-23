@@ -49,13 +49,19 @@ export function KPICard({ label, value, change, changeLabel, status, icon: Icon,
         </div>
       )}
       {tooltip && (
-        <TooltipProvider delayDuration={200}>
+        <TooltipProvider delayDuration={150}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Info className="absolute bottom-2 right-2 h-3.5 w-3.5 text-white/40 cursor-help hover:text-white/70 transition-colors" />
+              <button
+                type="button"
+                aria-label="Keterangan KPI"
+                className="absolute bottom-2 right-2 inline-flex items-center justify-center h-5 w-5 rounded-full bg-white/15 hover:bg-white/30 text-white/90 cursor-help transition-colors"
+              >
+                <Info className="h-3 w-3" />
+              </button>
             </TooltipTrigger>
             <TooltipPrimitive.Portal>
-              <TooltipContent side="top" className="max-w-[260px] text-xs leading-relaxed z-[100]">
+              <TooltipContent side="top" align="end" sideOffset={6} className="max-w-[260px] text-xs leading-relaxed z-[9999]">
                 {tooltip}
               </TooltipContent>
             </TooltipPrimitive.Portal>

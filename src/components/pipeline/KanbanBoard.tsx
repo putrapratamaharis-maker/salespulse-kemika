@@ -329,7 +329,10 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                         <div className="flex-1 space-y-0.5 min-h-0 overflow-hidden">
                           {/* 1. Header - Account Name */}
                           <div className="flex items-start justify-between gap-1 overflow-hidden">
-                            <p className="text-[12px] text-primary font-bold leading-tight truncate flex-1 min-w-0">
+                            <p
+                              className="text-[12px] text-primary font-bold leading-tight line-clamp-1 flex-1 min-w-0"
+                              title={getAccountName(d.accountId)}
+                            >
                               {getAccountName(d.accountId)}
                             </p>
                             <div className="flex items-center gap-0 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -401,7 +404,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           {d.location && (
                             <div className="flex items-center gap-1 overflow-hidden">
                               <MapPin className="h-3 w-3 text-muted-foreground shrink-0" />
-                              <p className="text-[10px] text-muted-foreground truncate">{d.location}</p>
+                              <p className="text-[10px] text-muted-foreground line-clamp-1 min-w-0" title={d.location}>{d.location}</p>
                             </div>
                           )}
 
@@ -409,7 +412,10 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           {d.products && d.products.length > 0 && (
                             <div className="flex items-center gap-1 overflow-hidden">
                               <Package className="h-2.5 w-2.5 text-muted-foreground shrink-0" />
-                              <p className="text-[10px] font-light text-muted-foreground truncate leading-tight">
+                              <p
+                                className="text-[10px] font-light text-muted-foreground line-clamp-1 leading-tight min-w-0"
+                                title={d.products.map(p => `${p.productName} ×${p.qty}`).join(', ')}
+                              >
                                 {d.products.slice(0, 1).map(p => `${p.productName} ×${p.qty}`).join(', ')}
                                 {d.products.length > 1 && ` +${d.products.length - 1}`}
                               </p>
@@ -417,7 +423,7 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                           )}
 
                           {/* 4. Value */}
-                          <p className="text-[11px] font-bold text-foreground truncate">{formatIDRFull(d.value)}</p>
+                          <p className="text-[11px] font-bold text-foreground line-clamp-1" title={formatIDRFull(d.value)}>{formatIDRFull(d.value)}</p>
                         </div>
 
                         <div className="shrink-0 space-y-0.5 pt-0.5 border-t border-border/50 overflow-hidden">
