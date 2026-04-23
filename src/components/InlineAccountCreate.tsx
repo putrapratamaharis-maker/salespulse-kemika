@@ -9,6 +9,7 @@ import { UserPlus, X, ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { generateNextCustomerId } from '@/lib/customerIdGenerator';
 
 const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor', 'NGO', 'Others'];
 const STATUSES = ['Active', 'Non-Active'];
@@ -41,31 +42,9 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
   const [saving, setSaving] = useState(false);
 
   // Auto-generate Customer ID on mount.
-  //
-  // Performance: query is sargable against the partial index
-  // `idx_accounts_customer_id_pattern` (text_pattern_ops). We use a range
-  // filter (gte / lt) instead of LIKE so the planner can do an index range
-  // scan + ORDER BY DESC LIMIT 1 → effectively O(log n) regardless of
-  // dataset size. Only the `customer_id` column is selected.
+  // Backed by `idx_accounts_customer_id_pattern` (text_pattern_ops) on the DB.
   useEffect(() => {
-    const generateId = async () => {
-      const year = new Date().getFullYear();
-      const prefix = `CUST${year}-`;
-      const upperBound = `CUST${year}.`; // '.' is the next ASCII char after '-'
-      const { data } = await supabase
-        .from('accounts')
-        .select('customer_id')
-        .gte('customer_id', prefix)
-        .lt('customer_id', upperBound)
-        .order('customer_id', { ascending: false })
-        .limit(1);
-      const lastNum = data && data.length > 0
-        ? parseInt(data[0].customer_id?.replace(prefix, '') || '0', 10)
-        : 0;
-      const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
-      setCustomerId(`${prefix}${String(next).padStart(4, '0')}`);
-    };
-    generateId();
+    generateNextCustomerId(supabase).then(setCustomerId).catch(() => {});
   }, []);
 
   const handleSave = async () => {
@@ -144,21 +123,7 @@ export function InlineAccountCreate({ salesId, onAccountCreated, onCancel }: Inl
         if (!isDupCustomerId) break;
 
         // Re-fetch latest max and bump (uses idx_accounts_customer_id_pattern)
-        const year = new Date().getFullYear();
-        const prefix = `CUST${year}-`;
-        const upperBound = `CUST${year}.`;
-        const { data: latest } = await supabase
-          .from('accounts')
-          .select('customer_id')
-          .gte('customer_id', prefix)
-          .lt('customer_id', upperBound)
-          .order('customer_id', { ascending: false })
-          .limit(1);
-        const lastNum = latest && latest.length > 0
-          ? parseInt(latest[0].customer_id?.replace(prefix, '') || '0', 10)
-          : 0;
-        const next = (isNaN(lastNum) ? 0 : lastNum) + 1;
-        attemptId = `${prefix}${String(next).padStart(4, '0')}`;
+        attemptId = await generateNextCustomerId(supabase);
         setCustomerId(attemptId);
       }
 
