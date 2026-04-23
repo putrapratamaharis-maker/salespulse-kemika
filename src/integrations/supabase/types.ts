@@ -1394,6 +1394,7 @@ export type Database = {
         Args: { _current_month: number; _current_year: number }
         Returns: Json
       }
+      get_next_customer_id: { Args: { _year: number }; Returns: string }
       get_sales_initials: { Args: { _user_id: string }; Returns: string }
       get_segment_deals: {
         Args: never
