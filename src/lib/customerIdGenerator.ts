@@ -58,6 +58,18 @@ export async function generateNextCustomerId(
   supabase: SupabaseClient<any, any, any>,
   year: number = new Date().getFullYear(),
 ): Promise<string> {
+  // Prefer the SECURITY DEFINER RPC so we read the TRUE global maximum
+  // (RLS would otherwise hide accounts owned by other users for non-admins,
+  // causing the generated id to collide with rows the caller can't see).
+  try {
+    const rpc = await (supabase as any).rpc('get_next_customer_id', { _year: year });
+    if (!rpc.error && typeof rpc.data === 'string' && rpc.data.length > 0) {
+      return rpc.data;
+    }
+  } catch {
+    // fall through to direct query
+  }
+
   const { prefix, upperBound } = buildCustomerIdRange(year);
   const { data } = await supabase
     .from('accounts')
