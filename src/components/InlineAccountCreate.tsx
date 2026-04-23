@@ -9,6 +9,7 @@ import { UserPlus, X, ChevronsUpDown, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { generateNextCustomerId } from '@/lib/customerIdGenerator';
 
 const TYPES = ['Corporate', 'Government', 'SME', 'Individual', 'Distributor', 'NGO', 'Others'];
 const STATUSES = ['Active', 'Non-Active'];
