@@ -335,6 +335,8 @@ Deno.serve(async (req) => {
         old_value: oldValue,
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
+        wms_items_subtotal: itemsSum,
+        tax_or_adjustment: itemsSum !== null ? Number((newValue - itemsSum).toFixed(2)) : null,
         customer_name_updated: customerNameUpdated,
         items_replaced: itemsReplaced,
         synced_at: now,
