@@ -19,6 +19,8 @@ Integrasi SalesPulse ↔ Warehouse Management System (WMS) menggunakan pola refe
 
 **Idempotency**: skip update jika `wms_so_number` sudah sama. Deal canceled/lost return 409.
 
+**Re-sync manual dari UI**: Edge function `wms-resync-deal` (verify_jwt=true, akses owner/admin) dipanggil dari tombol "Re-sync from WMS" di DealDetailDialog. Cari log terakhir `event_type IN ('so_approved','so_updated')` di `wms_sync_log` dan replay payload-nya (stage, value, items, dates). Aman diulang — tidak butuh webhook ulang dari WMS.
+
 **Kolom baru di `deals`**: `reference_number` (unique), `wms_so_number`, `wms_so_date`, `wms_synced_at`. Realtime aktif untuk auto-refresh kanban.
 
 **Secret**: `WMS_INTEGRATION_API_KEY`. Dokumentasi lengkap di `docs/WMS_INTEGRATION.md`.

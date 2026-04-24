@@ -54,6 +54,62 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
     timestamp?: string;
   } | null>(null);
 
+  const [wmsSyncing, setWmsSyncing] = useState(false);
+  const [wmsSyncResult, setWmsSyncResult] = useState<{
+    ok: boolean;
+    status: string;
+    message: string;
+    eventType?: string;
+    timestamp?: string;
+  } | null>(null);
+
+  const handleResyncWms = async () => {
+    if (!deal) return;
+    setWmsSyncing(true);
+    setWmsSyncResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('wms-resync-deal', {
+        body: { deal_id: deal.id },
+      });
+      if (error) {
+        const msg = error.message || 'Gagal memanggil sync';
+        setWmsSyncResult({ ok: false, status: 'error', message: msg });
+        toast.error('Re-sync WMS gagal', { description: msg });
+        return;
+      }
+      const status = data?.status as string | undefined;
+      if (status === 'resynced') {
+        const ts = data?.last_event_at ? new Date(data.last_event_at).toLocaleString('id-ID') : '';
+        const items = typeof data?.items_replaced === 'number' && data.items_replaced > 0
+          ? ` ${data.items_replaced} item produk di-refresh.`
+          : '';
+        const msg = `SO ${data?.wms_so_number ?? ''} berhasil di-replay${ts ? ` pada ${ts}` : ''}.${items}`;
+        setWmsSyncResult({
+          ok: true,
+          status: 'resynced',
+          message: msg,
+          eventType: data?.event_type,
+          timestamp: data?.last_event_at,
+        });
+        toast.success('Deal tersinkron dari WMS', { description: msg });
+      } else if (status === 'no_log' || status === 'no_so') {
+        const msg = data?.message ?? 'Tidak ada event WMS untuk di-resync.';
+        setWmsSyncResult({ ok: false, status, message: msg });
+        toast.info('Tidak ada event WMS', { description: msg });
+      } else {
+        const msg = data?.error ?? data?.message ?? 'Respons tidak dikenali.';
+        setWmsSyncResult({ ok: false, status: status ?? 'unknown', message: msg });
+        toast.warning('Re-sync WMS', { description: msg });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setWmsSyncResult({ ok: false, status: 'error', message: msg });
+      toast.error('Re-sync WMS gagal', { description: msg });
+    } finally {
+      setWmsSyncing(false);
+    }
+  };
+
   const handleResyncAR = async () => {
     if (!deal) return;
     setSyncing(true);
@@ -171,6 +227,59 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
               </div>
             )}
           </div>
+
+          {/* Re-sync from WMS — replay last so_approved/so_updated webhook payload */}
+          {(deal.referenceNumber || deal.wmsSoNumber) && deal.stage !== 'canceled' && deal.stage !== 'lost' && (
+            <div className="space-y-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleResyncWms}
+                disabled={wmsSyncing}
+                className="w-full gap-2"
+              >
+                {wmsSyncing ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <Warehouse className="h-3.5 w-3.5" />
+                )}
+                {wmsSyncing ? 'Menyinkronkan dari WMS...' : 'Re-sync from WMS'}
+              </Button>
+              <p className="text-[10px] text-muted-foreground leading-snug">
+                Replay payload SO terakhir dari WMS (stage, nilai, items, tanggal). Aman untuk diulang.
+              </p>
+              {wmsSyncResult && (
+                <div
+                  className={`flex items-start gap-2 rounded-md border px-2.5 py-1.5 text-[11px] leading-snug ${
+                    wmsSyncResult.ok
+                      ? 'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200'
+                      : wmsSyncResult.status === 'no_log' || wmsSyncResult.status === 'no_so'
+                      ? 'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200'
+                      : 'border-rose-300 bg-rose-50 text-rose-800 dark:border-rose-800 dark:bg-rose-950/40 dark:text-rose-200'
+                  }`}
+                >
+                  {wmsSyncResult.ok ? (
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  ) : wmsSyncResult.status === 'no_log' || wmsSyncResult.status === 'no_so' ? (
+                    <AlertTriangle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  ) : (
+                    <XCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-semibold">
+                      {wmsSyncResult.ok
+                        ? `Re-sync OK${wmsSyncResult.eventType ? ` · ${wmsSyncResult.eventType}` : ''}`
+                        : wmsSyncResult.status === 'no_log' || wmsSyncResult.status === 'no_so'
+                        ? 'Tidak ada event WMS'
+                        : 'Re-sync gagal'}
+                    </p>
+                    <p className="break-words">{wmsSyncResult.message}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* AR Invoice section (from AP/AR Nexus) */}
           {(deal.arInvoiceNumber || showSyncSection) && (
