@@ -52,7 +52,8 @@ serve(async (req) => {
 
   // Resolve atau auto-create kategori berdasarkan nama (WMS kirim category_name)
   let categoryId: string | null = null;
-  const categoryName = clean(body.category_name, 100);
+  // Accept both `category` (spec v2.0) and legacy `category_name`
+  const categoryName = clean(body.category ?? body.category_name, 100);
   if (categoryName) {
     const { data: cat } = await admin
       .from("product_categories")
@@ -72,8 +73,8 @@ serve(async (req) => {
     }
   }
 
-  // Resolve unit (WMS kirim unit_name, fallback "pcs")
-  const unitName = clean(body.unit_name, 50) || "pcs";
+  // Resolve unit — accept `unit` (spec v2.0) and legacy `unit_name`, fallback "pcs"
+  const unitName = clean(body.unit ?? body.unit_name, 50) || "pcs";
 
   const purchasePrice = num(body.purchase_price);
   const sellingPrice = num(body.selling_price, purchasePrice);
