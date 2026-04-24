@@ -54,6 +54,62 @@ export function DealDetailDialog({ deal, open, onOpenChange, getAccountName, get
     timestamp?: string;
   } | null>(null);
 
+  const [wmsSyncing, setWmsSyncing] = useState(false);
+  const [wmsSyncResult, setWmsSyncResult] = useState<{
+    ok: boolean;
+    status: string;
+    message: string;
+    eventType?: string;
+    timestamp?: string;
+  } | null>(null);
+
+  const handleResyncWms = async () => {
+    if (!deal) return;
+    setWmsSyncing(true);
+    setWmsSyncResult(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('wms-resync-deal', {
+        body: { deal_id: deal.id },
+      });
+      if (error) {
+        const msg = error.message || 'Gagal memanggil sync';
+        setWmsSyncResult({ ok: false, status: 'error', message: msg });
+        toast.error('Re-sync WMS gagal', { description: msg });
+        return;
+      }
+      const status = data?.status as string | undefined;
+      if (status === 'resynced') {
+        const ts = data?.last_event_at ? new Date(data.last_event_at).toLocaleString('id-ID') : '';
+        const items = typeof data?.items_replaced === 'number' && data.items_replaced > 0
+          ? ` ${data.items_replaced} item produk di-refresh.`
+          : '';
+        const msg = `SO ${data?.wms_so_number ?? ''} berhasil di-replay${ts ? ` pada ${ts}` : ''}.${items}`;
+        setWmsSyncResult({
+          ok: true,
+          status: 'resynced',
+          message: msg,
+          eventType: data?.event_type,
+          timestamp: data?.last_event_at,
+        });
+        toast.success('Deal tersinkron dari WMS', { description: msg });
+      } else if (status === 'no_log' || status === 'no_so') {
+        const msg = data?.message ?? 'Tidak ada event WMS untuk di-resync.';
+        setWmsSyncResult({ ok: false, status, message: msg });
+        toast.info('Tidak ada event WMS', { description: msg });
+      } else {
+        const msg = data?.error ?? data?.message ?? 'Respons tidak dikenali.';
+        setWmsSyncResult({ ok: false, status: status ?? 'unknown', message: msg });
+        toast.warning('Re-sync WMS', { description: msg });
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      setWmsSyncResult({ ok: false, status: 'error', message: msg });
+      toast.error('Re-sync WMS gagal', { description: msg });
+    } finally {
+      setWmsSyncing(false);
+    }
+  };
+
   const handleResyncAR = async () => {
     if (!deal) return;
     setSyncing(true);
