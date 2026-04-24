@@ -108,8 +108,14 @@ Deno.serve(async (req) => {
     if (!body.so_date || !/^\d{4}-\d{2}-\d{2}$/.test(body.so_date)) {
       errs.push("so_date wajib (format YYYY-MM-DD)");
     }
-    if (typeof body.total_value !== "number" || body.total_value < 0) {
-      errs.push("total_value wajib (number >= 0)");
+    // Terima total dari beberapa kemungkinan field name (kompatibilitas lintas versi WMS).
+    const wmsTotal =
+      typeof body.total_amount === "number" ? body.total_amount :
+      typeof body.grand_total === "number" ? body.grand_total :
+      typeof body.total_value === "number" ? body.total_value :
+      undefined;
+    if (typeof wmsTotal !== "number" || !Number.isFinite(wmsTotal) || wmsTotal < 0) {
+      errs.push("total_amount wajib (number >= 0). Alias yang diterima: total_amount | grand_total | total_value");
     }
     // Validasi items (jika dikirim)
     if (body.items !== undefined) {
@@ -203,15 +209,15 @@ Deno.serve(async (req) => {
     const oldValue = Number(deal.value) || 0;
     const hasItems = Array.isArray(body.items) && body.items.length > 0;
 
-    // Jika items dikirim, hitung ulang total_value dari items (lebih akurat).
-    let newValue = body.total_value!;
-    if (hasItems) {
-      const computed = body.items!.reduce((sum, it) => {
-        const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
-        return sum + line;
-      }, 0);
-      newValue = computed;
-    }
+    // Sumber kebenaran nilai = total_amount dari WMS (termasuk PPN/diskon/pembulatan).
+    // Hitungan dari items hanya dipakai untuk INFO selisih, bukan untuk nilai deal.
+    const newValue = wmsTotal!;
+    const itemsSum = hasItems
+      ? body.items!.reduce((sum, it) => {
+          const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
+          return sum + line;
+        }, 0)
+      : null;
 
     const valueDiffPct = oldValue > 0
       ? Math.abs(newValue - oldValue) / oldValue * 100
