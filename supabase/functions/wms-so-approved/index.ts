@@ -34,8 +34,10 @@
 //
 // Catatan items:
 // - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
-// - total_value akan otomatis di-recalculate dari sum(qty * price_per_unit) + sum(other_cost).
-// - Jika items[] tidak dikirim atau kosong, deal_products tidak diubah & total_value pakai field root.
+// - Sumber NILAI deal (deal.value) SELALU diambil dari `total_amount` (alias: `total_value`/`grand_total`)
+//   yang dikirim WMS — termasuk PPN/diskon/pembulatan. Sales Pulse TIDAK menghitung ulang dari items.
+// - price_per_unit per item disimpan apa adanya dari payload (boleh net, boleh gross — tidak diubah).
+// - Jika items[] tidak dikirim/kosong, deal_products tidak diubah; deal.value tetap pakai total dari WMS.
 // }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -51,7 +53,9 @@ interface Payload {
   reference_number?: string;
   so_number?: string;
   so_date?: string;
-  total_value?: number;
+  total_value?: number;   // legacy alias
+  total_amount?: number;  // PRIMARY: total final dari WMS (termasuk PPN/diskon)
+  grand_total?: number;   // legacy alias
   customer_po?: string;
   customer_name?: string;
   items?: WmsItem[];
@@ -104,8 +108,14 @@ Deno.serve(async (req) => {
     if (!body.so_date || !/^\d{4}-\d{2}-\d{2}$/.test(body.so_date)) {
       errs.push("so_date wajib (format YYYY-MM-DD)");
     }
-    if (typeof body.total_value !== "number" || body.total_value < 0) {
-      errs.push("total_value wajib (number >= 0)");
+    // Terima total dari beberapa kemungkinan field name (kompatibilitas lintas versi WMS).
+    const wmsTotal =
+      typeof body.total_amount === "number" ? body.total_amount :
+      typeof body.grand_total === "number" ? body.grand_total :
+      typeof body.total_value === "number" ? body.total_value :
+      undefined;
+    if (typeof wmsTotal !== "number" || !Number.isFinite(wmsTotal) || wmsTotal < 0) {
+      errs.push("total_amount wajib (number >= 0). Alias yang diterima: total_amount | grand_total | total_value");
     }
     // Validasi items (jika dikirim)
     if (body.items !== undefined) {
@@ -199,15 +209,15 @@ Deno.serve(async (req) => {
     const oldValue = Number(deal.value) || 0;
     const hasItems = Array.isArray(body.items) && body.items.length > 0;
 
-    // Jika items dikirim, hitung ulang total_value dari items (lebih akurat).
-    let newValue = body.total_value!;
-    if (hasItems) {
-      const computed = body.items!.reduce((sum, it) => {
-        const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
-        return sum + line;
-      }, 0);
-      newValue = computed;
-    }
+    // Sumber kebenaran nilai = total_amount dari WMS (termasuk PPN/diskon/pembulatan).
+    // Hitungan dari items hanya dipakai untuk INFO selisih, bukan untuk nilai deal.
+    const newValue = wmsTotal!;
+    const itemsSum = hasItems
+      ? body.items!.reduce((sum, it) => {
+          const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
+          return sum + line;
+        }, 0)
+      : null;
 
     const valueDiffPct = oldValue > 0
       ? Math.abs(newValue - oldValue) / oldValue * 100
@@ -325,6 +335,8 @@ Deno.serve(async (req) => {
         old_value: oldValue,
         new_value: newValue,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
+        wms_items_subtotal: itemsSum,
+        tax_or_adjustment: itemsSum !== null ? Number((newValue - itemsSum).toFixed(2)) : null,
         customer_name_updated: customerNameUpdated,
         items_replaced: itemsReplaced,
         synced_at: now,
