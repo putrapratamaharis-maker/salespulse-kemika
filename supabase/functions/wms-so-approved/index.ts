@@ -34,8 +34,10 @@
 //
 // Catatan items:
 // - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
-// - total_value akan otomatis di-recalculate dari sum(qty * price_per_unit) + sum(other_cost).
-// - Jika items[] tidak dikirim atau kosong, deal_products tidak diubah & total_value pakai field root.
+// - Sumber NILAI deal (deal.value) SELALU diambil dari `total_amount` (alias: `total_value`/`grand_total`)
+//   yang dikirim WMS — termasuk PPN/diskon/pembulatan. Sales Pulse TIDAK menghitung ulang dari items.
+// - price_per_unit per item disimpan apa adanya dari payload (boleh net, boleh gross — tidak diubah).
+// - Jika items[] tidak dikirim/kosong, deal_products tidak diubah; deal.value tetap pakai total dari WMS.
 // }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -51,7 +53,9 @@ interface Payload {
   reference_number?: string;
   so_number?: string;
   so_date?: string;
-  total_value?: number;
+  total_value?: number;   // legacy alias
+  total_amount?: number;  // PRIMARY: total final dari WMS (termasuk PPN/diskon)
+  grand_total?: number;   // legacy alias
   customer_po?: string;
   customer_name?: string;
   items?: WmsItem[];
