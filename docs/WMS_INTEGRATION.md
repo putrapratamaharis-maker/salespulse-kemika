@@ -324,3 +324,39 @@ Sinkronkan produk baru atau perubahan produk dari WMS ke SalesPulse `products`. 
 ## 📞 Kontak
 
 Untuk pertanyaan teknis atau request fitur tambahan, hubungi admin SalesPulse.
+
+---
+
+## 🔁 5. POST `/wms-resync-deal` (internal, untuk SalesPulse UI)
+
+Endpoint internal yang dipanggil dari halaman **Deal Detail** di SalesPulse via tombol **"Re-sync from WMS"**. Tidak dipakai oleh WMS, hanya untuk operator SalesPulse yang ingin me-replay payload SO terakhir dari WMS tanpa harus minta WMS mengirim ulang webhook.
+
+**Auth**: Supabase JWT (user harus login). Hanya owner deal (sales_id) atau admin/super_admin yang bisa memanggil.
+
+**Mekanisme**: Cari log terakhir di `wms_sync_log` dengan `event_type IN ('so_approved','so_updated')` untuk `reference_number` deal, lalu re-apply payload yang sama (idempotent — aman untuk diulang).
+
+**Request body**:
+```json
+{ "deal_id": "<uuid deal di SalesPulse>" }
+```
+
+**Response sukses (200)**:
+```json
+{
+  "status": "resynced",
+  "event_type": "so_approved",
+  "deal_id": "uuid",
+  "wms_so_number": "SO/20260423.01",
+  "wms_so_date": "2026-04-23",
+  "old_value": 2223214,
+  "new_value": 2467768,
+  "value_diff_pct": 11.0,
+  "items_replaced": 2,
+  "last_event_at": "2026-04-24T08:00:00.000Z"
+}
+```
+
+**Response tidak ada log**:
+```json
+{ "status": "no_log", "message": "Belum ada event SO Approved/Updated tersimpan untuk REF-DSP-2026-0001..." }
+```
