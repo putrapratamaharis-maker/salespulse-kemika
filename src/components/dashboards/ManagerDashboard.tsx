@@ -57,6 +57,7 @@ export function ManagerDashboard() {
   const [revenueYTD, setRevenueYTD] = useState(0);
   const [grossProfitMTD, setGrossProfitMTD] = useState(0);
   const [grossProfitYTD, setGrossProfitYTD] = useState(0);
+  const [invoiceNetSalesYTD, setInvoiceNetSalesYTD] = useState(0);
   const [totalTarget, setTotalTarget] = useState(0);
   const [totalTargetYear, setTotalTargetYear] = useState(0);
   const [outstandingAR, setOutstandingAR] = useState(0);
@@ -108,6 +109,7 @@ export function ManagerDashboard() {
       // Gross Profit YTD & Cash-In from shared corporate invoice RPC for all roles
       const invoiceRows = (invoicesYTD || []).filter((i: any) => i.issue_date?.startsWith(yearStr));
       setGrossProfitYTD(invoiceRows.reduce((s: number, i: any) => s + (Number(i.gross_profit) || 0), 0));
+      setInvoiceNetSalesYTD(invoiceRows.reduce((s: number, i: any) => s + (Number(i.net_sales) || 0), 0));
       setCashIn(invoiceRows
         .filter((i: any) => Boolean(i.paid_date))
         .reduce((s: number, i: any) => s + (Number(i.net_sales) || 0), 0));
@@ -223,7 +225,8 @@ export function ManagerDashboard() {
 
   const totalRevenue = segmentRevenue.reduce((s, sr) => s + sr.revenue, 0);
   const marginPctMTD = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
-  const marginPctYTD = revenueYTD > 0 ? (grossProfitYTD / revenueYTD) * 100 : 0;
+  // Margin YTD basis invoice (gross_profit ÷ net_sales) agar pembilang & penyebut sama-sama dari invoice
+  const marginPctYTD = invoiceNetSalesYTD > 0 ? (grossProfitYTD / invoiceNetSalesYTD) * 100 : 0;
   const achievementPctMTD = totalTarget > 0 ? (revenueMTD / totalTarget) * 100 : 0;
   const achievementPctYTD = totalTargetYear > 0 ? (revenueYTD / totalTargetYear) * 100 : 0;
 
