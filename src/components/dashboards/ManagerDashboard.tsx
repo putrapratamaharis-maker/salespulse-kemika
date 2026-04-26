@@ -264,6 +264,7 @@ export function ManagerDashboard() {
               ))}
             </SelectContent>
           </Select>
+          <RefreshKPIsButton onRefresh={refreshAll} />
         </div>
       </div>
 
