@@ -70,36 +70,43 @@ export function SalesRevenueRanking() {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const currentYear = now.getFullYear();
 
-      const [{ data: profiles }, { data: invoices }, { data: targets }] = await Promise.all([
-        supabase.from('profiles').select('user_id, full_name, segment'),
-        supabase.from('invoices').select('sales_id, net_sales, issue_date'),
-        supabase.from('targets').select('user_id, revenue_target, month'),
+      const [{ data: profiles }, { data: invoices }, { data: targets }, { data: allProfiles }] = await Promise.all([
+        supabase.rpc('get_active_sales_profiles'),
+        supabase.rpc('get_segment_invoices'),
+        supabase.rpc('get_segment_targets'),
+        supabase.from('profiles').select('user_id, segment'),
       ]);
 
       const profileList = profiles || [];
       const invoiceList = invoices || [];
       const targetList = targets || [];
+      const segmentMap = new Map<string, string>(
+        (allProfiles || []).map((p: any) => [p.user_id, p.segment || ''])
+      );
 
       const buildRanking = (filterMonth?: string): SalesRanking[] => {
-        return profileList.map(p => {
+        return profileList.map((p: any) => {
           const inv = filterMonth
-            ? invoiceList.filter(i => i.sales_id === p.user_id && i.issue_date.startsWith(filterMonth))
-            : invoiceList.filter(i => i.sales_id === p.user_id && i.issue_date.startsWith(String(currentYear)));
-          const revenue = inv.reduce((s, i) => s + (i.net_sales || 0), 0);
+            ? invoiceList.filter((i: any) => i.sales_id === p.user_id && i.issue_date?.startsWith(filterMonth))
+            : invoiceList.filter((i: any) => i.sales_id === p.user_id && i.issue_date?.startsWith(String(currentYear)));
+          const revenue = inv.reduce((s: number, i: any) => s + (Number(i.net_sales) || 0), 0);
 
+          // targets RPC returns aggregate per segment+month, not per user.
+          // Match by user's segment instead.
+          const userSegment = segmentMap.get(p.user_id) || '';
           const tgts = filterMonth
-            ? targetList.filter(t => t.user_id === p.user_id && t.month === filterMonth)
-            : targetList.filter(t => t.user_id === p.user_id);
-          const target = tgts.reduce((s, t) => s + (t.revenue_target || 0), 0);
+            ? targetList.filter((t: any) => t.segment === userSegment && t.month === filterMonth)
+            : targetList.filter((t: any) => t.segment === userSegment && t.month?.startsWith(String(currentYear)));
+          const target = tgts.reduce((s: number, t: any) => s + (Number(t.revenue_target) || 0), 0);
 
           return {
             name: p.full_name,
-            segment: p.segment || '',
+            segment: userSegment,
             revenue,
             target,
             achievementPct: target > 0 ? (revenue / target) * 100 : 0,
           };
-        }).filter(r => r.revenue > 0).sort((a, b) => b.revenue - a.revenue);
+        }).filter(r => r.revenue > 0).sort((a, b) => b.revenue - a.revenue).slice(0, 3);
       };
 
       setMtdData(buildRanking(currentMonth));
