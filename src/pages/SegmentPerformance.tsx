@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { formatIDRFull, formatPercent } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 interface SegmentData {
   revenueYTD: number;
@@ -203,8 +204,7 @@ const SegmentPerformance = () => {
   const [segmentData, setSegmentData] = useState<Record<string, SegmentData>>({});
   const [movementData, setMovementData] = useState<Record<string, MonthlyMovement[]>>({});
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = useCallback(async () => {
       setLoading(true);
       const year = new Date().getFullYear();
 
@@ -241,9 +241,11 @@ const SegmentPerformance = () => {
       setSegmentData(result);
       setMovementData(movement);
       setLoading(false);
-    };
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (
@@ -258,9 +260,12 @@ const SegmentPerformance = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Segment Performance</h2>
-        <p className="text-sm text-muted-foreground">KPIs customized per business segment</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Segment Performance</h2>
+          <p className="text-sm text-muted-foreground">KPIs customized per business segment</p>
+        </div>
+        <RefreshKPIsButton onRefresh={fetchData} />
       </div>
 
       <Tabs defaultValue="B2G">
