@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown } from 'lucide-react';
@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 interface ProductWithSales {
   id: string;
@@ -38,8 +39,7 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchData = useCallback(async () => {
       setLoading(true);
       // Use SECURITY DEFINER functions to bypass RLS for company-wide data
       const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
@@ -84,9 +84,11 @@ const Products = () => {
       setCategories(uniqueCats);
       setProducts(merged);
       setLoading(false);
-    };
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const formatIDRFull = (val: number) => {
     if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}B`;
@@ -169,9 +171,12 @@ const Products = () => {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-foreground">Product Performance</h2>
-        <p className="text-sm text-muted-foreground">Ringkasan performa penjualan per produk</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">Product Performance</h2>
+          <p className="text-sm text-muted-foreground">Ringkasan performa penjualan per produk</p>
+        </div>
+        <RefreshKPIsButton onRefresh={fetchData} />
       </div>
 
       {/* KPI Cards */}
