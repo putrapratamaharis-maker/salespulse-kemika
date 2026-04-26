@@ -66,7 +66,6 @@ export function ManagerDashboard() {
   const [stuckDealsCount, setStuckDealsCount] = useState(0);
   const [stuckDealsValue, setStuckDealsValue] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
-  const [segmentRevenueMTD, setSegmentRevenueMTD] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
@@ -143,18 +142,6 @@ export function ManagerDashboard() {
         // Monthly trend by segment
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const trendArr = (d.monthly_trend as any[]) || [];
-        // Segment revenue MTD - filter trendArr by selected month
-        const mtdMap = new Map<string, number>();
-        trendArr.forEach((t: any) => {
-          if (Number(t.month_num) === selMonth) {
-            mtdMap.set(t.segment, (mtdMap.get(t.segment) || 0) + Number(t.revenue));
-          }
-        });
-        setSegmentRevenueMTD(segments.map(seg => ({
-          segment: seg,
-          revenue: mtdMap.get(seg) || 0,
-        })));
-
         const monthMap = new Map<string, { B2G: number; B2B: number; B2C: number }>();
         trendArr.forEach((t: any) => {
           const key = monthNames[(t.month_num as number) - 1];
@@ -313,46 +300,17 @@ export function ManagerDashboard() {
             <CardTitle className="text-sm font-semibold">Revenue by Segment</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {/* Legend */}
-              <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block w-3 h-2 rounded-sm bg-accent" />
-                  <span>YTD</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-block w-3 h-2 rounded-sm" style={{ backgroundColor: 'hsl(var(--chart-2))' }} />
-                  <span>MTD ({monthName})</span>
-                </div>
-              </div>
-
+            <div className="space-y-3">
               {segmentRevenue.map(s => {
-                const mtd = segmentRevenueMTD.find(m => m.segment === s.segment)?.revenue || 0;
-                const totalMTD = segmentRevenueMTD.reduce((sum, m) => sum + m.revenue, 0);
-                const pctYTD = totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0;
-                const pctMTD = totalMTD > 0 ? (mtd / totalMTD) * 100 : 0;
+                const pct = totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0;
                 return (
-                  <div key={s.segment} className="space-y-2">
-                    <div className="text-sm font-medium">{s.segment}</div>
-                    {/* YTD bar */}
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">YTD</span>
-                        <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pctYTD)})</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pctYTD}%` }} />
-                      </div>
+                  <div key={s.segment}>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium">{s.segment}</span>
+                      <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pct)})</span>
                     </div>
-                    {/* MTD bar */}
-                    <div>
-                      <div className="flex justify-between text-xs mb-1">
-                        <span className="text-muted-foreground">MTD</span>
-                        <span className="text-muted-foreground">{formatIDRFull(mtd)} ({formatPercent(pctMTD)})</span>
-                      </div>
-                      <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pctMTD}%`, backgroundColor: 'hsl(var(--chart-2))' }} />
-                      </div>
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
                     </div>
                   </div>
                 );
