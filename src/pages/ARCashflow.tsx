@@ -23,8 +23,12 @@ const ARCashflow = () => {
   useEffect(() => {
     const fetch = async () => {
       setLoading(true);
-      const { data } = await supabase.from('invoices').select('id, invoice_number, net_sales, issue_date, due_date, paid_date').order('due_date', { ascending: true });
-      setInvoices((data || []) as InvoiceRow[]);
+      // Use SECURITY DEFINER RPC so all roles see the same corporate aggregate
+      const { data } = await supabase.rpc('get_segment_invoices');
+      const sorted = ((data || []) as InvoiceRow[])
+        .slice()
+        .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
+      setInvoices(sorted);
       setLoading(false);
     };
     fetch();
