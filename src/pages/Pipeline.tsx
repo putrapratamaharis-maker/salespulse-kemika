@@ -23,8 +23,16 @@ const Pipeline = () => {
 
   const fetchData = useCallback(async () => {
       setLoading(true);
-      const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
+      // NOTE: Use corporate-wide RPCs so all roles (incl. sales_person) see
+      // every account name on the kanban. `get_accounts_with_pic_for_user`
+      // is RLS-filtered and would leave accounts owned by other reps
+      // unresolved (falling back to UUIDs in the card header).
+      // PIC info is enriched separately via `get_accounts_with_pic_for_user`
+      // which is fine — for accounts the user can't see PIC on, the dialog
+      // will simply have no PIC. The card name resolution stays correct.
+      const [{ data: deals }, { data: accounts }, { data: accountsWithPic }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.rpc('get_all_deals_pipeline'),
+        (supabase.rpc as any)('get_accounts_basic'),
         (supabase.rpc as any)('get_accounts_with_pic_for_user'),
         supabase.rpc('get_active_sales_profiles'),
         supabase.rpc('get_all_deal_products_pipeline'),
@@ -45,11 +53,13 @@ const Pipeline = () => {
         });
       });
 
-      // Map accounts
+      // Map accounts (corporate-wide name resolution)
       const accountList = (accounts || []) as any[];
       const accMap = new Map(accountList.map((a: any) => [a.id as string, a.name as string]));
       setAccountMap(accMap);
-      const picMap = new Map(accountList.map((a: any) => [a.id as string, { picName: a.pic_name as string | undefined, picEmail: a.pic_email as string | undefined, picContact: a.pic_contact as string | undefined }]));
+      // PIC info only available for accounts visible under RLS to the current user
+      const picList = (accountsWithPic || []) as any[];
+      const picMap = new Map(picList.map((a: any) => [a.id as string, { picName: a.pic_name as string | undefined, picEmail: a.pic_email as string | undefined, picContact: a.pic_contact as string | undefined }]));
       setAccountPICMap(picMap);
 
       // Map profiles for sales names
