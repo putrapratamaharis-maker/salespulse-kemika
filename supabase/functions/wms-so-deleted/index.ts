@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
     }).select("id").single();
     const logId = logRow?.id ?? null;
 
-    let deal: { id: string; sales_id: string; name: string; stage: string; po_number: string | null } | null = null;
+    type DealRow = { id: string; sales_id: string; name: string; stage: string; po_number: string | null };
+    let deal: DealRow | null = null;
     {
       const { data, error } = await supabase
         .from("deals")
@@ -81,13 +82,13 @@ Deno.serve(async (req) => {
         await markLog(supabase, logId, "failed", error.message);
         return jsonError(500, "Database error");
       }
-      deal = data as typeof deal;
+      deal = data as DealRow | null;
     }
     if (!deal && refNum) {
       const { data } = await supabase
         .from("deals").select("id, sales_id, name, stage, po_number")
         .eq("reference_number", refNum).maybeSingle();
-      deal = data as typeof deal;
+      deal = data as DealRow | null;
     }
     if (!deal) {
       await markLog(supabase, logId, "ignored", `Deal not found for SO ${soNum}`);
