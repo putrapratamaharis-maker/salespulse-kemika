@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { useAppContext } from '@/context/AppContext';
 import { formatIDRFull, formatNumIDR, formatIDRAxis, formatPercent, getAchievementStatus } from '@/types/sales';
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 interface ProductWithCategory {
   name: string;
@@ -75,8 +76,7 @@ export function ManagerDashboard() {
 
   const monthName = MONTH_OPTIONS.find(m => m.value === selectedMonth)?.label || '';
 
-  useEffect(() => {
-    async function fetchDashboardData() {
+  const fetchDashboardData = useCallback(async () => {
       setLoading(true);
 
       const yearStr = String(selYear);
@@ -159,13 +159,14 @@ export function ManagerDashboard() {
       }
 
       setLoading(false);
-    }
-    fetchDashboardData();
   }, [selYear, selMonth]);
 
-  // Fetch products from deal_products (won deals) via RPC
   useEffect(() => {
-    async function fetchProducts() {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Fetch products from deal_products (won deals) via RPC
+  const fetchProducts = useCallback(async () => {
       setLoadingProducts(true);
       const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
         supabase.rpc('get_all_deal_products_pipeline'),
@@ -205,9 +206,15 @@ export function ManagerDashboard() {
       setCategoryData(Array.from(catMap, ([category, revenue]) => ({ category, revenue })).sort((a, b) => b.revenue - a.revenue));
 
       setLoadingProducts(false);
-    }
-    fetchProducts();
   }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const refreshAll = useCallback(async () => {
+    await Promise.all([fetchDashboardData(), fetchProducts()]);
+  }, [fetchDashboardData, fetchProducts]);
 
   const totalRevenue = segmentRevenue.reduce((s, sr) => s + sr.revenue, 0);
   const marginPctMTD = revenueMTD > 0 ? (grossProfitMTD / revenueMTD) * 100 : 0;
