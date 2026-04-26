@@ -305,7 +305,7 @@ export function ManagerDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Revenue by Segment</CardTitle>
+            <CardTitle className="text-sm font-semibold">Revenue by Segment (MTD)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
