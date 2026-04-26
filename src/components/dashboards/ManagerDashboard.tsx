@@ -66,6 +66,7 @@ export function ManagerDashboard() {
   const [stuckDealsCount, setStuckDealsCount] = useState(0);
   const [stuckDealsValue, setStuckDealsValue] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
+  const [segmentRevenueMTD, setSegmentRevenueMTD] = useState<{ segment: string; revenue: number }[]>([]);
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
@@ -142,6 +143,18 @@ export function ManagerDashboard() {
         // Monthly trend by segment
         const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const trendArr = (d.monthly_trend as any[]) || [];
+        // Segment revenue MTD - filter trendArr by selected month
+        const mtdMap = new Map<string, number>();
+        trendArr.forEach((t: any) => {
+          if (Number(t.month_num) === selMonth) {
+            mtdMap.set(t.segment, (mtdMap.get(t.segment) || 0) + Number(t.revenue));
+          }
+        });
+        setSegmentRevenueMTD(segments.map(seg => ({
+          segment: seg,
+          revenue: mtdMap.get(seg) || 0,
+        })));
+
         const monthMap = new Map<string, { B2G: number; B2B: number; B2C: number }>();
         trendArr.forEach((t: any) => {
           const key = monthNames[(t.month_num as number) - 1];
