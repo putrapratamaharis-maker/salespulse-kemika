@@ -112,7 +112,8 @@ Deno.serve(async (req) => {
     const logId = logRow?.id ?? null;
 
     // Cari deal: utama via wms_so_number, fallback ke reference_number
-    let deal: { id: string; account_id: string; sales_id: string; name: string; value: number; stage: string; po_number: string | null; wms_so_date: string | null } | null = null;
+    type DealRow = { id: string; account_id: string; sales_id: string; name: string; value: number; stage: string; po_number: string | null; wms_so_date: string | null };
+    let deal: DealRow | null = null;
     {
       const { data, error } = await supabase
         .from("deals")
@@ -123,7 +124,7 @@ Deno.serve(async (req) => {
         await markLog(supabase, logId, "failed", error.message);
         return jsonError(500, "Database error");
       }
-      deal = data as typeof deal;
+      deal = data as DealRow | null;
     }
     if (!deal && refNum) {
       const { data } = await supabase
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
         .select("id, account_id, sales_id, name, value, stage, po_number, wms_so_date")
         .eq("reference_number", refNum)
         .maybeSingle();
-      deal = data as typeof deal;
+      deal = data as DealRow | null;
     }
     if (!deal) {
       await markLog(supabase, logId, "failed", `Deal not found for SO ${soNum}`);
