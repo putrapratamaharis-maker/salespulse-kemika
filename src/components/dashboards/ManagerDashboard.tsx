@@ -88,7 +88,7 @@ export function ManagerDashboard() {
           _current_month: selMonth,
         }),
         (supabase.rpc as any)('get_accounts_basic'),
-        supabase.from('invoices').select('gross_profit, net_sales, paid_date, issue_date').gte('issue_date', `${yearStr}-01-01`).lte('issue_date', `${yearStr}-12-31`),
+        supabase.rpc('get_segment_invoices'),
         supabase.rpc('get_all_deals_pipeline'),
       ]);
 
@@ -105,7 +105,12 @@ export function ManagerDashboard() {
       setStuckDealsCount(stuck.length);
       setStuckDealsValue(stuck.reduce((s, d) => s + (Number(d.value) || 0), 0));
 
-      // Gross Profit YTD & Cash-In from invoices
+      // Gross Profit YTD & Cash-In from shared corporate invoice RPC for all roles
+      const invoiceRows = (invoicesYTD || []).filter((i: any) => i.issue_date?.startsWith(yearStr));
+      setGrossProfitYTD(invoiceRows.reduce((s: number, i: any) => s + (Number(i.gross_profit) || 0), 0));
+      setCashIn(invoiceRows
+        .filter((i: any) => Boolean(i.paid_date))
+        .reduce((s: number, i: any) => s + (Number(i.net_sales) || 0), 0));
 
       const allAccounts = (accounts || []) as any[];
 
