@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { formatIDRFull, formatNumIDR, formatDate } from '@/types/sales';
@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { CreditCard, AlertTriangle, Clock, CheckCircle, Loader2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 interface InvoiceRow {
   id: string;
@@ -20,8 +21,7 @@ const ARCashflow = () => {
   const [loading, setLoading] = useState(true);
   const [invoices, setInvoices] = useState<InvoiceRow[]>([]);
 
-  useEffect(() => {
-    const fetch = async () => {
+  const fetchData = useCallback(async () => {
       setLoading(true);
       // Use SECURITY DEFINER RPC so all roles see the same corporate aggregate
       const { data } = await supabase.rpc('get_segment_invoices');
@@ -30,9 +30,11 @@ const ARCashflow = () => {
         .sort((a, b) => new Date(a.due_date).getTime() - new Date(b.due_date).getTime());
       setInvoices(sorted);
       setLoading(false);
-    };
-    fetch();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const now = new Date();
   const outstanding = invoices.filter(inv => !inv.paid_date);
@@ -63,9 +65,12 @@ const ARCashflow = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-xl font-bold text-foreground">AR & Cashflow</h2>
-        <p className="text-sm text-muted-foreground">Accounts receivable aging and cash position</p>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">AR & Cashflow</h2>
+          <p className="text-sm text-muted-foreground">Accounts receivable aging and cash position</p>
+        </div>
+        <RefreshKPIsButton onRefresh={fetchData} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

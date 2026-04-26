@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 interface InvoiceRow {
   id: string;
@@ -198,7 +199,10 @@ const Revenue = () => {
           <h2 className="text-xl font-bold text-foreground">Revenue & Margin</h2>
           <p className="text-sm text-muted-foreground">Financial performance and margin compliance</p>
         </div>
-        <NewInvoiceDialog onCreated={() => setRefreshKey(k => k + 1)} />
+        <div className="flex items-center gap-2">
+          <RefreshKPIsButton onRefresh={fetchInvoices} />
+          <NewInvoiceDialog onCreated={() => setRefreshKey(k => k + 1)} />
+        </div>
       </div>
 
       {/* Period Filter Bar */}
