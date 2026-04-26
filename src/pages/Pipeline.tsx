@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Deal, DealStage, DealProduct, formatIDRFull, formatIDRAxis, formatPercent, formatDate } from '@/types/sales';
@@ -9,6 +9,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { AllOpenDealsTable } from '@/components/pipeline/AllOpenDealsTable';
+import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 const Pipeline = () => {
   const [salesFilter, setSalesFilter] = useState<string>('all');
@@ -20,8 +21,7 @@ const Pipeline = () => {
   const [accountPICMap, setAccountPICMap] = useState<Map<string, { picName?: string; picEmail?: string; picContact?: string }>>(new Map());
   const [salesUsers, setSalesUsers] = useState<{ id: string; name: string }[]>([]);
 
-  useEffect(() => {
-    async function fetchData() {
+  const fetchData = useCallback(async () => {
       setLoading(true);
       const [{ data: deals }, { data: accounts }, { data: profiles }, { data: dealProductsData }] = await Promise.all([
         supabase.rpc('get_all_deals_pipeline'),
@@ -98,9 +98,11 @@ const Pipeline = () => {
       })));
 
       setLoading(false);
-    }
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const [localDeals, setLocalDeals] = useState<Deal[]>([]);
 
@@ -190,6 +192,7 @@ const Pipeline = () => {
               ))}
             </SelectContent>
           </Select>
+          <RefreshKPIsButton onRefresh={fetchData} />
         </div>
       </div>
 
