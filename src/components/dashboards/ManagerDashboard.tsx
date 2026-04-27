@@ -338,6 +338,10 @@ export function ManagerDashboard() {
                 const maxScale = Math.max(s.revenue, target, 1);
                 const realisasiBarPct = (s.revenue / maxScale) * 100;
                 const targetBarPct = (target / maxScale) * 100;
+                const segmentColor =
+                  s.segment === 'B2G' ? 'bg-indigo-500' :
+                  s.segment === 'B2B' ? 'bg-teal-500' :
+                  'bg-amber-500';
                 return (
                   <div key={s.segment}>
                     <div className="flex justify-between text-sm mb-1">
@@ -345,7 +349,7 @@ export function ManagerDashboard() {
                       <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pct)})</span>
                     </div>
                     <div className="h-2 bg-secondary rounded-full overflow-hidden mb-1">
-                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${realisasiBarPct}%` }} />
+                      <div className={`h-full rounded-full transition-all ${segmentColor}`} style={{ width: `${realisasiBarPct}%` }} />
                     </div>
                     <TooltipProvider delayDuration={150}>
                       <UITooltip>
@@ -370,7 +374,7 @@ export function ManagerDashboard() {
                               </span>
                             </div>
                             <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                              <div className="h-full rounded-full bg-muted-foreground/50 transition-all" style={{ width: `${targetBarPct}%` }} />
+                              <div className={`h-full rounded-full transition-all opacity-40 ${segmentColor}`} style={{ width: `${targetBarPct}%` }} />
                             </div>
                           </div>
                         </TooltipTrigger>
