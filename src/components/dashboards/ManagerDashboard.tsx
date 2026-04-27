@@ -331,14 +331,37 @@ export function ManagerDashboard() {
             <div className="space-y-3">
               {segmentRevenue.map(s => {
                 const pct = totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0;
+                const target = segmentTargetMTD[s.segment] || 0;
+                const achievementPct = target > 0 ? (s.revenue / target) * 100 : 0;
+                const maxScale = Math.max(s.revenue, target, 1);
+                const realisasiBarPct = (s.revenue / maxScale) * 100;
+                const targetBarPct = (target / maxScale) * 100;
                 return (
                   <div key={s.segment}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{s.segment}</span>
                       <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pct)})</span>
                     </div>
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden mb-1">
+                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${realisasiBarPct}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-muted-foreground">Target MTD</span>
+                      <span className="text-muted-foreground">
+                        {formatIDRFull(target)}
+                        {target > 0 && (
+                          <span className={`ml-2 font-semibold ${
+                            achievementPct >= 100 ? 'text-status-green' :
+                            achievementPct >= 80 ? 'text-status-yellow' :
+                            'text-status-red'
+                          }`}>
+                            ({formatPercent(achievementPct)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-muted-foreground/50 transition-all" style={{ width: `${targetBarPct}%` }} />
                     </div>
                   </div>
                 );
