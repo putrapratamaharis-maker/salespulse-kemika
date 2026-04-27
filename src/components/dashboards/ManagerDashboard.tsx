@@ -11,6 +11,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from 'recharts';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
+import { Tooltip as UITooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface ProductWithCategory {
   name: string;
@@ -345,24 +347,64 @@ export function ManagerDashboard() {
                     <div className="h-2 bg-secondary rounded-full overflow-hidden mb-1">
                       <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${realisasiBarPct}%` }} />
                     </div>
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span className="text-muted-foreground">Target MTD</span>
-                      <span className="text-muted-foreground">
-                        {formatIDRFull(target)}
-                        {target > 0 && (
-                          <span className={`ml-2 font-semibold ${
-                            achievementPct >= 100 ? 'text-status-green' :
-                            achievementPct >= 80 ? 'text-status-yellow' :
-                            'text-status-red'
-                          }`}>
-                            ({formatPercent(achievementPct)})
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-muted-foreground/50 transition-all" style={{ width: `${targetBarPct}%` }} />
-                    </div>
+                    <TooltipProvider delayDuration={150}>
+                      <UITooltip>
+                        <TooltipTrigger asChild>
+                          <div className="cursor-help">
+                            <div className="flex justify-between text-[11px] mb-1 items-center">
+                              <span className="text-muted-foreground inline-flex items-center gap-1">
+                                Target MTD
+                                <Info className="h-3 w-3 opacity-60" />
+                              </span>
+                              <span className="text-muted-foreground">
+                                {formatIDRFull(target)}
+                                {target > 0 && (
+                                  <span className={`ml-2 font-semibold ${
+                                    achievementPct >= 100 ? 'text-status-green' :
+                                    achievementPct >= 80 ? 'text-status-yellow' :
+                                    'text-status-red'
+                                  }`}>
+                                    ({formatPercent(achievementPct)})
+                                  </span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                              <div className="h-full rounded-full bg-muted-foreground/50 transition-all" style={{ width: `${targetBarPct}%` }} />
+                            </div>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-xs text-xs leading-relaxed">
+                          <div className="space-y-1">
+                            <p className="font-semibold">Target MTD — {s.segment}</p>
+                            <p>
+                              <span className="font-medium">Sumber data:</span> RPC korporat
+                              <code className="mx-1 px-1 rounded bg-muted text-[10px]">get_segment_targets</code>
+                              (tabel <code className="px-1 rounded bg-muted text-[10px]">targets</code>), difilter
+                              <code className="mx-1 px-1 rounded bg-muted text-[10px]">segment = {s.segment}</code> &
+                              <code className="ml-1 px-1 rounded bg-muted text-[10px]">month = {`${selYear}-${String(selMonth).padStart(2, '0')}`}</code>.
+                            </p>
+                            <p>
+                              <span className="font-medium">Periode MTD:</span> {monthName} {selYear} (1–akhir bulan berjalan).
+                            </p>
+                            <p>
+                              <span className="font-medium">Realisasi:</span> Σ value deal pada stage
+                              <em> PO Secured</em> & <em>Invoice Issued</em> dengan
+                              <code className="mx-1 px-1 rounded bg-muted text-[10px]">expected_close_date</code> di bulan berjalan
+                              (RPC <code className="px-1 rounded bg-muted text-[10px]">get_executive_summary_kpis</code>).
+                            </p>
+                            <p>
+                              <span className="font-medium">Rumus pencapaian:</span> Realisasi MTD ÷ Target MTD × 100%.
+                            </p>
+                            <p className="text-muted-foreground">
+                              Status: <span className="text-status-green font-semibold">≥100% Hijau</span> ·{' '}
+                              <span className="text-status-yellow font-semibold">≥80% Kuning</span> ·{' '}
+                              <span className="text-status-red font-semibold">&lt;80% Merah</span>.
+                            </p>
+                          </div>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
                   </div>
                 );
               })}
