@@ -68,6 +68,7 @@ export function ManagerDashboard() {
   const [stuckDealsCount, setStuckDealsCount] = useState(0);
   const [stuckDealsValue, setStuckDealsValue] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
+  const [segmentTargetMTD, setSegmentTargetMTD] = useState<Record<string, number>>({ B2G: 0, B2B: 0, B2C: 0 });
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
@@ -92,6 +93,17 @@ export function ManagerDashboard() {
         supabase.rpc('get_segment_invoices'),
         supabase.rpc('get_all_deals_pipeline'),
       ]);
+
+      // Fetch segment targets (MTD) — corporate-wide via shared RPC
+      const { data: segTargetsRaw } = await supabase.rpc('get_segment_targets');
+      const monthKey = `${selYear}-${String(selMonth).padStart(2, '0')}`;
+      const segTargetMap: Record<string, number> = { B2G: 0, B2B: 0, B2C: 0 };
+      (segTargetsRaw || []).forEach((t: any) => {
+        if (t.month === monthKey && segTargetMap[t.segment] !== undefined) {
+          segTargetMap[t.segment] += Number(t.revenue_target) || 0;
+        }
+      });
+      setSegmentTargetMTD(segTargetMap);
 
       // Use same RPC data source as Pipeline & Forecast page for consistency
       const allDeals = allDealsData || [];
