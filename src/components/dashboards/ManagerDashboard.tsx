@@ -68,6 +68,7 @@ export function ManagerDashboard() {
   const [stuckDealsCount, setStuckDealsCount] = useState(0);
   const [stuckDealsValue, setStuckDealsValue] = useState(0);
   const [segmentRevenue, setSegmentRevenue] = useState<{ segment: string; revenue: number }[]>([]);
+  const [segmentTargetMTD, setSegmentTargetMTD] = useState<Record<string, number>>({ B2G: 0, B2B: 0, B2C: 0 });
   const [customerRevenue, setCustomerRevenue] = useState<{ name: string; segment: string; revenue: number }[]>([]);
   const [regionData, setRegionData] = useState<{ region: string; revenue: number }[]>([]);
   const [monthlyTrend, setMonthlyTrend] = useState<{ month: string; B2G: number; B2B: number; B2C: number }[]>([]);
@@ -92,6 +93,17 @@ export function ManagerDashboard() {
         supabase.rpc('get_segment_invoices'),
         supabase.rpc('get_all_deals_pipeline'),
       ]);
+
+      // Fetch segment targets (MTD) — corporate-wide via shared RPC
+      const { data: segTargetsRaw } = await supabase.rpc('get_segment_targets');
+      const monthKey = `${selYear}-${String(selMonth).padStart(2, '0')}`;
+      const segTargetMap: Record<string, number> = { B2G: 0, B2B: 0, B2C: 0 };
+      (segTargetsRaw || []).forEach((t: any) => {
+        if (t.month === monthKey && segTargetMap[t.segment] !== undefined) {
+          segTargetMap[t.segment] += Number(t.revenue_target) || 0;
+        }
+      });
+      setSegmentTargetMTD(segTargetMap);
 
       // Use same RPC data source as Pipeline & Forecast page for consistency
       const allDeals = allDealsData || [];
@@ -319,14 +331,37 @@ export function ManagerDashboard() {
             <div className="space-y-3">
               {segmentRevenue.map(s => {
                 const pct = totalRevenue > 0 ? (s.revenue / totalRevenue) * 100 : 0;
+                const target = segmentTargetMTD[s.segment] || 0;
+                const achievementPct = target > 0 ? (s.revenue / target) * 100 : 0;
+                const maxScale = Math.max(s.revenue, target, 1);
+                const realisasiBarPct = (s.revenue / maxScale) * 100;
+                const targetBarPct = (target / maxScale) * 100;
                 return (
                   <div key={s.segment}>
                     <div className="flex justify-between text-sm mb-1">
                       <span className="font-medium">{s.segment}</span>
                       <span className="text-muted-foreground">{formatIDRFull(s.revenue)} ({formatPercent(pct)})</span>
                     </div>
-                    <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${pct}%` }} />
+                    <div className="h-2 bg-secondary rounded-full overflow-hidden mb-1">
+                      <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${realisasiBarPct}%` }} />
+                    </div>
+                    <div className="flex justify-between text-[11px] mb-1">
+                      <span className="text-muted-foreground">Target MTD</span>
+                      <span className="text-muted-foreground">
+                        {formatIDRFull(target)}
+                        {target > 0 && (
+                          <span className={`ml-2 font-semibold ${
+                            achievementPct >= 100 ? 'text-status-green' :
+                            achievementPct >= 80 ? 'text-status-yellow' :
+                            'text-status-red'
+                          }`}>
+                            ({formatPercent(achievementPct)})
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+                      <div className="h-full rounded-full bg-muted-foreground/50 transition-all" style={{ width: `${targetBarPct}%` }} />
                     </div>
                   </div>
                 );
