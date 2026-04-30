@@ -78,18 +78,40 @@ export function SalesRevenueRanking() {
       ]);
 
       const profileList = profiles || [];
-      const invoiceList = invoices || [];
       const targetList = targets || [];
       const segmentMap = new Map<string, string>(
         (allProfiles || []).map((p: any) => [p.user_id, p.segment || ''])
       );
 
+      // Revenue mengikuti definisi Executive Summary KPI cards:
+      // PO Secured/Won + Invoice Issued (dari tabel deals, bukan invoices).
+      // Filter berdasarkan expected_close_date agar konsisten dengan KPI lain.
+      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
+      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        .toISOString().slice(0, 10);
+      const yearStart = `${now.getFullYear()}-01-01`;
+      const yearEnd = `${now.getFullYear()}-12-31`;
+
+      const [{ data: dealsMtd }, { data: dealsYtd }] = await Promise.all([
+        supabase
+          .from('deals')
+          .select('sales_id, value, stage, expected_close_date')
+          .in('stage', ['po_secured', 'invoice_issued'])
+          .gte('expected_close_date', monthStart)
+          .lte('expected_close_date', monthEnd),
+        supabase
+          .from('deals')
+          .select('sales_id, value, stage, expected_close_date')
+          .in('stage', ['po_secured', 'invoice_issued'])
+          .gte('expected_close_date', yearStart)
+          .lte('expected_close_date', yearEnd),
+      ]);
+
       const buildRanking = (filterMonth?: string): SalesRanking[] => {
+        const dealRows = filterMonth ? (dealsMtd || []) : (dealsYtd || []);
         return profileList.map((p: any) => {
-          const inv = filterMonth
-            ? invoiceList.filter((i: any) => i.sales_id === p.user_id && i.issue_date?.startsWith(filterMonth))
-            : invoiceList.filter((i: any) => i.sales_id === p.user_id && i.issue_date?.startsWith(String(currentYear)));
-          const revenue = inv.reduce((s: number, i: any) => s + (Number(i.net_sales) || 0), 0);
+          const userDeals = dealRows.filter((d: any) => d.sales_id === p.user_id);
+          const revenue = userDeals.reduce((s: number, d: any) => s + (Number(d.value) || 0), 0);
 
           // targets RPC returns aggregate per segment+month, not per user.
           // Match by user's segment instead.
@@ -106,7 +128,9 @@ export function SalesRevenueRanking() {
             target,
             achievementPct: target > 0 ? (revenue / target) * 100 : 0,
           };
-        }).sort((a, b) => b.revenue - a.revenue);
+        })
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 3);
       };
 
       setMtdData(buildRanking(currentMonth));
