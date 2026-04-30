@@ -106,7 +106,7 @@ export function SalesRevenueRanking() {
             target,
             achievementPct: target > 0 ? (revenue / target) * 100 : 0,
           };
-        }).filter(r => r.revenue > 0).sort((a, b) => b.revenue - a.revenue).slice(0, 3);
+        }).sort((a, b) => b.revenue - a.revenue);
       };
 
       setMtdData(buildRanking(currentMonth));
