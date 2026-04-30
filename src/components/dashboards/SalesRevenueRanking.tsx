@@ -70,45 +70,30 @@ export function SalesRevenueRanking() {
       const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       const currentYear = now.getFullYear();
 
-      const [{ data: profiles }, { data: invoices }, { data: targets }, { data: allProfiles }] = await Promise.all([
+      const [{ data: profiles }, { data: targets }, { data: allDeals }] = await Promise.all([
         supabase.rpc('get_active_sales_profiles'),
-        supabase.rpc('get_segment_invoices'),
         supabase.rpc('get_segment_targets'),
-        supabase.from('profiles').select('user_id, segment'),
+        supabase.rpc('get_all_deals_pipeline'),
       ]);
 
       const profileList = profiles || [];
       const targetList = targets || [];
-      const segmentMap = new Map<string, string>(
-        (allProfiles || []).map((p: any) => [p.user_id, p.segment || ''])
+      const allWonDeals = (allDeals || []).filter((d: any) =>
+        ['po_secured', 'invoice_issued'].includes(d.stage) && d.expected_close_date
       );
+      const segmentMap = new Map<string, string>();
+      allWonDeals.forEach((d: any) => {
+        if (!segmentMap.has(d.sales_id) && d.segment) segmentMap.set(d.sales_id, d.segment);
+      });
 
       // Revenue mengikuti definisi Executive Summary KPI cards:
       // PO Secured/Won + Invoice Issued (dari tabel deals, bukan invoices).
       // Filter berdasarkan expected_close_date agar konsisten dengan KPI lain.
-      const monthStart = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`;
-      const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-        .toISOString().slice(0, 10);
-      const yearStart = `${now.getFullYear()}-01-01`;
-      const yearEnd = `${now.getFullYear()}-12-31`;
-
-      const [{ data: dealsMtd }, { data: dealsYtd }] = await Promise.all([
-        supabase
-          .from('deals')
-          .select('sales_id, value, stage, expected_close_date')
-          .in('stage', ['po_secured', 'invoice_issued'])
-          .gte('expected_close_date', monthStart)
-          .lte('expected_close_date', monthEnd),
-        supabase
-          .from('deals')
-          .select('sales_id, value, stage, expected_close_date')
-          .in('stage', ['po_secured', 'invoice_issued'])
-          .gte('expected_close_date', yearStart)
-          .lte('expected_close_date', yearEnd),
-      ]);
+      const dealsMtd = allWonDeals.filter((d: any) => d.expected_close_date?.slice(0, 7) === currentMonth);
+      const dealsYtd = allWonDeals.filter((d: any) => d.expected_close_date?.slice(0, 4) === String(currentYear));
 
       const buildRanking = (filterMonth?: string): SalesRanking[] => {
-        const dealRows = filterMonth ? (dealsMtd || []) : (dealsYtd || []);
+        const dealRows = filterMonth ? dealsMtd : dealsYtd;
         return profileList.map((p: any) => {
           const userDeals = dealRows.filter((d: any) => d.sales_id === p.user_id);
           const revenue = userDeals.reduce((s: number, d: any) => s + (Number(d.value) || 0), 0);
