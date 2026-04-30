@@ -72,7 +72,7 @@ export function SalesRevenueRanking() {
 
       const [{ data: profiles }, { data: targets }, { data: allDeals }] = await Promise.all([
         supabase.rpc('get_active_sales_profiles'),
-        supabase.rpc('get_segment_targets'),
+        (supabase.rpc as any)('get_sales_person_targets'),
         supabase.rpc('get_all_deals_pipeline'),
       ]);
 
@@ -98,12 +98,12 @@ export function SalesRevenueRanking() {
           const userDeals = dealRows.filter((d: any) => d.sales_id === p.user_id);
           const revenue = userDeals.reduce((s: number, d: any) => s + (Number(d.value) || 0), 0);
 
-          // targets RPC returns aggregate per segment+month, not per user.
-          // Match by user's segment instead.
+          // Target mengikuti data personal per sales person.
+          // MTD = target user pada bulan berjalan; YTD = total target user dalam tahun berjalan.
           const userSegment = segmentMap.get(p.user_id) || '';
           const tgts = filterMonth
-            ? targetList.filter((t: any) => t.segment === userSegment && t.month === filterMonth)
-            : targetList.filter((t: any) => t.segment === userSegment && t.month?.startsWith(String(currentYear)));
+            ? targetList.filter((t: any) => t.user_id === p.user_id && t.month === filterMonth)
+            : targetList.filter((t: any) => t.user_id === p.user_id && t.month?.startsWith(String(currentYear)));
           const target = tgts.reduce((s: number, t: any) => s + (Number(t.revenue_target) || 0), 0);
 
           return {

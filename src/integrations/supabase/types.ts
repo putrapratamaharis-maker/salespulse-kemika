@@ -1396,6 +1396,15 @@ export type Database = {
       }
       get_next_customer_id: { Args: { _year: number }; Returns: string }
       get_sales_initials: { Args: { _user_id: string }; Returns: string }
+      get_sales_person_targets: {
+        Args: never
+        Returns: {
+          month: string
+          revenue_target: number
+          segment: string
+          user_id: string
+        }[]
+      }
       get_segment_deals: {
         Args: never
         Returns: {
