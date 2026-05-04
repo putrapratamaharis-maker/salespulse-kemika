@@ -57,6 +57,9 @@ const Revenue = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('all');
   const [filterYear, setFilterYear] = useState<string>('all');
+  const [filterSegment, setFilterSegment] = useState<string>('all');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [filterSales, setFilterSales] = useState<string>('all');
 
   const fetchInvoices = async () => {
     setLoading(true);
@@ -106,6 +109,16 @@ const Revenue = () => {
     return Array.from(years).sort().reverse();
   }, [allInvoices]);
 
+  const availableSegments = useMemo(() => {
+    const set = new Set(allInvoices.map(i => i.segment).filter(Boolean));
+    return Array.from(set).sort();
+  }, [allInvoices]);
+
+  const availableSales = useMemo(() => {
+    const set = new Set(allInvoices.map(i => i.sales_name || '').filter(Boolean));
+    return Array.from(set).sort();
+  }, [allInvoices]);
+
   // Filtered invoices
   const invoices = useMemo(() => {
     let filtered = allInvoices;
@@ -116,16 +129,28 @@ const Revenue = () => {
     if (filterMonth !== 'all') {
       filtered = filtered.filter(i => i.issue_date.slice(5, 7) === filterMonth);
     }
+    if (filterSegment !== 'all') {
+      filtered = filtered.filter(i => i.segment === filterSegment);
+    }
+    if (filterStatus !== 'all') {
+      filtered = filtered.filter(i =>
+        filterStatus === 'paid' ? !!i.paid_date : !i.paid_date
+      );
+    }
+    if (filterSales !== 'all') {
+      filtered = filtered.filter(i => (i.sales_name || '') === filterSales);
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(i =>
         i.invoice_number.toLowerCase().includes(q) ||
-        (i.account_name || '').toLowerCase().includes(q)
+        (i.account_name || '').toLowerCase().includes(q) ||
+        (i.sales_name || '').toLowerCase().includes(q)
       );
     }
 
     return filtered;
-  }, [allInvoices, filterYear, filterMonth, searchQuery]);
+  }, [allInvoices, filterYear, filterMonth, filterSegment, filterStatus, filterSales, searchQuery]);
 
   // Filtered deals (using expected_close_date / PO/Won/Closed Date)
   const filteredDeals = useMemo(() => {
@@ -288,6 +313,48 @@ const Revenue = () => {
           </DropdownMenu>
         </CardHeader>
         <CardContent>
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[220px] max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Cari invoice, akun, atau sales..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
+            <Select value={filterSegment} onValueChange={setFilterSegment}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Segment" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Segment</SelectItem>
+                {availableSegments.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[140px]"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Status</SelectItem>
+                <SelectItem value="paid">Paid</SelectItem>
+                <SelectItem value="outstanding">Outstanding</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterSales} onValueChange={setFilterSales}>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Sales" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Sales</SelectItem>
+                {availableSales.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            {(filterSegment !== 'all' || filterStatus !== 'all' || filterSales !== 'all') && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => { setFilterSegment('all'); setFilterStatus('all'); setFilterSales('all'); }}
+              >
+                Reset
+              </Button>
+            )}
+          </div>
           <Table>
             <TableHeader>
               <TableRow className="hover:bg-transparent">
