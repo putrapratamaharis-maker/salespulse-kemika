@@ -55,6 +55,66 @@ const sortColumns = [
 
 const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued'];
 
+interface MultiSelectCheckboxProps {
+  icon?: React.ReactNode;
+  placeholder: string;
+  widthClass?: string;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+}
+
+function MultiSelectCheckbox({ icon, placeholder, widthClass = 'w-[150px]', options, selected, onToggle, onClear }: MultiSelectCheckboxProps) {
+  const label = selected.length === 0
+    ? placeholder
+    : selected.length === 1
+      ? (options.find(o => o.value === selected[0])?.label ?? placeholder)
+      : `${selected.length} selected`;
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className={cn('h-8 text-xs justify-between font-normal', widthClass)}>
+          <span className="inline-flex items-center truncate">
+            {icon}
+            <span className="truncate">{label}</span>
+          </span>
+          <ChevronDown className="h-3 w-3 opacity-60 shrink-0" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[220px] p-1" align="start">
+        <div className="max-h-64 overflow-y-auto">
+          {options.map(o => {
+            const checked = selected.includes(o.value);
+            return (
+              <button
+                key={o.value}
+                type="button"
+                onClick={() => onToggle(o.value)}
+                className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-xs hover:bg-accent text-left"
+              >
+                <Checkbox checked={checked} className="pointer-events-none" />
+                <span className="truncate">{o.label}</span>
+              </button>
+            );
+          })}
+        </div>
+        {selected.length > 0 && (
+          <div className="border-t mt-1 pt-1">
+            <button
+              type="button"
+              onClick={onClear}
+              className="w-full text-left px-2 py-1.5 text-xs text-muted-foreground hover:bg-accent rounded inline-flex items-center"
+            >
+              <X className="h-3 w-3 mr-1" /> Clear selection
+            </button>
+          </div>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountPIC, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
   const [stageFilter, setStageFilter] = useState<string[]>([]);
