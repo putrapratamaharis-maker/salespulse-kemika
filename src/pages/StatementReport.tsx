@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { FileText, Search, Calendar as CalendarIcon, FolderOpen, Loader2, Copy, Download, Printer, ArrowLeft, Info, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileDown } from 'lucide-react';
+import { FileText, Search, Calendar as CalendarIcon, FolderOpen, Loader2, Copy, Download, Printer, ArrowLeft, Info, ChevronDown, FileSpreadsheet, FileText as FilePdf, FileDown, Filter, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -103,6 +103,11 @@ export default function StatementReport() {
   const [fromOpen, setFromOpen] = useState(false);
   const [toOpen, setToOpen] = useState(false);
 
+  // Hanging filter (applied on the generated Report Overview table)
+  const [tableFilterOpen, setTableFilterOpen] = useState(false);
+  const [tableSearch, setTableSearch] = useState('');
+  const [tableSalesFilter, setTableSalesFilter] = useState<string>('all');
+
   useEffect(() => {
     supabase.rpc('get_active_sales_profiles').then(({ data }) => {
       if (data) setSalesProfiles(data);
@@ -133,6 +138,11 @@ export default function StatementReport() {
     return salesProfiles.find(s => s.user_id === id)?.full_name || id;
   };
 
+  const salesNameById = (id: string | null | undefined) => {
+    if (!id) return '-';
+    return salesProfiles.find(s => s.user_id === id)?.full_name || '-';
+  };
+
   const getSegmentName = (id: string) => {
     return segmentOptions.find(s => s.id === id)?.name || id;
   };
@@ -154,13 +164,13 @@ export default function StatementReport() {
     const rows = (data || []).map(inv => ({
       'Invoice #': inv.invoice_number, 'Issue Date': inv.issue_date,
       'Net Sales': inv.net_sales, 'Gross Profit': inv.gross_profit,
-      'Segment': inv.segment, 'Status': inv.paid_date ? 'Paid' : 'Unpaid',
+      'Segment': inv.segment, 'Sales': salesNameById(inv.sales_id), 'Status': inv.paid_date ? 'Paid' : 'Unpaid',
     }));
-    return { type: 'revenue-summary', name: `Revenue Summary`, columns: ['Invoice #', 'Issue Date', 'Net Sales', 'Gross Profit', 'Segment', 'Status'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Revenue Summary', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
+    return { type: 'revenue-summary', name: `Revenue Summary`, columns: ['Invoice #', 'Issue Date', 'Net Sales', 'Gross Profit', 'Segment', 'Sales', 'Status'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Revenue Summary', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
   };
 
   const generatePipelineStatus = async (from: string, to: string): Promise<GeneratedReport> => {
-    let query = supabase.from('deals').select('name, stage, value, probability, expected_close_date, segment, days_in_stage')
+    let query = supabase.from('deals').select('name, stage, value, probability, expected_close_date, segment, days_in_stage, sales_id')
       .gte('expected_close_date', from).lte('expected_close_date', to);
     const seg = buildSegmentFilter();
     if (seg) query = query.eq('segment', seg);
@@ -171,23 +181,23 @@ export default function StatementReport() {
     const rows = (data || []).map(d => ({
       'Deal Name': d.name, 'Stage': d.stage, 'Value': d.value,
       'Probability': `${d.probability}%`, 'Expected Close': d.expected_close_date,
-      'Segment': d.segment, 'Days in Stage': d.days_in_stage,
+      'Segment': d.segment, 'Sales': salesNameById((d as any).sales_id), 'Days in Stage': d.days_in_stage,
     }));
-    return { type: 'pipeline-status', name: `Pipeline Status`, columns: ['Deal Name', 'Stage', 'Value', 'Probability', 'Expected Close', 'Segment', 'Days in Stage'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Pipeline Status', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
+    return { type: 'pipeline-status', name: `Pipeline Status`, columns: ['Deal Name', 'Stage', 'Value', 'Probability', 'Expected Close', 'Segment', 'Sales', 'Days in Stage'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Pipeline Status', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
   };
 
   const generateActivityLog = async (from: string, to: string): Promise<GeneratedReport> => {
-    let query = supabase.from('sales_activities').select('type, activity_date, notes, outcome, purpose')
+    let query = supabase.from('sales_activities').select('type, activity_date, notes, outcome, purpose, sales_id')
       .gte('activity_date', from).lte('activity_date', to);
     const salesF = buildSalesFilter();
     if (salesF) query = query.eq('sales_id', salesF);
     const { data, error } = await query.order('activity_date', { ascending: false });
     if (error) throw error;
     const rows = (data || []).map(a => ({
-      'Date': a.activity_date, 'Type': a.type, 'Purpose': a.purpose || '-',
+      'Date': a.activity_date, 'Sales': salesNameById((a as any).sales_id), 'Type': a.type, 'Purpose': a.purpose || '-',
       'Outcome': a.outcome || '-', 'Notes': a.notes || '-',
     }));
-    return { type: 'activity-log', name: `Activity Log`, columns: ['Date', 'Type', 'Purpose', 'Outcome', 'Notes'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Activity Log', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
+    return { type: 'activity-log', name: `Activity Log`, columns: ['Date', 'Sales', 'Type', 'Purpose', 'Outcome', 'Notes'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'Activity Log', period: selectedPeriod, segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
   };
 
   const generateARAging = async (): Promise<GeneratedReport> => {
@@ -210,7 +220,8 @@ export default function StatementReport() {
       else if (diffDays > 0) aging = '1-30 days';
       return { 'Invoice #': inv.invoice_number, 'Net Sales': inv.net_sales, 'Issue Date': inv.issue_date, 'Due Date': inv.due_date, 'Overdue Days': Math.max(0, diffDays), 'Aging': aging, 'Segment': inv.segment };
     });
-    return { type: 'ar-aging', name: `AR Aging Report`, columns: ['Invoice #', 'Net Sales', 'Issue Date', 'Due Date', 'Overdue Days', 'Aging', 'Segment'], rows, generatedAt: new Date().toISOString(), filters: { reportType: 'AR Aging Report', period: '-', segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
+    const rows2 = (data || []).map((inv, i) => ({ ...rows[i], 'Sales': salesNameById((inv as any).sales_id) }));
+    return { type: 'ar-aging', name: `AR Aging Report`, columns: ['Invoice #', 'Net Sales', 'Issue Date', 'Due Date', 'Overdue Days', 'Aging', 'Segment', 'Sales'], rows: rows2, generatedAt: new Date().toISOString(), filters: { reportType: 'AR Aging Report', period: '-', segment: getSegmentName(selectedSegment), salesPerson: getSalesName(selectedSales), dateFrom: formatDateDisplay(dateRange.from), dateTo: formatDateDisplay(dateRange.to) } };
   };
 
   const generateProductSales = async (from: string, to: string): Promise<GeneratedReport> => {
@@ -258,9 +269,29 @@ export default function StatementReport() {
 
   const formatCellValue = (col: string, val: any) => {
     if (val === null || val === undefined) return '-';
-    if (['Net Sales', 'Gross Profit', 'Value', 'Revenue'].includes(col)) return formatIDR(Number(val));
+    if (['Net Sales', 'Gross Profit', 'Value', 'Revenue'].includes(col)) {
+      return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Number(val));
+    }
     return String(val);
   };
+
+  // Apply hanging filter to the generated rows
+  const displayedRows = useMemo(() => {
+    if (!previewReport) return [];
+    const q = tableSearch.trim().toLowerCase();
+    const salesName = tableSalesFilter === 'all' ? null : getSalesName(tableSalesFilter);
+    return previewReport.rows.filter(row => {
+      if (salesName && previewReport.columns.includes('Sales')) {
+        if (String(row['Sales'] ?? '').toLowerCase() !== salesName.toLowerCase()) return false;
+      }
+      if (q) {
+        return previewReport.columns.some(col => String(row[col] ?? '').toLowerCase().includes(q));
+      }
+      return true;
+    });
+  }, [previewReport, tableSearch, tableSalesFilter, salesProfiles]);
+
+  const tableFilterActive = tableSearch.trim() !== '' || tableSalesFilter !== 'all';
 
   // --- Action handlers ---
   const handleCopyTable = () => {
@@ -505,29 +536,66 @@ export default function StatementReport() {
               </div>
 
               {/* Report Table */}
-              <div ref={tableRef} className="rounded-md border overflow-auto max-h-[500px]">
+              <div ref={tableRef} className="relative rounded-md border overflow-auto max-h-[500px]">
+                {/* Hanging filter button */}
+                <div className="sticky top-2 z-20 flex justify-end pr-2 pointer-events-none print:hidden">
+                  <Popover open={tableFilterOpen} onOpenChange={setTableFilterOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant={tableFilterActive ? 'default' : 'outline'}
+                        size="sm"
+                        className="pointer-events-auto shadow-md h-8"
+                      >
+                        <Filter className="h-4 w-4 mr-1.5" />
+                        Filter{tableFilterActive ? ` (${displayedRows.length}/${previewReport.rows.length})` : ''}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-72 space-y-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold">Search</Label>
+                        <Input value={tableSearch} onChange={(e) => setTableSearch(e.target.value)} placeholder="Cari di semua kolom..." className="h-9 text-sm" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-semibold">Sales</Label>
+                        <Select value={tableSalesFilter} onValueChange={setTableSalesFilter}>
+                          <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="all">All Sales</SelectItem>
+                            {salesProfiles.map(sp => (<SelectItem key={sp.user_id} value={sp.user_id}>{sp.full_name}</SelectItem>))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex justify-between pt-1">
+                        <Button variant="ghost" size="sm" onClick={() => { setTableSearch(''); setTableSalesFilter('all'); }}>
+                          <X className="h-3.5 w-3.5 mr-1" /> Reset
+                        </Button>
+                        <Button size="sm" onClick={() => setTableFilterOpen(false)}>Tutup</Button>
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-xs whitespace-nowrap w-[50px]">#</TableHead>
+                      <TableHead className="text-xs whitespace-nowrap w-[50px] sticky top-0 bg-card z-10">#</TableHead>
                       {previewReport.columns.map(col => (
-                        <TableHead key={col} className="text-xs whitespace-nowrap">{col}</TableHead>
+                        <TableHead key={col} className="text-xs whitespace-normal break-words align-top max-w-[200px] sticky top-0 bg-card z-10">{col}</TableHead>
                       ))}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {previewReport.rows.length === 0 ? (
+                    {displayedRows.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={previewReport.columns.length + 1} className="text-center text-sm text-muted-foreground py-8">
                           Tidak ada data untuk filter yang dipilih.
                         </TableCell>
                       </TableRow>
                     ) : (
-                      previewReport.rows.map((row, rIdx) => (
+                      displayedRows.map((row, rIdx) => (
                         <TableRow key={rIdx}>
                           <TableCell className="text-sm text-muted-foreground">{rIdx + 1}</TableCell>
                           {previewReport.columns.map(col => (
-                            <TableCell key={col} className="text-sm whitespace-nowrap">
+                            <TableCell key={col} className="text-sm whitespace-normal break-words align-top max-w-[240px]">
                               {formatCellValue(col, row[col])}
                             </TableCell>
                           ))}
