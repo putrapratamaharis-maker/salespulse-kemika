@@ -9,9 +9,14 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, Filter, X, CalendarIcon, ArrowUpDown, ArrowUp, ArrowDown, ChevronLeft, ChevronRight, Download, FileText, FileSpreadsheet, ChevronDown } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 import { AccountPIC } from '@/components/pipeline/DealDetailDialog';
 
@@ -26,7 +31,6 @@ interface AllOpenDealsTableProps {
 const perPageOptions = [5, 10, 25, 50, 100];
 
 const stageOptions = [
-  { value: 'all', label: 'All Stages' },
   { value: 'prospect', label: 'Prospect' },
   { value: 'quotation', label: 'Quotation' },
   { value: 'negotiation', label: 'Negotiation' },
@@ -35,7 +39,6 @@ const stageOptions = [
 ];
 
 const segmentOptions = [
-  { value: 'all', label: 'All Segments' },
   { value: 'B2G', label: 'B2G' },
   { value: 'B2B', label: 'B2B' },
   { value: 'B2C', label: 'B2C' },
@@ -54,9 +57,9 @@ const stageOrd = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice
 
 export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAccountPIC, salesPersons = [] }: AllOpenDealsTableProps) {
   const [search, setSearch] = useState('');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [segmentFilter, setSegmentFilter] = useState('all');
-  const [salesFilter, setSalesFilter] = useState('all');
+  const [stageFilter, setStageFilter] = useState<string[]>([]);
+  const [segmentFilter, setSegmentFilter] = useState<string[]>([]);
+  const [salesFilter, setSalesFilter] = useState<string[]>([]);
   const [dateFrom, setDateFrom] = useState<Date | undefined>();
   const [dateTo, setDateTo] = useState<Date | undefined>();
   const [sortKey, setSortKey] = useState<string | null>(null);
@@ -65,13 +68,13 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
   const [perPage, setPerPage] = useState(5);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
 
-  const hasFilters = search || stageFilter !== 'all' || segmentFilter !== 'all' || salesFilter !== 'all' || dateFrom || dateTo;
+  const hasFilters = search || stageFilter.length > 0 || segmentFilter.length > 0 || salesFilter.length > 0 || dateFrom || dateTo;
 
   const clearFilters = () => {
     setSearch('');
-    setStageFilter('all');
-    setSegmentFilter('all');
-    setSalesFilter('all');
+    setStageFilter([]);
+    setSegmentFilter([]);
+    setSalesFilter([]);
     setDateFrom(undefined);
     setDateTo(undefined);
     setPage(1);
@@ -79,11 +82,13 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
 
   // Reset page when filters change
   const setSearchAndReset = (v: string) => { setSearch(v); setPage(1); };
-  const setStageAndReset = (v: string) => { setStageFilter(v); setPage(1); };
-  const setSegmentAndReset = (v: string) => { setSegmentFilter(v); setPage(1); };
+  const toggleInList = (list: string[], v: string) =>
+    list.includes(v) ? list.filter(x => x !== v) : [...list, v];
+  const toggleStage = (v: string) => { setStageFilter(prev => toggleInList(prev, v)); setPage(1); };
+  const toggleSegment = (v: string) => { setSegmentFilter(prev => toggleInList(prev, v)); setPage(1); };
+  const toggleSales = (v: string) => { setSalesFilter(prev => toggleInList(prev, v)); setPage(1); };
   const setDateFromAndReset = (v: Date | undefined) => { setDateFrom(v); setPage(1); };
   const setDateToAndReset = (v: Date | undefined) => { setDateTo(v); setPage(1); };
-  const setSalesAndReset = (v: string) => { setSalesFilter(v); setPage(1); };
   const setPerPageAndReset = (v: string) => { setPerPage(Number(v)); setPage(1); };
 
   const filteredAndSorted = useMemo(() => {
@@ -97,9 +102,9 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
         getSalesName(d.salesId).toLowerCase().includes(q)
       );
     }
-    if (stageFilter !== 'all') result = result.filter(d => d.stage === stageFilter);
-    if (segmentFilter !== 'all') result = result.filter(d => d.segment === segmentFilter);
-    if (salesFilter !== 'all') result = result.filter(d => d.salesId === salesFilter);
+    if (stageFilter.length > 0) result = result.filter(d => stageFilter.includes(d.stage));
+    if (segmentFilter.length > 0) result = result.filter(d => segmentFilter.includes(d.segment));
+    if (salesFilter.length > 0) result = result.filter(d => salesFilter.includes(d.salesId));
     if (dateFrom) result = result.filter(d => new Date(d.expectedCloseDate) >= dateFrom);
     if (dateTo) result = result.filter(d => new Date(d.expectedCloseDate) <= dateTo);
 
@@ -133,6 +138,42 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
     }
   };
 
+  const buildExportRows = () => filteredAndSorted.map(d => ({
+    Deal: d.name,
+    Account: getAccountName(d.accountId),
+    Sales: getSalesName(d.salesId),
+    'Value (Rp)': d.value,
+    Stage: d.stage.replace('_', ' '),
+    Segment: d.segment,
+    'Probability (%)': d.probability,
+    'Expected Close': d.expectedCloseDate,
+  }));
+
+  const exportExcel = () => {
+    const rows = buildExportRows();
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Open Deals');
+    XLSX.writeFile(wb, `open-deals-${format(new Date(), 'yyyyMMdd-HHmm')}.xlsx`);
+  };
+
+  const exportPDF = () => {
+    const rows = buildExportRows();
+    const doc = new jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(12);
+    doc.text('All Open Deals', 14, 14);
+    doc.setFontSize(9);
+    doc.text(`Exported: ${format(new Date(), 'dd MMM yyyy HH:mm')} — ${rows.length} deals`, 14, 20);
+    autoTable(doc, {
+      head: [Object.keys(rows[0] || { Deal: '', Account: '', Sales: '', 'Value (Rp)': '', Stage: '', Segment: '', 'Probability (%)': '', 'Expected Close': '' })],
+      body: rows.map(r => Object.values(r).map(v => typeof v === 'number' ? v.toLocaleString('id-ID') : String(v ?? ''))),
+      startY: 25,
+      styles: { fontSize: 8, cellPadding: 2 },
+      headStyles: { fillColor: [79, 70, 229] },
+    });
+    doc.save(`open-deals-${format(new Date(), 'yyyyMMdd-HHmm')}.pdf`);
+  };
+
   return (
     <>
     <Card>
@@ -140,7 +181,24 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-semibold">All Open Deals</CardTitle>
-            <span className="text-xs text-muted-foreground">{filteredAndSorted.length} deals</span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{filteredAndSorted.length} deals</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-8 text-xs" disabled={filteredAndSorted.length === 0}>
+                    <Download className="h-3.5 w-3.5 mr-1" /> Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={exportExcel} className="text-xs">
+                    <FileSpreadsheet className="h-3.5 w-3.5 mr-2" /> Export to Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={exportPDF} className="text-xs">
+                    <FileText className="h-3.5 w-3.5 mr-2" /> Export to PDF
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <div className="relative flex-1 min-w-[180px] max-w-xs">
@@ -152,39 +210,32 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
                 className="h-8 pl-8 text-xs"
               />
             </div>
-            <Select value={stageFilter} onValueChange={setStageAndReset}>
-              <SelectTrigger className="h-8 w-[130px] text-xs">
-                <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {stageOptions.map(o => (
-                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={segmentFilter} onValueChange={setSegmentAndReset}>
-              <SelectTrigger className="h-8 w-[130px] text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {segmentOptions.map(o => (
-                  <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <MultiSelectCheckbox
+              icon={<Filter className="h-3 w-3 mr-1 text-muted-foreground" />}
+              placeholder="All Stages"
+              widthClass="w-[150px]"
+              options={stageOptions}
+              selected={stageFilter}
+              onToggle={toggleStage}
+              onClear={() => { setStageFilter([]); setPage(1); }}
+            />
+            <MultiSelectCheckbox
+              placeholder="All Segments"
+              widthClass="w-[140px]"
+              options={segmentOptions}
+              selected={segmentFilter}
+              onToggle={toggleSegment}
+              onClear={() => { setSegmentFilter([]); setPage(1); }}
+            />
             {salesPersons.length > 0 && (
-              <Select value={salesFilter} onValueChange={setSalesAndReset}>
-                <SelectTrigger className="h-8 w-[150px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Sales</SelectItem>
-                  {salesPersons.map(s => (
-                    <SelectItem key={s.id} value={s.id} className="text-xs">{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectCheckbox
+                placeholder="All Sales"
+                widthClass="w-[170px]"
+                options={salesPersons.map(s => ({ value: s.id, label: s.name }))}
+                selected={salesFilter}
+                onToggle={toggleSales}
+                onClear={() => { setSalesFilter([]); setPage(1); }}
+              />
             )}
 
             {/* Date From */}
