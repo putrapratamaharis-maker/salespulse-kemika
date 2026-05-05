@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
 import { Calendar } from '@/components/ui/calendar';
 import { Separator } from '@/components/ui/separator';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
@@ -536,6 +537,45 @@ export default function StatementReport() {
               </div>
 
               {/* Report Table */}
+              {tableFilterActive && (
+                <div className="flex flex-wrap items-center gap-2 mb-2 print:hidden">
+                  <span className="text-xs text-muted-foreground">Filter aktif:</span>
+                  {tableSearch.trim() !== '' && (
+                    <Badge variant="secondary" className="gap-1 pr-1 font-normal">
+                      <span className="text-xs">Search: "{tableSearch.trim()}"</span>
+                      <button
+                        type="button"
+                        onClick={() => setTableSearch('')}
+                        className="ml-1 rounded-full hover:bg-background/60 p-0.5"
+                        aria-label="Hapus filter pencarian"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  )}
+                  {tableSalesFilter !== 'all' && (
+                    <Badge variant="secondary" className="gap-1 pr-1 font-normal">
+                      <span className="text-xs">Sales: {getSalesName(tableSalesFilter)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setTableSalesFilter('all')}
+                        className="ml-1 rounded-full hover:bg-background/60 p-0.5"
+                        aria-label="Hapus filter sales"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => { setTableSearch(''); setTableSalesFilter('all'); }}
+                  >
+                    Hapus semua
+                  </Button>
+                </div>
+              )}
               <div ref={tableRef} className="relative rounded-md border overflow-auto max-h-[500px]">
                 {/* Hanging filter button */}
                 <div className="sticky top-2 z-20 flex justify-end pr-2 pointer-events-none print:hidden">
