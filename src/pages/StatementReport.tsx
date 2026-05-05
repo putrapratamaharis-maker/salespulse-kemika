@@ -538,11 +538,14 @@ export default function StatementReport() {
 
               {/* Report Table */}
               <div className="flex flex-wrap items-center gap-2 mb-2 print:hidden">
+                {tableFilterActive && (
+                  <>
                   <Badge variant="outline" className="font-normal text-xs">
-                    Menampilkan {displayedRows.length.toLocaleString('id-ID')}
-                    {tableFilterActive ? ` dari ${previewReport.rows.length.toLocaleString('id-ID')}` : ''} data
+                    Menampilkan {displayedRows.length.toLocaleString('id-ID')} dari {previewReport.rows.length.toLocaleString('id-ID')} data
                   </Badge>
-                  {tableFilterActive && <span className="text-xs text-muted-foreground">Filter aktif:</span>}
+                  <span className="text-xs text-muted-foreground">Filter aktif:</span>
+                  </>
+                )}
                   {tableSearch.trim() !== '' && (
                     <Badge variant="secondary" className="gap-1 pr-1 font-normal">
                       <span className="text-xs">Search: "{tableSearch.trim()}"</span>
