@@ -537,8 +537,7 @@ export default function StatementReport() {
               </div>
 
               {/* Report Table */}
-              {(tableFilterActive || displayedRows.length !== previewReport.rows.length) || true ? (
-                <div className="flex flex-wrap items-center gap-2 mb-2 print:hidden">
+              <div className="flex flex-wrap items-center gap-2 mb-2 print:hidden">
                   <Badge variant="outline" className="font-normal text-xs">
                     Menampilkan {displayedRows.length.toLocaleString('id-ID')}
                     {tableFilterActive ? ` dari ${previewReport.rows.length.toLocaleString('id-ID')}` : ''} data
@@ -580,8 +579,7 @@ export default function StatementReport() {
                       Hapus semua
                     </Button>
                   )}
-                </div>
-              ) : null}
+              </div>
               <div ref={tableRef} className="relative rounded-md border overflow-auto max-h-[500px]">
                 {/* Hanging filter button */}
                 <div className="sticky top-2 z-20 flex justify-end pr-2 pointer-events-none print:hidden">
