@@ -3,7 +3,7 @@ import { Deal, DealStage, formatNumIDR, formatDate } from '@/types/sales';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
 import { StatusBadge } from '@/components/StatusBadge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -188,6 +188,9 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
 
   const totalPages = Math.max(1, Math.ceil(filteredAndSorted.length / perPage));
   const paginatedDeals = filteredAndSorted.slice((page - 1) * perPage, page * perPage);
+
+  const totalValue = useMemo(() => filteredAndSorted.reduce((s, d) => s + (d.value || 0), 0), [filteredAndSorted]);
+  const avgProbability = useMemo(() => filteredAndSorted.length === 0 ? 0 : filteredAndSorted.reduce((s, d) => s + (d.probability || 0), 0) / filteredAndSorted.length, [filteredAndSorted]);
 
   const handleSort = (key: string) => {
     if (sortKey === key) {
@@ -397,6 +400,17 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
               ))
             )}
           </TableBody>
+          {filteredAndSorted.length > 0 && (
+            <TableFooter>
+              <TableRow className="bg-muted/40 font-semibold">
+                <TableCell colSpan={2} className="text-xs">Total / Rata-rata ({filteredAndSorted.length} deals)</TableCell>
+                <TableCell className="text-sm">{formatNumIDR(totalValue)}</TableCell>
+                <TableCell colSpan={2}></TableCell>
+                <TableCell className="text-sm">{avgProbability.toFixed(1)}%</TableCell>
+                <TableCell></TableCell>
+              </TableRow>
+            </TableFooter>
+          )}
         </Table>
 
         {/* Pagination */}
