@@ -537,9 +537,13 @@ export default function StatementReport() {
               </div>
 
               {/* Report Table */}
-              {tableFilterActive && (
+              {(tableFilterActive || displayedRows.length !== previewReport.rows.length) || true ? (
                 <div className="flex flex-wrap items-center gap-2 mb-2 print:hidden">
-                  <span className="text-xs text-muted-foreground">Filter aktif:</span>
+                  <Badge variant="outline" className="font-normal text-xs">
+                    Menampilkan {displayedRows.length.toLocaleString('id-ID')}
+                    {tableFilterActive ? ` dari ${previewReport.rows.length.toLocaleString('id-ID')}` : ''} data
+                  </Badge>
+                  {tableFilterActive && <span className="text-xs text-muted-foreground">Filter aktif:</span>}
                   {tableSearch.trim() !== '' && (
                     <Badge variant="secondary" className="gap-1 pr-1 font-normal">
                       <span className="text-xs">Search: "{tableSearch.trim()}"</span>
@@ -566,16 +570,18 @@ export default function StatementReport() {
                       </button>
                     </Badge>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 px-2 text-xs"
-                    onClick={() => { setTableSearch(''); setTableSalesFilter('all'); }}
-                  >
-                    Hapus semua
-                  </Button>
+                  {tableFilterActive && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => { setTableSearch(''); setTableSalesFilter('all'); }}
+                    >
+                      Hapus semua
+                    </Button>
+                  )}
                 </div>
-              )}
+              ) : null}
               <div ref={tableRef} className="relative rounded-md border overflow-auto max-h-[500px]">
                 {/* Hanging filter button */}
                 <div className="sticky top-2 z-20 flex justify-end pr-2 pointer-events-none print:hidden">
