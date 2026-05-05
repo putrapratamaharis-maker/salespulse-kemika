@@ -215,6 +215,17 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
   const exportExcel = () => {
     const rows = buildExportRows();
     const ws = XLSX.utils.json_to_sheet(rows);
+    const summaryRow = {
+      Deal: `TOTAL / RATA-RATA (${rows.length} deals)`,
+      Account: '',
+      Sales: '',
+      'Value (Rp)': totalValue,
+      Stage: '',
+      Segment: '',
+      'Probability (%)': Number(avgProbability.toFixed(1)),
+      'Expected Close': '',
+    };
+    XLSX.utils.sheet_add_json(ws, [summaryRow], { skipHeader: true, origin: -1 });
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Open Deals');
     XLSX.writeFile(wb, `open-deals-${format(new Date(), 'yyyyMMdd-HHmm')}.xlsx`);
@@ -230,9 +241,18 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
     autoTable(doc, {
       head: [Object.keys(rows[0] || { Deal: '', Account: '', Sales: '', 'Value (Rp)': '', Stage: '', Segment: '', 'Probability (%)': '', 'Expected Close': '' })],
       body: rows.map(r => Object.values(r).map(v => typeof v === 'number' ? v.toLocaleString('id-ID') : String(v ?? ''))),
+      foot: [[
+        `TOTAL / RATA-RATA (${rows.length} deals)`,
+        '', '',
+        totalValue.toLocaleString('id-ID'),
+        '', '',
+        `${avgProbability.toFixed(1)}%`,
+        '',
+      ]],
       startY: 25,
       styles: { fontSize: 8, cellPadding: 2 },
       headStyles: { fillColor: [79, 70, 229] },
+      footStyles: { fillColor: [229, 231, 235], textColor: 20, fontStyle: 'bold' },
     });
     doc.save(`open-deals-${format(new Date(), 'yyyyMMdd-HHmm')}.pdf`);
   };
