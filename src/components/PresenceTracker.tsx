@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 
@@ -10,6 +10,7 @@ import { useAuth } from '@/context/AuthContext';
  */
 export function PresenceTracker() {
   const { user } = useAuth();
+  const lastActiveRef = useRef<number>(Date.now());
 
   useEffect(() => {
     if (!user) return;
@@ -17,6 +18,21 @@ export function PresenceTracker() {
     const channel = supabase.channel('online-users', {
       config: { presence: { key: user.id } },
     });
+
+    let onlineAt = new Date().toISOString();
+    let profileData: { full_name: string; avatar_url: string | null } = {
+      full_name: 'User',
+      avatar_url: null,
+    };
+
+    const trackPresence = async () => {
+      await channel.track({
+        full_name: profileData.full_name,
+        avatar_url: profileData.avatar_url,
+        online_at: onlineAt,
+        last_active_at: new Date(lastActiveRef.current).toISOString(),
+      });
+    };
 
     channel.subscribe(async (status) => {
       if (status !== 'SUBSCRIBED') return;
@@ -30,14 +46,28 @@ export function PresenceTracker() {
         const { resolveAvatarUrl } = await import('@/lib/avatarUrl');
         signedAvatar = await resolveAvatarUrl(profile.avatar_url);
       }
-      await channel.track({
+      profileData = {
         full_name: profile?.full_name || 'User',
         avatar_url: signedAvatar,
-        online_at: new Date().toISOString(),
-      });
+      };
+      await trackPresence();
     });
 
+    // Track user activity to determine Active vs Idle
+    const bumpActivity = () => {
+      lastActiveRef.current = Date.now();
+    };
+    const events: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+    events.forEach((e) => window.addEventListener(e, bumpActivity, { passive: true }));
+
+    // Re-broadcast periodically so other clients can recompute Active/Idle
+    const interval = window.setInterval(() => {
+      trackPresence();
+    }, 30_000);
+
     return () => {
+      events.forEach((e) => window.removeEventListener(e, bumpActivity));
+      window.clearInterval(interval);
       supabase.removeChannel(channel);
     };
   }, [user]);
