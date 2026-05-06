@@ -65,6 +65,20 @@ function formatOnlineSince(onlineAt: string, now: number): string {
   return `${day} hari lalu`;
 }
 
+function formatLastActive(lastActiveAt: string | undefined, now: number): string {
+  if (!lastActiveAt) return 'baru saja';
+  const diffSec = Math.max(0, Math.floor((now - new Date(lastActiveAt).getTime()) / 1000));
+  if (diffSec < 10) return 'baru saja';
+  if (diffSec < 60) return `${diffSec} detik lalu`;
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min} menit lalu`;
+  const hr = Math.floor(min / 60);
+  const remMin = min % 60;
+  if (hr < 24) return remMin > 0 ? `${hr} jam ${remMin} menit lalu` : `${hr} jam lalu`;
+  const day = Math.floor(hr / 24);
+  return `${day} hari lalu`;
+}
+
 export function LiveStatusRow() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -257,6 +271,10 @@ export function LiveStatusRow() {
                           Online sejak {formatOnlineSince(u.online_at, nowTick)}
                         </p>
                       )}
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Activity className="h-2.5 w-2.5" />
+                        Last aktif {formatLastActive(u.last_active_at, nowTick)}
+                      </p>
                     </div>
                   </div>
                 );
