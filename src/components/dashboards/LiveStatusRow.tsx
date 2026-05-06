@@ -75,25 +75,7 @@ export function LiveStatusRow() {
         });
         setOnlineUsers(users);
       })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('full_name, avatar_url')
-            .eq('user_id', user.id)
-            .single();
-          let signedAvatar: string | null = null;
-          if (profile?.avatar_url) {
-            const { resolveAvatarUrl } = await import('@/lib/avatarUrl');
-            signedAvatar = await resolveAvatarUrl(profile.avatar_url);
-          }
-          await channel.track({
-            full_name: profile?.full_name || 'User',
-            avatar_url: signedAvatar,
-            online_at: new Date().toISOString(),
-          });
-        }
-      });
+      .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
