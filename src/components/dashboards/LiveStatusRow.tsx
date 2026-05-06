@@ -45,6 +45,26 @@ const activityTypeLabels: Record<string, string> = {
   proposal: '📄 Proposal',
 };
 
+function computePresenceStatus(lastActiveAt: string | undefined, now: number): 'Active' | 'Idle' | 'Offline' {
+  if (!lastActiveAt) return 'Active';
+  const diffSec = (now - new Date(lastActiveAt).getTime()) / 1000;
+  if (diffSec < 120) return 'Active';      // < 2 min
+  if (diffSec < 600) return 'Idle';        // < 10 min
+  return 'Offline';
+}
+
+function formatOnlineSince(onlineAt: string, now: number): string {
+  const diffSec = Math.max(0, Math.floor((now - new Date(onlineAt).getTime()) / 1000));
+  if (diffSec < 60) return `${diffSec}d lalu`;
+  const min = Math.floor(diffSec / 60);
+  if (min < 60) return `${min} menit lalu`;
+  const hr = Math.floor(min / 60);
+  const remMin = min % 60;
+  if (hr < 24) return remMin > 0 ? `${hr} jam ${remMin} menit lalu` : `${hr} jam lalu`;
+  const day = Math.floor(hr / 24);
+  return `${day} hari lalu`;
+}
+
 export function LiveStatusRow() {
   const navigate = useNavigate();
   const { user } = useAuth();
