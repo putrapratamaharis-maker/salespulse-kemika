@@ -13,6 +13,8 @@ interface OnlineUser {
   full_name: string;
   avatar_url: string | null;
   presence_ref: string;
+  online_at?: string;
+  last_active_at?: string;
 }
 
 interface PendingApproval {
@@ -49,6 +51,13 @@ export function LiveStatusRow() {
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
+  const [nowTick, setNowTick] = useState<number>(Date.now());
+
+  // Tick every 30s so durations & status (Active/Idle) refresh in UI
+  useEffect(() => {
+    const id = window.setInterval(() => setNowTick(Date.now()), 30_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   // Track online presence via Supabase Realtime
   useEffect(() => {
@@ -70,6 +79,8 @@ export function LiveStatusRow() {
               full_name: p.full_name || 'User',
               avatar_url: p.avatar_url || null,
               presence_ref: p.presence_ref,
+              online_at: p.online_at,
+              last_active_at: p.last_active_at,
             });
           }
         });
@@ -191,17 +202,45 @@ export function LiveStatusRow() {
             <p className="text-xs text-muted-foreground text-center py-4">Tidak ada user online.</p>
           ) : (
             <div className="space-y-2 max-h-[160px] overflow-y-auto">
-              {onlineUsers.map((u) => (
-                <div key={u.user_id} className="flex items-center gap-2">
-                  <div className="relative">
-                    <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                      {u.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              {onlineUsers.map((u) => {
+                const status = computePresenceStatus(u.last_active_at, nowTick);
+                const dotColor =
+                  status === 'Active'
+                    ? 'fill-emerald-500 text-emerald-500'
+                    : status === 'Idle'
+                    ? 'fill-amber-500 text-amber-500'
+                    : 'fill-muted-foreground text-muted-foreground';
+                const badgeClass =
+                  status === 'Active'
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+                    : status === 'Idle'
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30'
+                    : 'bg-muted text-muted-foreground border-border';
+                return (
+                  <div key={u.user_id} className="flex items-center gap-2">
+                    <div className="relative">
+                      <div className="h-7 w-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                        {u.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
+                      <Circle className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 ${dotColor}`} />
                     </div>
-                    <Circle className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 fill-emerald-500 text-emerald-500" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-medium truncate">{u.full_name}</span>
+                        <Badge variant="outline" className={`text-[9px] px-1.5 py-0 h-4 ${badgeClass}`}>
+                          {status}
+                        </Badge>
+                      </div>
+                      {u.online_at && (
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-2.5 w-2.5" />
+                          Online sejak {formatOnlineSince(u.online_at, nowTick)}
+                        </p>
+                      )}
+                    </div>
                   </div>
-                  <span className="text-xs font-medium truncate">{u.full_name}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
