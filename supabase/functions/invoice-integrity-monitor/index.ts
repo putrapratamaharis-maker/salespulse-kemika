@@ -99,6 +99,52 @@ Deno.serve(async (req) => {
       `• ${i.invoice_number} — Deal "${i.deal?.name}" (${i.deal?.stage})`
     );
 
+    // ===== Root-cause heuristics =====
+    const rootCauses: string[] = [];
+
+    if (orphanCount > 0) {
+      // Pattern A: invoice_number tidak match deals.ar_invoice_number sama sekali
+      const orphanNumbers = (orphans || []).map((o: any) => o.invoice_number).filter(Boolean);
+      const { data: matchedDeals } = orphanNumbers.length > 0
+        ? await supabase.from("deals").select("ar_invoice_number").in("ar_invoice_number", orphanNumbers)
+        : { data: [] as any[] };
+      const matchedSet = new Set((matchedDeals || []).map((d: any) => d.ar_invoice_number));
+      const unmatched = orphanNumbers.filter((n: string) => !matchedSet.has(n));
+
+      // Pattern B: format nomor invoice tidak konsisten (cek prefix)
+      const prefixes = new Map<string, number>();
+      for (const n of orphanNumbers) {
+        const p = (n.match(/^[A-Za-z\-\/]+/)?.[0] || "(numeric)").toUpperCase();
+        prefixes.set(p, (prefixes.get(p) || 0) + 1);
+      }
+      const prefixSummary = [...prefixes.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 3)
+        .map(([p, c]) => `${p}×${c}`)
+        .join(", ");
+
+      if (unmatched.length === orphanNumbers.length && orphanNumbers.length > 0) {
+        rootCauses.push(`• Orphan: nomor invoice tidak match field ar_invoice_number deal manapun → kemungkinan invoice di-input manual tanpa link deal, atau format penomoran berbeda (prefix terdeteksi: ${prefixSummary}).`);
+      } else if (unmatched.length > 0) {
+        rootCauses.push(`• Orphan: ${unmatched.length}/${orphanNumbers.length} nomor invoice tidak punya deal cocok (prefix: ${prefixSummary}); ${orphanNumbers.length - unmatched.length} cocok tapi deal_id belum ter-set → backfill diperlukan.`);
+      } else {
+        rootCauses.push(`• Orphan: nomor cocok dengan deal tapi deal_id NULL → trigger/insert path tidak set deal_id (cek edge function insert invoice).`);
+      }
+    }
+
+    if (inactiveCount > 0) {
+      // Pattern C: distribusi stage
+      const stageCounts = new Map<string, number>();
+      for (const i of inactive) {
+        const s = i.deal?.stage || "unknown";
+        stageCounts.set(s, (stageCounts.get(s) || 0) + 1);
+      }
+      const stageSummary = [...stageCounts.entries()]
+        .map(([s, c]) => `${s}×${c}`)
+        .join(", ");
+      rootCauses.push(`• Inactive: deal dipindah ke stage non-aktif (${stageSummary}) setelah invoice terbit → user perlu hapus invoice terkait, atau revert stage deal.`);
+    }
+
     const messageParts: string[] = [];
     if (orphanCount > 0) {
       messageParts.push(
@@ -115,7 +161,10 @@ Deno.serve(async (req) => {
     const deltaParts: string[] = [];
     if (orphanIncreased) deltaParts.push(`orphan +${orphanCount - prevOrphan} (${prevOrphan}→${orphanCount})`);
     if (inactiveIncreased) deltaParts.push(`inactive +${inactiveCount - prevInactive} (${prevInactive}→${inactiveCount})`);
-    const message = `Peningkatan terdeteksi: ${deltaParts.join(", ")}.\n\n${messageParts.join("\n\n")}\n\nBuka Revenue & Margin untuk review.`;
+    const rootCauseBlock = rootCauses.length > 0
+      ? `\n\n🔍 Kemungkinan root cause:\n${rootCauses.join("\n")}`
+      : "";
+    const message = `Peningkatan terdeteksi: ${deltaParts.join(", ")}.\n\n${messageParts.join("\n\n")}${rootCauseBlock}\n\nBuka Revenue & Margin untuk review.`;
 
     const notifs = (admins || []).map((a: any) => ({
       user_id: a.user_id,
