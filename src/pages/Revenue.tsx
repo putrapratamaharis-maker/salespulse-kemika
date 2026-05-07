@@ -56,7 +56,7 @@ const Revenue = () => {
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [filterMonth, setFilterMonth] = useState<string>('all');
-  const [filterYear, setFilterYear] = useState<string>('all');
+  const [filterYear, setFilterYear] = useState<string>(String(new Date().getFullYear()));
   const [filterSegment, setFilterSegment] = useState<string>('all');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterSales, setFilterSales] = useState<string>('all');
@@ -267,7 +267,7 @@ const Revenue = () => {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard label="Total Revenue by Invoice" value={formatIDRFull(totalRevenue)} change={14.2} changeLabel="vs last month" icon={DollarSign} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Total net_sales dari seluruh invoice berdasarkan filter periode dan segment" />
-        <KPICard label="TOTAL REVENUE (WON)" value={formatIDRFull(totalWon)} icon={Trophy} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="Gabungan nilai deals pada tahap PO Secured dan Invoice Issued dari pipeline" />
+        <KPICard label="TOTAL REVENUE (WON)" value={formatIDRFull(totalWon)} icon={Trophy} autoFitText className="bg-gradient-to-br from-indigo-600 to-indigo-500" tooltip="SUM deals.value pada stage PO Secured + Invoice Issued, difilter berdasarkan expected_close_date sesuai dropdown Tahun/Bulan. Default = tahun berjalan, sehingga match dengan Actual Revenue YTD di Executive Summary." />
         <KPICard label="Gross Profit" value={formatIDRFull(totalGP)} icon={TrendingUp} autoFitText className="bg-gradient-to-br from-emerald-600 to-emerald-500" tooltip="Total gross_profit dari seluruh invoice berdasarkan filter" />
         <KPICard label="Gross Margin" value={formatPercent(marginPct)} status={marginPct >= 17 ? 'green' : 'red'} icon={Percent} autoFitText className="bg-gradient-to-br from-amber-500 to-amber-400" tooltip="Gross Profit ÷ Total Revenue × 100%. Threshold hijau ≥ 17%" />
         <KPICard label="Margin Compliance" value={formatPercent(marginCompliance)} status={marginCompliance >= 80 ? 'green' : 'yellow'} icon={CreditCard} autoFitText className="bg-gradient-to-br from-sky-600 to-sky-500" tooltip="Persentase invoice yang memiliki margin ≥ 17% dari total invoice" />
