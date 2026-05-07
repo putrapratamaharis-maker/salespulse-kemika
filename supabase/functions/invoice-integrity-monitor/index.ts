@@ -58,10 +58,36 @@ Deno.serve(async (req) => {
     // 4. Build deduped alert payload (one notif per admin per run)
     const today = new Date().toISOString().slice(0, 10);
     const title = "⚠️ Invoice Integrity Alert";
+
+    // Resolve account names for orphan invoices
+    const orphanAccountIds = [...new Set((orphans || []).map((o: any) => o.account_id).filter(Boolean))];
+    const { data: accts } = orphanAccountIds.length > 0
+      ? await supabase.from("accounts").select("id, name").in("id", orphanAccountIds)
+      : { data: [] as any[] };
+    const acctMap = new Map((accts || []).map((a: any) => [a.id, a.name]));
+
+    const MAX_LIST = 10;
+    const orphanLines = (orphans || []).slice(0, MAX_LIST).map((o: any) =>
+      `• ${o.invoice_number} — ${acctMap.get(o.account_id) || "Akun tidak diketahui"}`
+    );
+    const inactiveLines = inactive.slice(0, MAX_LIST).map((i: any) =>
+      `• ${i.invoice_number} — Deal "${i.deal?.name}" (${i.deal?.stage})`
+    );
+
     const messageParts: string[] = [];
-    if (orphanCount > 0) messageParts.push(`${orphanCount} invoice tanpa deal_id (orphan)`);
-    if (inactiveCount > 0) messageParts.push(`${inactiveCount} invoice masih ter-link ke deal canceled/lost`);
-    const message = `Terdeteksi: ${messageParts.join(" & ")}. Buka Revenue & Margin atau jalankan backfill.`;
+    if (orphanCount > 0) {
+      messageParts.push(
+        `🔸 ${orphanCount} invoice tanpa deal_id (orphan):\n${orphanLines.join("\n")}` +
+        (orphanCount > MAX_LIST ? `\n…dan ${orphanCount - MAX_LIST} lainnya` : "")
+      );
+    }
+    if (inactiveCount > 0) {
+      messageParts.push(
+        `🔸 ${inactiveCount} invoice di deal canceled/lost:\n${inactiveLines.join("\n")}` +
+        (inactiveCount > MAX_LIST ? `\n…dan ${inactiveCount - MAX_LIST} lainnya` : "")
+      );
+    }
+    const message = `Terdeteksi masalah integritas invoice:\n\n${messageParts.join("\n\n")}\n\nBuka Revenue & Margin untuk review.`;
 
     const notifs = (admins || []).map((a: any) => ({
       user_id: a.user_id,
