@@ -348,6 +348,7 @@ export type Database = {
         Row: {
           account_id: string
           created_at: string
+          deal_id: string | null
           due_date: string
           gross_profit: number
           id: string
@@ -361,6 +362,7 @@ export type Database = {
         Insert: {
           account_id: string
           created_at?: string
+          deal_id?: string | null
           due_date: string
           gross_profit?: number
           id?: string
@@ -374,6 +376,7 @@ export type Database = {
         Update: {
           account_id?: string
           created_at?: string
+          deal_id?: string | null
           due_date?: string
           gross_profit?: number
           id?: string
@@ -390,6 +393,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "invoices_deal_id_fkey"
+            columns: ["deal_id"]
+            isOneToOne: false
+            referencedRelation: "deals"
             referencedColumns: ["id"]
           },
         ]
@@ -1418,6 +1428,7 @@ export type Database = {
         Returns: {
           account_id: string
           created_at: string
+          deal_id: string | null
           due_date: string
           gross_profit: number
           id: string
