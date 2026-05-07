@@ -344,6 +344,30 @@ export type Database = {
         }
         Relationships: []
       }
+      invoice_integrity_runs: {
+        Row: {
+          alerted: boolean
+          id: string
+          inactive_count: number
+          orphan_count: number
+          run_at: string
+        }
+        Insert: {
+          alerted?: boolean
+          id?: string
+          inactive_count?: number
+          orphan_count?: number
+          run_at?: string
+        }
+        Update: {
+          alerted?: boolean
+          id?: string
+          inactive_count?: number
+          orphan_count?: number
+          run_at?: string
+        }
+        Relationships: []
+      }
       invoices: {
         Row: {
           account_id: string
