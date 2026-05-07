@@ -170,6 +170,7 @@ Deno.serve(async (req) => {
               gross_profit: 0,
               issue_date: payload.invoice_date,
               due_date: payload.due_date ?? payload.invoice_date,
+              deal_id: deal.id,
             },
             { onConflict: "invoice_number" },
           );

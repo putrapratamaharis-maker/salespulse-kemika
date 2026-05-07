@@ -236,6 +236,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
         issue_date: invoiceIssueDate,
         due_date: invoiceDueDate,
         paid_date: invoicePaidDate || null,
+        deal_id: deal.id,
       });
 
       if (error) {

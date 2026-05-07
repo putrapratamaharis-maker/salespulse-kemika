@@ -205,6 +205,7 @@ Deno.serve(async (req) => {
               gross_profit: 0, // dihitung manual / dari margin deal
               issue_date: body.invoice_date!,
               due_date: body.due_date ?? body.invoice_date!,
+              deal_id: deal.id,
             },
             { onConflict: "invoice_number" },
           );

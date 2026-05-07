@@ -87,6 +87,7 @@ export function InvoiceTransitionDialog({ open, onOpenChange, deal, getAccountNa
       issue_date: format(issueDate, 'yyyy-MM-dd'),
       due_date: format(dueDate, 'yyyy-MM-dd'),
       paid_date: paidDate ? format(paidDate, 'yyyy-MM-dd') : null,
+      deal_id: deal.id,
     });
 
     if (error) {
