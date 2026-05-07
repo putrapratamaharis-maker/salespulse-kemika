@@ -41,9 +41,33 @@ Deno.serve(async (req) => {
     const orphanCount = orphans?.length ?? 0;
     const inactiveCount = inactive.length;
 
-    if (orphanCount <= ORPHAN_THRESHOLD && inactiveCount <= INACTIVE_THRESHOLD) {
+    // Compare with previous run — only alert when counts INCREASED
+    const { data: prevRun } = await supabase
+      .from("invoice_integrity_runs")
+      .select("orphan_count, inactive_count")
+      .order("run_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const prevOrphan = prevRun?.orphan_count ?? 0;
+    const prevInactive = prevRun?.inactive_count ?? 0;
+    const orphanIncreased = orphanCount > prevOrphan && orphanCount > ORPHAN_THRESHOLD;
+    const inactiveIncreased = inactiveCount > prevInactive && inactiveCount > INACTIVE_THRESHOLD;
+    const shouldAlert = orphanIncreased || inactiveIncreased;
+
+    // Always log this run for next comparison
+    await supabase.from("invoice_integrity_runs").insert({
+      orphan_count: orphanCount,
+      inactive_count: inactiveCount,
+      alerted: shouldAlert,
+    });
+
+    if (!shouldAlert) {
       return new Response(
-        JSON.stringify({ ok: true, orphanCount, inactiveCount, alerted: false }),
+        JSON.stringify({
+          ok: true, orphanCount, inactiveCount, prevOrphan, prevInactive, alerted: false,
+          reason: "no_increase",
+        }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -55,8 +79,9 @@ Deno.serve(async (req) => {
       .in("system_role", ["super_admin", "admin"]);
     if (e3) throw e3;
 
-    // 4. Build deduped alert payload (one notif per admin per run)
-    const today = new Date().toISOString().slice(0, 10);
+    // 4. Build alert payload — unique per run timestamp (no daily dedupe needed
+    // because we already gate on "increased vs previous run")
+    const runStamp = new Date().toISOString();
     const title = "⚠️ Invoice Integrity Alert";
 
     // Resolve account names for orphan invoices
@@ -87,7 +112,10 @@ Deno.serve(async (req) => {
         (inactiveCount > MAX_LIST ? `\n…dan ${inactiveCount - MAX_LIST} lainnya` : "")
       );
     }
-    const message = `Terdeteksi masalah integritas invoice:\n\n${messageParts.join("\n\n")}\n\nBuka Revenue & Margin untuk review.`;
+    const deltaParts: string[] = [];
+    if (orphanIncreased) deltaParts.push(`orphan +${orphanCount - prevOrphan} (${prevOrphan}→${orphanCount})`);
+    if (inactiveIncreased) deltaParts.push(`inactive +${inactiveCount - prevInactive} (${prevInactive}→${inactiveCount})`);
+    const message = `Peningkatan terdeteksi: ${deltaParts.join(", ")}.\n\n${messageParts.join("\n\n")}\n\nBuka Revenue & Margin untuk review.`;
 
     const notifs = (admins || []).map((a: any) => ({
       user_id: a.user_id,
@@ -95,22 +123,12 @@ Deno.serve(async (req) => {
       message,
       type: "warning",
       reference_type: "invoice_integrity",
-      reference_id: today,
+      reference_id: runStamp,
     }));
 
-    // Skip if today's alert already sent (dedupe by reference_id+user)
     if (notifs.length > 0) {
-      const { data: existing } = await supabase
-        .from("notifications")
-        .select("user_id")
-        .eq("reference_type", "invoice_integrity")
-        .eq("reference_id", today);
-      const sent = new Set((existing || []).map((r: any) => r.user_id));
-      const fresh = notifs.filter((n) => !sent.has(n.user_id));
-      if (fresh.length > 0) {
-        const { error: e4 } = await supabase.from("notifications").insert(fresh);
-        if (e4) throw e4;
-      }
+      const { error: e4 } = await supabase.from("notifications").insert(notifs);
+      if (e4) throw e4;
     }
 
     return new Response(
