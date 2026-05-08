@@ -107,6 +107,25 @@ const Products = () => {
     return { totalRevenue, totalUnits, categoryCount: catCount, withSales };
   }, [products]);
 
+  // KPI "Total Revenue" — selaras dengan Executive Summary (Revenue YTD):
+  // SUM(deals.value) header, stage IN (po_secured, invoice_issued), YEAR(expected_close_date) = tahun berjalan.
+  const [revenueYTD, setRevenueYTD] = useState(0);
+  useEffect(() => {
+    const fetchYTD = async () => {
+      const { data } = await supabase.rpc('get_all_deals_pipeline');
+      const currentYear = new Date().getFullYear();
+      const total = (data || []).reduce((sum: number, d: any) => {
+        const isWon = d.stage === 'po_secured' || d.stage === 'invoice_issued';
+        if (!isWon || !d.expected_close_date) return sum;
+        const y = new Date(d.expected_close_date).getFullYear();
+        if (y !== currentYear) return sum;
+        return sum + (Number(d.value) || 0);
+      }, 0);
+      setRevenueYTD(total);
+    };
+    fetchYTD();
+  }, [products]);
+
   const top10 = useMemo(() => products.slice(0, 10), [products]);
   const top10Max = useMemo(() => Math.max(...top10.map(p => p.totalRevenue), 1), [top10]);
 
@@ -188,7 +207,7 @@ const Products = () => {
             </div>
             <div className="min-w-0">
               <p className="text-[11px] font-medium uppercase tracking-wider text-white/70">Total Revenue</p>
-              <p className="text-lg font-bold tracking-tight text-white">Rp {formatNumIDR(stats.totalRevenue)}</p>
+              <p className="text-lg font-bold tracking-tight text-white">Rp {formatNumIDR(revenueYTD)}</p>
             </div>
           </CardContent>
         </Card>
