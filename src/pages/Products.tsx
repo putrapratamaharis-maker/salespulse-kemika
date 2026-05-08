@@ -573,8 +573,6 @@ const Products = () => {
       {dealGaps.length > 0 && (
         <Card className="animate-fade-in">
           <CardHeader className="pb-2">
-            {(() => null)()}
-            {/* eslint-disable-next-line @typescript-eslint/no-unused-vars */}
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
