@@ -75,6 +75,10 @@ const Products = () => {
   const [dealGaps, setDealGaps] = useState<DealGapRow[]>([]);
   const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
 
+  // Gap table filters
+  const [gapSign, setGapSign] = useState<'all' | 'positive' | 'negative'>('all');
+  const [gapThreshold, setGapThreshold] = useState<string>('0'); // min |gap| in IDR
+
   // Gap detail dialog state
   const [gapDetailOpen, setGapDetailOpen] = useState(false);
   const [gapDetailRow, setGapDetailRow] = useState<DealGapRow | null>(null);
@@ -573,21 +577,88 @@ const Products = () => {
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-amber-500" />
                 <CardTitle className="text-sm font-semibold">Selisih Deal Value vs Line Item Produk</CardTitle>
-                <span className="text-xs text-muted-foreground">{dealGaps.length} deal</span>
-              </div>
-              <div className="flex items-center gap-3 text-xs">
-                <span className="text-muted-foreground">Total Selisih:</span>
-                <span className={`font-semibold tabular-nums ${dealGaps.reduce((s, g) => s + g.gap, 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                  {dealGaps.reduce((s, g) => s + g.gap, 0) >= 0 ? '+' : ''}Rp {formatNumIDR(dealGaps.reduce((s, g) => s + g.gap, 0))}
-                </span>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground mt-1">
               Deal yang nilai header (<code>deals.value</code>) berbeda dengan total line item produknya. Sumber utama gap antara KPI Revenue YTD (Executive Summary) vs Total Revenue per Produk.
             </p>
+
+            {/* Filters */}
+            {(() => {
+              const minAbs = Number(gapThreshold) || 0;
+              const filtered = dealGaps.filter(g => {
+                if (Math.abs(g.gap) < minAbs) return false;
+                if (gapSign === 'positive' && g.gap <= 0) return false;
+                if (gapSign === 'negative' && g.gap >= 0) return false;
+                return true;
+              });
+              const totalGap = filtered.reduce((s, g) => s + g.gap, 0);
+              return (
+                <div className="flex items-center justify-between flex-wrap gap-3 mt-3 pt-3 border-t border-border">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="inline-flex rounded-md border border-border overflow-hidden text-[11px]">
+                      {(['all', 'positive', 'negative'] as const).map(s => (
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setGapSign(s)}
+                          className={`px-2.5 py-1 transition-colors ${
+                            gapSign === s
+                              ? s === 'positive'
+                                ? 'bg-emerald-500/15 text-emerald-500 font-semibold'
+                                : s === 'negative'
+                                  ? 'bg-rose-500/15 text-rose-500 font-semibold'
+                                  : 'bg-muted text-foreground font-semibold'
+                              : 'text-muted-foreground hover:bg-muted/50'
+                          }`}
+                        >
+                          {s === 'all' ? 'Semua' : s === 'positive' ? '+ Positif' : '− Negatif'}
+                        </button>
+                      ))}
+                    </div>
+                    <Select value={gapThreshold} onValueChange={setGapThreshold}>
+                      <SelectTrigger className="h-7 w-[180px] text-xs">
+                        <SelectValue placeholder="Ambang gap minimum" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Semua selisih</SelectItem>
+                        <SelectItem value="100000">≥ Rp 100K</SelectItem>
+                        <SelectItem value="1000000">≥ Rp 1M</SelectItem>
+                        <SelectItem value="5000000">≥ Rp 5M</SelectItem>
+                        <SelectItem value="10000000">≥ Rp 10M</SelectItem>
+                        <SelectItem value="50000000">≥ Rp 50M</SelectItem>
+                        <SelectItem value="100000000">≥ Rp 100M</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <span className="text-[11px] text-muted-foreground">
+                      {filtered.length} / {dealGaps.length} deal
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-muted-foreground">Total Selisih:</span>
+                    <span className={`font-semibold tabular-nums ${totalGap >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {totalGap >= 0 ? '+' : ''}Rp {formatNumIDR(totalGap)}
+                    </span>
+                  </div>
+                </div>
+              );
+            })()}
           </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            {(() => {
+              const minAbs = Number(gapThreshold) || 0;
+              const filtered = dealGaps.filter(g => {
+                if (Math.abs(g.gap) < minAbs) return false;
+                if (gapSign === 'positive' && g.gap <= 0) return false;
+                if (gapSign === 'negative' && g.gap >= 0) return false;
+                return true;
+              });
+              if (filtered.length === 0) {
+                return <p className="text-xs text-muted-foreground text-center py-8">Tidak ada deal yang cocok dengan filter.</p>;
+              }
+              return (
+              <>
+              <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
@@ -601,7 +672,7 @@ const Products = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {dealGaps.slice(0, 50).map((g, idx) => (
+                  {filtered.slice(0, 50).map((g, idx) => (
                     <TableRow
                       key={g.dealId}
                       className="cursor-pointer hover:bg-muted/50 transition-colors"
@@ -620,10 +691,13 @@ const Products = () => {
                   ))}
                 </TableBody>
               </Table>
-            </div>
-            {dealGaps.length > 50 && (
-              <p className="text-[11px] text-muted-foreground text-center py-2">Menampilkan 50 deal teratas dari {dealGaps.length} deal yang memiliki selisih.</p>
-            )}
+              </div>
+              {filtered.length > 50 && (
+                <p className="text-[11px] text-muted-foreground text-center py-2">Menampilkan 50 deal teratas dari {filtered.length} deal hasil filter.</p>
+              )}
+              </>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
