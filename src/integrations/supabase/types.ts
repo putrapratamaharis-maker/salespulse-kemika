@@ -1429,6 +1429,20 @@ export type Database = {
         Returns: Json
       }
       get_next_customer_id: { Args: { _year: number }; Returns: string }
+      get_realtime_activities_for_user: {
+        Args: { _limit?: number }
+        Returns: {
+          account_id: string
+          account_name: string
+          activity_date: string
+          created_at: string
+          id: string
+          notes: string
+          sales_id: string
+          sales_name: string
+          type: string
+        }[]
+      }
       get_sales_initials: { Args: { _user_id: string }; Returns: string }
       get_sales_person_targets: {
         Args: never

@@ -175,30 +175,16 @@ export function LiveStatusRow() {
     if (!user) return;
 
     async function fetchActivities() {
-      const { data } = await supabase
-        .from('sales_activities')
-        .select('id, type, activity_date, notes, sales_id, account_id, created_at')
-        .order('created_at', { ascending: false })
-        .limit(8);
-
+      const { data } = await (supabase.rpc as any)('get_realtime_activities_for_user', { _limit: 8 });
       if (data && data.length > 0) {
-        const salesIds = [...new Set(data.map(d => d.sales_id))];
-        const accountIds = [...new Set(data.filter(d => d.account_id).map(d => d.account_id!))];
-
-        const [profilesRes, accountsRes] = await Promise.all([
-          supabase.from('profiles').select('user_id, full_name').in('user_id', salesIds),
-          accountIds.length > 0
-            ? (supabase.rpc as any)('get_accounts_basic')
-            : { data: [] },
-        ]);
-
-        const nameMap = new Map((profilesRes.data || []).map(p => [p.user_id, p.full_name]));
-        const accMap = new Map(((accountsRes.data || []) as any[]).map((a: any) => [a.id as string, a.name as string]));
-
-        setRecentActivities(data.map(d => ({
-          ...d,
-          sales_name: nameMap.get(d.sales_id) || 'Unknown',
-          account_name: d.account_id ? accMap.get(d.account_id) || '—' : '—',
+        setRecentActivities((data as any[]).map((d) => ({
+          id: d.id,
+          type: d.type,
+          activity_date: d.activity_date,
+          notes: d.notes,
+          created_at: d.created_at,
+          sales_name: d.sales_name || 'Unknown',
+          account_name: d.account_name || '—',
         })));
       } else {
         setRecentActivities([]);
