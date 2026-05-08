@@ -200,12 +200,8 @@ const Products = () => {
     fetchData();
   }, [fetchData]);
 
-  const formatIDRFull = (val: number) => {
-    if (val >= 1_000_000_000) return `Rp ${(val / 1_000_000_000).toFixed(1)}B`;
-    if (val >= 1_000_000) return `Rp ${(val / 1_000_000).toFixed(0)}M`;
-    if (val >= 1_000) return `Rp ${(val / 1_000).toFixed(0)}K`;
-    return `Rp ${Math.floor(val).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
-  };
+  const formatIDRFull = (val: number) =>
+    `Rp ${Math.floor(val).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
 
   const formatNumIDR = (val: number) => Math.floor(val).toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
@@ -401,7 +397,7 @@ const Products = () => {
                         />
                       </div>
                     </div>
-                    <div className="w-[90px] text-right text-sm font-semibold tabular-nums">
+                    <div className="w-[160px] text-right text-sm font-semibold tabular-nums">
                       {formatIDRFull(p.totalRevenue)}
                     </div>
                     <div className="w-[50px] text-right">
