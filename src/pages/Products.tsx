@@ -507,7 +507,6 @@ const Products = () => {
           )}
         </CardContent>
       </Card>
-    </div>
 
       {/* Gap antara Header Deal Value vs Line Item Product */}
       {dealGaps.length > 0 && (
