@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProductWithSales {
   id: string;
@@ -27,6 +29,27 @@ interface DealGapRow {
   headerValue: number;
   lineItemTotal: number;
   gap: number;
+}
+
+interface DealLineItem {
+  id: string;
+  product_name: string;
+  category: string;
+  unit: string;
+  qty: number;
+  price_per_unit: number;
+  other_cost: number;
+  line_total: number;
+}
+
+interface DealInvoiceRow {
+  id: string;
+  invoice_number: string;
+  issue_date: string;
+  due_date: string;
+  paid_date: string | null;
+  net_sales: number;
+  gross_profit: number;
 }
 
 const DONUT_COLORS = [
@@ -51,6 +74,40 @@ const Products = () => {
 
   const [dealGaps, setDealGaps] = useState<DealGapRow[]>([]);
   const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+
+  // Gap detail dialog state
+  const [gapDetailOpen, setGapDetailOpen] = useState(false);
+  const [gapDetailRow, setGapDetailRow] = useState<DealGapRow | null>(null);
+  const [gapDetailLoading, setGapDetailLoading] = useState(false);
+  const [gapDetailItems, setGapDetailItems] = useState<DealLineItem[]>([]);
+  const [gapDetailInvoices, setGapDetailInvoices] = useState<DealInvoiceRow[]>([]);
+
+  const openGapDetail = useCallback(async (row: DealGapRow) => {
+    setGapDetailRow(row);
+    setGapDetailOpen(true);
+    setGapDetailLoading(true);
+    setGapDetailItems([]);
+    setGapDetailInvoices([]);
+    try {
+      const [{ data: items }, { data: invs }] = await Promise.all([
+        supabase.from('deal_products').select('*').eq('deal_id', row.dealId),
+        supabase.from('invoices').select('id, invoice_number, issue_date, due_date, paid_date, net_sales, gross_profit').eq('deal_id', row.dealId).order('issue_date', { ascending: false }),
+      ]);
+      setGapDetailItems(((items || []) as any[]).map(i => ({
+        id: i.id,
+        product_name: i.product_name,
+        category: i.category,
+        unit: i.unit,
+        qty: Number(i.qty) || 0,
+        price_per_unit: Number(i.price_per_unit) || 0,
+        other_cost: Number(i.other_cost) || 0,
+        line_total: (Number(i.qty) || 0) * (Number(i.price_per_unit) || 0) + (Number(i.other_cost) || 0),
+      })));
+      setGapDetailInvoices((invs || []) as any);
+    } finally {
+      setGapDetailLoading(false);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
       setLoading(true);
@@ -545,7 +602,11 @@ const Products = () => {
                 </TableHeader>
                 <TableBody>
                   {dealGaps.slice(0, 50).map((g, idx) => (
-                    <TableRow key={g.dealId}>
+                    <TableRow
+                      key={g.dealId}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openGapDetail(g)}
+                    >
                       <TableCell className="pl-6 text-muted-foreground text-xs">{idx + 1}</TableCell>
                       <TableCell className="text-xs font-mono">{g.reference || '—'}</TableCell>
                       <TableCell className="text-sm font-medium">{g.dealName}</TableCell>
