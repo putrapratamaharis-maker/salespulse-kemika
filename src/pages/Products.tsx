@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ActivityPagination } from '@/components/activities/ActivityPagination';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface ProductWithSales {
   id: string;
@@ -27,6 +29,27 @@ interface DealGapRow {
   headerValue: number;
   lineItemTotal: number;
   gap: number;
+}
+
+interface DealLineItem {
+  id: string;
+  product_name: string;
+  category: string;
+  unit: string;
+  qty: number;
+  price_per_unit: number;
+  other_cost: number;
+  line_total: number;
+}
+
+interface DealInvoiceRow {
+  id: string;
+  invoice_number: string;
+  issue_date: string;
+  due_date: string;
+  paid_date: string | null;
+  net_sales: number;
+  gross_profit: number;
 }
 
 const DONUT_COLORS = [
@@ -51,6 +74,40 @@ const Products = () => {
 
   const [dealGaps, setDealGaps] = useState<DealGapRow[]>([]);
   const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+
+  // Gap detail dialog state
+  const [gapDetailOpen, setGapDetailOpen] = useState(false);
+  const [gapDetailRow, setGapDetailRow] = useState<DealGapRow | null>(null);
+  const [gapDetailLoading, setGapDetailLoading] = useState(false);
+  const [gapDetailItems, setGapDetailItems] = useState<DealLineItem[]>([]);
+  const [gapDetailInvoices, setGapDetailInvoices] = useState<DealInvoiceRow[]>([]);
+
+  const openGapDetail = useCallback(async (row: DealGapRow) => {
+    setGapDetailRow(row);
+    setGapDetailOpen(true);
+    setGapDetailLoading(true);
+    setGapDetailItems([]);
+    setGapDetailInvoices([]);
+    try {
+      const [{ data: items }, { data: invs }] = await Promise.all([
+        supabase.from('deal_products').select('*').eq('deal_id', row.dealId),
+        supabase.from('invoices').select('id, invoice_number, issue_date, due_date, paid_date, net_sales, gross_profit').eq('deal_id', row.dealId).order('issue_date', { ascending: false }),
+      ]);
+      setGapDetailItems(((items || []) as any[]).map(i => ({
+        id: i.id,
+        product_name: i.product_name,
+        category: i.category,
+        unit: i.unit,
+        qty: Number(i.qty) || 0,
+        price_per_unit: Number(i.price_per_unit) || 0,
+        other_cost: Number(i.other_cost) || 0,
+        line_total: (Number(i.qty) || 0) * (Number(i.price_per_unit) || 0) + (Number(i.other_cost) || 0),
+      })));
+      setGapDetailInvoices((invs || []) as any);
+    } finally {
+      setGapDetailLoading(false);
+    }
+  }, []);
 
   const fetchData = useCallback(async () => {
       setLoading(true);
@@ -545,7 +602,11 @@ const Products = () => {
                 </TableHeader>
                 <TableBody>
                   {dealGaps.slice(0, 50).map((g, idx) => (
-                    <TableRow key={g.dealId}>
+                    <TableRow
+                      key={g.dealId}
+                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => openGapDetail(g)}
+                    >
                       <TableCell className="pl-6 text-muted-foreground text-xs">{idx + 1}</TableCell>
                       <TableCell className="text-xs font-mono">{g.reference || '—'}</TableCell>
                       <TableCell className="text-sm font-medium">{g.dealName}</TableCell>
@@ -566,6 +627,130 @@ const Products = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Gap Detail Dialog */}
+      <Dialog open={gapDetailOpen} onOpenChange={setGapDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              Detail Selisih Deal
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {gapDetailRow?.reference || '—'} • {gapDetailRow?.dealName} • {gapDetailRow ? (accountMap.get(gapDetailRow.accountId) || '—') : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          {gapDetailRow && (
+            <ScrollArea className="flex-1 pr-3">
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="rounded-md border border-border bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Header Value</p>
+                  <p className="text-sm font-semibold tabular-nums">Rp {formatNumIDR(gapDetailRow.headerValue)}</p>
+                </div>
+                <div className="rounded-md border border-border bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Line Item</p>
+                  <p className="text-sm font-semibold tabular-nums">Rp {formatNumIDR(gapDetailRow.lineItemTotal)}</p>
+                </div>
+                <div className={`rounded-md border p-3 ${gapDetailRow.gap >= 0 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-rose-500/30 bg-rose-500/5'}`}>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Selisih</p>
+                  <p className={`text-sm font-semibold tabular-nums ${gapDetailRow.gap >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {gapDetailRow.gap >= 0 ? '+' : ''}Rp {formatNumIDR(gapDetailRow.gap)}
+                  </p>
+                </div>
+              </div>
+
+              {gapDetailLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {/* Line Items */}
+                  <div className="mb-5">
+                    <h4 className="text-xs font-semibold mb-2 flex items-center gap-2">
+                      <Package className="h-3.5 w-3.5" /> Breakdown Line Items ({gapDetailItems.length})
+                    </h4>
+                    {gapDetailItems.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Tidak ada line item produk.</p>
+                    ) : (
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent bg-muted/40">
+                              <TableHead className="text-[10px] py-2">Produk</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Qty</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Harga/Unit</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Other Cost</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {gapDetailItems.map(it => (
+                              <TableRow key={it.id}>
+                                <TableCell className="text-xs">
+                                  <div className="font-medium">{it.product_name}</div>
+                                  <div className="text-[10px] text-muted-foreground">{it.category}</div>
+                                </TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{it.qty.toLocaleString('id-ID')} {it.unit}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(it.price_per_unit)}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(it.other_cost)}</TableCell>
+                                <TableCell className="text-xs text-right font-semibold tabular-nums">{formatNumIDR(it.line_total)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Invoices */}
+                  <div>
+                    <h4 className="text-xs font-semibold mb-2 flex items-center gap-2">
+                      <BarChart3 className="h-3.5 w-3.5" /> Transaksi Invoice ({gapDetailInvoices.length})
+                    </h4>
+                    {gapDetailInvoices.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Belum ada invoice yang terkait deal ini.</p>
+                    ) : (
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent bg-muted/40">
+                              <TableHead className="text-[10px] py-2">No. Invoice</TableHead>
+                              <TableHead className="text-[10px] py-2">Issue</TableHead>
+                              <TableHead className="text-[10px] py-2">Due</TableHead>
+                              <TableHead className="text-[10px] py-2">Paid</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Net Sales</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Gross Profit</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {gapDetailInvoices.map(inv => (
+                              <TableRow key={inv.id}>
+                                <TableCell className="text-xs font-mono">{inv.invoice_number}</TableCell>
+                                <TableCell className="text-xs">{inv.issue_date}</TableCell>
+                                <TableCell className="text-xs">{inv.due_date}</TableCell>
+                                <TableCell className="text-xs">
+                                  {inv.paid_date
+                                    ? <Badge variant="secondary" className="text-[9px]">{inv.paid_date}</Badge>
+                                    : <Badge variant="outline" className="text-[9px] text-amber-500">Unpaid</Badge>}
+                                </TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(Number(inv.net_sales) || 0)}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(Number(inv.gross_profit) || 0)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
