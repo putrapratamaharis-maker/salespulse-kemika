@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown } from 'lucide-react';
+import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,16 @@ interface ProductWithSales {
   totalRevenue: number;
   unitsSold: number;
   segments: string[];
+}
+
+interface DealGapRow {
+  dealId: string;
+  dealName: string;
+  reference: string;
+  accountId: string;
+  headerValue: number;
+  lineItemTotal: number;
+  gap: number;
 }
 
 const DONUT_COLORS = [
@@ -39,22 +49,38 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [dealGaps, setDealGaps] = useState<DealGapRow[]>([]);
+  const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+
   const fetchData = useCallback(async () => {
       setLoading(true);
       // Use SECURITY DEFINER functions to bypass RLS for company-wide data
-      const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
+      const [{ data: allDealProducts }, { data: allDeals }, { data: allAccounts }] = await Promise.all([
         supabase.rpc('get_all_deal_products_pipeline'),
         supabase.rpc('get_all_deals_pipeline'),
+        supabase.rpc('get_accounts_basic'),
       ]);
 
+      const accMap = new Map<string, string>();
+      (allAccounts || []).forEach((a: any) => accMap.set(a.id, a.name));
+      setAccountMap(accMap);
+
       // Build deal lookup for stage/segment
-      const dealMap = new Map<string, { stage: string; segment: string }>();
+      const dealMap = new Map<string, { stage: string; segment: string; value: number; name: string; reference: string; account_id: string }>();
       (allDeals || []).forEach((d: any) => {
-        dealMap.set(d.id, { stage: d.stage, segment: d.segment });
+        dealMap.set(d.id, {
+          stage: d.stage,
+          segment: d.segment,
+          value: Number(d.value) || 0,
+          name: d.name,
+          reference: d.reference_number || '',
+          account_id: d.account_id,
+        });
       });
 
       // Aggregate by product_name
       const salesByProduct = new Map<string, { revenue: number; units: number; segments: Set<string>; category: string }>();
+      const lineItemByDeal = new Map<string, number>();
 
       (allDealProducts || []).forEach((dp: any) => {
         const deal = dealMap.get(dp.deal_id);
@@ -69,7 +95,30 @@ const Products = () => {
         existing.units += Number(dp.qty) || 0;
         if (deal.segment) existing.segments.add(deal.segment);
         salesByProduct.set(key, existing);
+
+        lineItemByDeal.set(dp.deal_id, (lineItemByDeal.get(dp.deal_id) || 0) + lineRevenue);
       });
+
+      // Build gap rows for won deals
+      const gaps: DealGapRow[] = [];
+      dealMap.forEach((deal, dealId) => {
+        const isWon = deal.stage === 'po_secured' || deal.stage === 'invoice_issued';
+        if (!isWon) return;
+        const lineTotal = lineItemByDeal.get(dealId) || 0;
+        const gap = lineTotal - deal.value;
+        if (Math.abs(gap) < 1) return; // ignore rounding noise
+        gaps.push({
+          dealId,
+          dealName: deal.name,
+          reference: deal.reference,
+          accountId: deal.account_id,
+          headerValue: deal.value,
+          lineItemTotal: lineTotal,
+          gap,
+        });
+      });
+      gaps.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap));
+      setDealGaps(gaps);
 
       const merged: ProductWithSales[] = Array.from(salesByProduct.entries()).map(([name, s]) => ({
         id: name,
@@ -458,6 +507,65 @@ const Products = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Gap antara Header Deal Value vs Line Item Product */}
+      {dealGaps.length > 0 && (
+        <Card className="animate-fade-in">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 text-amber-500" />
+                <CardTitle className="text-sm font-semibold">Selisih Deal Value vs Line Item Produk</CardTitle>
+                <span className="text-xs text-muted-foreground">{dealGaps.length} deal</span>
+              </div>
+              <div className="flex items-center gap-3 text-xs">
+                <span className="text-muted-foreground">Total Selisih:</span>
+                <span className={`font-semibold tabular-nums ${dealGaps.reduce((s, g) => s + g.gap, 0) >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                  {dealGaps.reduce((s, g) => s + g.gap, 0) >= 0 ? '+' : ''}Rp {formatNumIDR(dealGaps.reduce((s, g) => s + g.gap, 0))}
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Deal yang nilai header (<code>deals.value</code>) berbeda dengan total line item produknya. Sumber utama gap antara KPI Revenue YTD (Executive Summary) vs Total Revenue per Produk.
+            </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="pl-6 w-[40px] text-xs text-white font-semibold bg-gradient-to-br from-slate-600 to-slate-500 rounded-tl-md py-3">#</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-indigo-600 to-indigo-500 py-3">Reference</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-sky-600 to-sky-500 py-3">Deal</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-cyan-600 to-cyan-500 py-3">Account</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-emerald-600 to-emerald-500 py-3 text-right">Header (Rp)</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-teal-600 to-teal-500 py-3 text-right">Line Item (Rp)</TableHead>
+                    <TableHead className="text-xs text-white font-semibold bg-gradient-to-br from-rose-500 to-rose-400 rounded-tr-md py-3 text-right">Selisih (Rp)</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {dealGaps.slice(0, 50).map((g, idx) => (
+                    <TableRow key={g.dealId}>
+                      <TableCell className="pl-6 text-muted-foreground text-xs">{idx + 1}</TableCell>
+                      <TableCell className="text-xs font-mono">{g.reference || '—'}</TableCell>
+                      <TableCell className="text-sm font-medium">{g.dealName}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground">{accountMap.get(g.accountId) || '—'}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumIDR(g.headerValue)}</TableCell>
+                      <TableCell className="text-right text-sm tabular-nums">{formatNumIDR(g.lineItemTotal)}</TableCell>
+                      <TableCell className={`text-right text-sm font-semibold tabular-nums ${g.gap >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                        {g.gap >= 0 ? '+' : ''}{formatNumIDR(g.gap)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {dealGaps.length > 50 && (
+              <p className="text-[11px] text-muted-foreground text-center py-2">Menampilkan 50 deal teratas dari {dealGaps.length} deal yang memiliki selisih.</p>
+            )}
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
