@@ -627,6 +627,130 @@ const Products = () => {
           </CardContent>
         </Card>
       )}
+
+      {/* Gap Detail Dialog */}
+      <Dialog open={gapDetailOpen} onOpenChange={setGapDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-base">
+              <AlertTriangle className="h-4 w-4 text-amber-500" />
+              Detail Selisih Deal
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              {gapDetailRow?.reference || '—'} • {gapDetailRow?.dealName} • {gapDetailRow ? (accountMap.get(gapDetailRow.accountId) || '—') : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          {gapDetailRow && (
+            <ScrollArea className="flex-1 pr-3">
+              {/* Summary */}
+              <div className="grid grid-cols-3 gap-2 mb-4">
+                <div className="rounded-md border border-border bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Header Value</p>
+                  <p className="text-sm font-semibold tabular-nums">Rp {formatNumIDR(gapDetailRow.headerValue)}</p>
+                </div>
+                <div className="rounded-md border border-border bg-muted/30 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Line Item</p>
+                  <p className="text-sm font-semibold tabular-nums">Rp {formatNumIDR(gapDetailRow.lineItemTotal)}</p>
+                </div>
+                <div className={`rounded-md border p-3 ${gapDetailRow.gap >= 0 ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-rose-500/30 bg-rose-500/5'}`}>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Selisih</p>
+                  <p className={`text-sm font-semibold tabular-nums ${gapDetailRow.gap >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                    {gapDetailRow.gap >= 0 ? '+' : ''}Rp {formatNumIDR(gapDetailRow.gap)}
+                  </p>
+                </div>
+              </div>
+
+              {gapDetailLoading ? (
+                <div className="flex justify-center py-10">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <>
+                  {/* Line Items */}
+                  <div className="mb-5">
+                    <h4 className="text-xs font-semibold mb-2 flex items-center gap-2">
+                      <Package className="h-3.5 w-3.5" /> Breakdown Line Items ({gapDetailItems.length})
+                    </h4>
+                    {gapDetailItems.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Tidak ada line item produk.</p>
+                    ) : (
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent bg-muted/40">
+                              <TableHead className="text-[10px] py-2">Produk</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Qty</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Harga/Unit</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Other Cost</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Total</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {gapDetailItems.map(it => (
+                              <TableRow key={it.id}>
+                                <TableCell className="text-xs">
+                                  <div className="font-medium">{it.product_name}</div>
+                                  <div className="text-[10px] text-muted-foreground">{it.category}</div>
+                                </TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{it.qty.toLocaleString('id-ID')} {it.unit}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(it.price_per_unit)}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(it.other_cost)}</TableCell>
+                                <TableCell className="text-xs text-right font-semibold tabular-nums">{formatNumIDR(it.line_total)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Invoices */}
+                  <div>
+                    <h4 className="text-xs font-semibold mb-2 flex items-center gap-2">
+                      <BarChart3 className="h-3.5 w-3.5" /> Transaksi Invoice ({gapDetailInvoices.length})
+                    </h4>
+                    {gapDetailInvoices.length === 0 ? (
+                      <p className="text-xs text-muted-foreground italic">Belum ada invoice yang terkait deal ini.</p>
+                    ) : (
+                      <div className="rounded-md border border-border overflow-hidden">
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="hover:bg-transparent bg-muted/40">
+                              <TableHead className="text-[10px] py-2">No. Invoice</TableHead>
+                              <TableHead className="text-[10px] py-2">Issue</TableHead>
+                              <TableHead className="text-[10px] py-2">Due</TableHead>
+                              <TableHead className="text-[10px] py-2">Paid</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Net Sales</TableHead>
+                              <TableHead className="text-[10px] py-2 text-right">Gross Profit</TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {gapDetailInvoices.map(inv => (
+                              <TableRow key={inv.id}>
+                                <TableCell className="text-xs font-mono">{inv.invoice_number}</TableCell>
+                                <TableCell className="text-xs">{inv.issue_date}</TableCell>
+                                <TableCell className="text-xs">{inv.due_date}</TableCell>
+                                <TableCell className="text-xs">
+                                  {inv.paid_date
+                                    ? <Badge variant="secondary" className="text-[9px]">{inv.paid_date}</Badge>
+                                    : <Badge variant="outline" className="text-[9px] text-amber-500">Unpaid</Badge>}
+                                </TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(Number(inv.net_sales) || 0)}</TableCell>
+                                <TableCell className="text-xs text-right tabular-nums">{formatNumIDR(Number(inv.gross_profit) || 0)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </ScrollArea>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
