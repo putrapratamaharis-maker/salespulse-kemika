@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown } from 'lucide-react';
+import { Package, Loader2, TrendingUp, BarChart3, Layers, Crown, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
@@ -17,6 +17,16 @@ interface ProductWithSales {
   totalRevenue: number;
   unitsSold: number;
   segments: string[];
+}
+
+interface DealGapRow {
+  dealId: string;
+  dealName: string;
+  reference: string;
+  accountId: string;
+  headerValue: number;
+  lineItemTotal: number;
+  gap: number;
 }
 
 const DONUT_COLORS = [
@@ -39,22 +49,38 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [dealGaps, setDealGaps] = useState<DealGapRow[]>([]);
+  const [accountMap, setAccountMap] = useState<Map<string, string>>(new Map());
+
   const fetchData = useCallback(async () => {
       setLoading(true);
       // Use SECURITY DEFINER functions to bypass RLS for company-wide data
-      const [{ data: allDealProducts }, { data: allDeals }] = await Promise.all([
+      const [{ data: allDealProducts }, { data: allDeals }, { data: allAccounts }] = await Promise.all([
         supabase.rpc('get_all_deal_products_pipeline'),
         supabase.rpc('get_all_deals_pipeline'),
+        supabase.rpc('get_accounts_basic'),
       ]);
 
+      const accMap = new Map<string, string>();
+      (allAccounts || []).forEach((a: any) => accMap.set(a.id, a.name));
+      setAccountMap(accMap);
+
       // Build deal lookup for stage/segment
-      const dealMap = new Map<string, { stage: string; segment: string }>();
+      const dealMap = new Map<string, { stage: string; segment: string; value: number; name: string; reference: string; account_id: string }>();
       (allDeals || []).forEach((d: any) => {
-        dealMap.set(d.id, { stage: d.stage, segment: d.segment });
+        dealMap.set(d.id, {
+          stage: d.stage,
+          segment: d.segment,
+          value: Number(d.value) || 0,
+          name: d.name,
+          reference: d.reference_number || '',
+          account_id: d.account_id,
+        });
       });
 
       // Aggregate by product_name
       const salesByProduct = new Map<string, { revenue: number; units: number; segments: Set<string>; category: string }>();
+      const lineItemByDeal = new Map<string, number>();
 
       (allDealProducts || []).forEach((dp: any) => {
         const deal = dealMap.get(dp.deal_id);
@@ -69,7 +95,30 @@ const Products = () => {
         existing.units += Number(dp.qty) || 0;
         if (deal.segment) existing.segments.add(deal.segment);
         salesByProduct.set(key, existing);
+
+        lineItemByDeal.set(dp.deal_id, (lineItemByDeal.get(dp.deal_id) || 0) + lineRevenue);
       });
+
+      // Build gap rows for won deals
+      const gaps: DealGapRow[] = [];
+      dealMap.forEach((deal, dealId) => {
+        const isWon = deal.stage === 'po_secured' || deal.stage === 'invoice_issued';
+        if (!isWon) return;
+        const lineTotal = lineItemByDeal.get(dealId) || 0;
+        const gap = lineTotal - deal.value;
+        if (Math.abs(gap) < 1) return; // ignore rounding noise
+        gaps.push({
+          dealId,
+          dealName: deal.name,
+          reference: deal.reference,
+          accountId: deal.account_id,
+          headerValue: deal.value,
+          lineItemTotal: lineTotal,
+          gap,
+        });
+      });
+      gaps.sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap));
+      setDealGaps(gaps);
 
       const merged: ProductWithSales[] = Array.from(salesByProduct.entries()).map(([name, s]) => ({
         id: name,
