@@ -212,6 +212,8 @@ export type Database = {
           expected_margin: number | null
           id: string
           location: string | null
+          lost_notes: string | null
+          lost_reason: string | null
           name: string
           notes: string | null
           po_number: string | null
@@ -245,6 +247,8 @@ export type Database = {
           expected_margin?: number | null
           id?: string
           location?: string | null
+          lost_notes?: string | null
+          lost_reason?: string | null
           name: string
           notes?: string | null
           po_number?: string | null
@@ -278,6 +282,8 @@ export type Database = {
           expected_margin?: number | null
           id?: string
           location?: string | null
+          lost_notes?: string | null
+          lost_reason?: string | null
           name?: string
           notes?: string | null
           po_number?: string | null
@@ -1399,6 +1405,8 @@ export type Database = {
           expected_margin: number | null
           id: string
           location: string | null
+          lost_notes: string | null
+          lost_reason: string | null
           name: string
           notes: string | null
           po_number: string | null
