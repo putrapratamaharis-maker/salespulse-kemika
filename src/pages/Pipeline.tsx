@@ -9,6 +9,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { AllOpenDealsTable } from '@/components/pipeline/AllOpenDealsTable';
+import { DealAgingHeatmap } from '@/components/pipeline/DealAgingHeatmap';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
 
 const Pipeline = () => {
@@ -272,6 +273,13 @@ const Pipeline = () => {
           </ResponsiveContainer>
         </CardContent>
       </Card>
+
+      {/* Deal Aging Heatmap */}
+      <DealAgingHeatmap
+        deals={allDeals.map(d => ({ sales_id: d.salesId, stage: d.stage, value: d.value, days_in_stage: d.daysInStage }))}
+        getSalesName={getSalesName}
+        salesPersons={salesUsers}
+      />
 
       <AllOpenDealsTable
         deals={allDeals}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { CoachingNotesDialog } from '@/components/coaching/CoachingNotes';
+import { BookOpen } from 'lucide-react';
 
 interface TeamMember {
   userId: string;
@@ -31,6 +33,7 @@ export function SupervisorDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [teamData, setTeamData] = useState<TeamMember[]>([]);
+  const [coachingTarget, setCoachingTarget] = useState<{ userId: string; name: string } | null>(null);
 
   useEffect(() => {
     async function fetchTeamData() {
@@ -157,6 +160,7 @@ export function SupervisorDashboard() {
                   <TableHead className="text-xs">Pipeline (Rp)</TableHead>
                   <TableHead className="text-xs">Activities</TableHead>
                   <TableHead className="text-xs">Alerts</TableHead>
+                  <TableHead className="text-xs">Coaching</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -188,6 +192,14 @@ export function SupervisorDashboard() {
                         {d.overdueInvoices > 0 && <StatusBadge status="yellow" label={`${d.overdueInvoices} overdue`} />}
                       </div>
                     </TableCell>
+                    <TableCell onClick={e => e.stopPropagation()}>
+                      <button
+                        className="flex items-center gap-1 text-xs text-primary hover:underline"
+                        onClick={() => setCoachingTarget({ userId: d.userId, name: d.name })}
+                      >
+                        <BookOpen className="h-3.5 w-3.5" /> Notes
+                      </button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -195,6 +207,16 @@ export function SupervisorDashboard() {
           )}
         </CardContent>
       </Card>
+      {coachingTarget && user && (
+        <CoachingNotesDialog
+          open={!!coachingTarget}
+          onOpenChange={(open) => !open && setCoachingTarget(null)}
+          salesId={coachingTarget.userId}
+          salesName={coachingTarget.name}
+          currentUserId={user.id}
+          mode="supervisor"
+        />
+      )}
     </div>
   );
 }

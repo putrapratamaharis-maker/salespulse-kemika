@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { CoachingNotesSummary } from '@/components/coaching/CoachingNotes';
+import { ForecastAccuracyTracker } from '@/components/performance/ForecastAccuracyTracker';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -456,6 +458,16 @@ const MyPerformance = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Forecast Accuracy Tracker */}
+      <ForecastAccuracyTracker
+        deals={dls}
+        invoices={inv}
+      />
+
+      {/* Coaching dari Supervisor */}
+      <CoachingNotesSummary salesId={currentUser.id} currentUserId={currentUser.id} />
+
     </div>
   );
 };
