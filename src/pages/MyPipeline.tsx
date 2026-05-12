@@ -177,11 +177,12 @@ const MyPipeline = () => {
       value: updatedDeal.value,
       probability: updatedDeal.probability,
       expected_close_date: updatedDeal.expectedCloseDate,
-      
       po_number: updatedDeal.poNumber || '',
       expected_margin: updatedDeal.expectedMargin || 0,
       location: updatedDeal.location || '',
       notes: updatedDeal.notes || '',
+      lost_reason: updatedDeal.stage === 'lost' ? (updatedDeal.lostReason ?? null) : null,
+      lost_notes: updatedDeal.stage === 'lost' ? (updatedDeal.lostNotes ?? null) : null,
     }).eq('id', updatedDeal.id);
     if (error) {
       toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' });

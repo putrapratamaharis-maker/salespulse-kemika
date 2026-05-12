@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Trash2, Loader2 } from 'lucide-react';
-import { Deal, DealStage, DealProduct, Segment } from '@/types/sales';
+import { Deal, DealStage, DealProduct, Segment, LostReason } from '@/types/sales';
 import { useToast } from '@/hooks/use-toast';
 import { validateDealInputs } from '@/lib/dealValidation';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -17,6 +17,12 @@ import { format } from 'date-fns';
 import { ProductCategoryCombobox, ProductNameCombobox } from '@/components/pipeline/ProductItemForm';
 import { findDuplicateDeals, DuplicateMatch } from '@/lib/dealDuplicateCheck';
 import { DuplicateDealAlert } from '@/components/pipeline/DuplicateDealAlert';
+import { LostDealDialog } from '@/components/pipeline/LostDealDialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const stageOptions: { value: DealStage; label: string }[] = [
   { value: 'prospect', label: 'Prospect' },
@@ -165,6 +171,8 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   const formatRp = (val: number) => val > 0 ? `Rp ${val.toLocaleString('id-ID')}` : '-';
 
   const [saving, setSaving] = useState(false);
+  const [showLostDialog, setShowLostDialog] = useState(false);
+  const [showCanceledDialog, setShowCanceledDialog] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -212,10 +220,20 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       return;
     }
 
+    // Intercept transisi ke lost/canceled — tampilkan dialog konfirmasi
+    if (stage === 'lost' && deal?.stage !== 'lost') {
+      setShowLostDialog(true);
+      return;
+    }
+    if (stage === 'canceled' && deal?.stage !== 'canceled') {
+      setShowCanceledDialog(true);
+      return;
+    }
+
     await performSave();
   };
 
-  const performSave = async () => {
+  const performSave = async (lostReason?: LostReason, lostNotes?: string) => {
     if (!deal) return;
 
     const skipProb = stage === 'po_secured' || stage === 'invoice_issued';
@@ -269,6 +287,7 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
       expectedMargin: Number(expectedMargin) || 0,
       products,
       poNumber,
+      ...(stage === 'lost' ? { lostReason, lostNotes: lostNotes || '' } : {}),
     };
 
     const success = await onSave(updated);
@@ -571,6 +590,40 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
         onConfirm={async () => { setDuplicateOpen(false); await performSave(); }}
         onCancel={() => setDuplicateOpen(false)}
       />
+
+      {/* Lost Deal Dialog — wajib isi alasan */}
+      <LostDealDialog
+        open={showLostDialog}
+        onOpenChange={setShowLostDialog}
+        dealName={deal?.name ?? ''}
+        onConfirm={async ({ lostReason, lostNotes }) => {
+          setShowLostDialog(false);
+          await performSave(lostReason, lostNotes);
+        }}
+      />
+
+      {/* Canceled Confirmation Dialog */}
+      <AlertDialog open={showCanceledDialog} onOpenChange={setShowCanceledDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Tandai Deal sebagai Canceled?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Deal <span className="font-medium">"{deal?.name}"</span> akan dipindahkan ke tahap <span className="font-semibold">Canceled</span>. Tindakan ini dapat diubah kembali melalui form edit.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setShowCanceledDialog(false)}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                setShowCanceledDialog(false);
+                await performSave();
+              }}
+            >
+              Ya, Canceled
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
