@@ -24,6 +24,8 @@ import {
 import { StageTransitionDialog } from '@/components/pipeline/StageTransitionDialog';
 import { InvoiceTransitionDialog } from '@/components/pipeline/InvoiceTransitionDialog';
 import { DeleteDealRequestDialog } from '@/components/pipeline/DeleteDealRequestDialog';
+import { LostDealDialog } from '@/components/pipeline/LostDealDialog';
+import { LostReason } from '@/types/sales';
 
 const stageOrder: DealStage[] = ['prospect', 'quotation', 'negotiation', 'po_secured', 'invoice_issued', 'canceled', 'lost'];
 const stageLabels: Record<string, string> = {
@@ -75,7 +77,7 @@ interface KanbanBoardProps {
   onEdit?: (deal: Deal) => void;
   onDelete?: (deal: Deal, reason: string) => void;
   onDuplicate?: (deal: Deal) => void;
-  onStageChange?: (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => void;
+  onStageChange?: (dealId: string, newStage: DealStage, extraData?: { poNumber?: string; closeDate?: string; lostReason?: LostReason; lostNotes?: string }) => void;
   readOnly?: boolean;
 }
 
@@ -603,14 +605,14 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         />
       )}
 
-      {/* Simple Confirmation for Canceled / Lost */}
-      <AlertDialog open={!!stageConfirm && (stageConfirm?.targetStage === 'canceled' || stageConfirm?.targetStage === 'lost')} onOpenChange={(open) => !open && setStageConfirm(null)}>
+      {/* Confirmation for Canceled */}
+      <AlertDialog open={!!stageConfirm && stageConfirm?.targetStage === 'canceled'} onOpenChange={(open) => !open && setStageConfirm(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Perpindahan Stage</AlertDialogTitle>
             <AlertDialogDescription>
-              Apakah Anda yakin ingin memindahkan deal "{stageConfirm?.deal.name}" ke tahap <span className="font-semibold">{stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}</span>?
-              <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai {stageConfirm ? stageLabels[stageConfirm.targetStage] : ''}.</span>
+              Apakah Anda yakin ingin memindahkan deal "{stageConfirm?.deal.name}" ke tahap <span className="font-semibold">Canceled</span>?
+              <span className="block mt-1 text-xs text-destructive">Deal akan ditandai sebagai Canceled.</span>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -628,6 +630,19 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Lost Deal Dialog — requires reason */}
+      <LostDealDialog
+        open={!!stageConfirm && stageConfirm?.targetStage === 'lost'}
+        onOpenChange={(open) => !open && setStageConfirm(null)}
+        dealName={stageConfirm?.deal.name ?? ''}
+        onConfirm={(data) => {
+          if (stageConfirm && onStageChange) {
+            onStageChange(stageConfirm.deal.id, 'lost', { lostReason: data.lostReason, lostNotes: data.lostNotes });
+          }
+          setStageConfirm(null);
+        }}
+      />
 
       {/* Delete Request Dialog */}
       {deleteTarget && onDelete && (

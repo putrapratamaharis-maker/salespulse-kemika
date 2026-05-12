@@ -5,6 +5,27 @@ export type OrgRole = 'sales_manager' | 'supervisor' | 'sales_person' | 'represe
 export type Segment = 'B2G' | 'B2B' | 'B2C';
 export type DealStage = 'prospect' | 'quotation' | 'negotiation' | 'po_secured' | 'invoice_issued' | 'canceled' | 'lost';
 
+export type LostReason =
+  | 'price'
+  | 'competitor'
+  | 'needs_mismatch'
+  | 'budget'
+  | 'timing'
+  | 'no_response'
+  | 'internal_decision'
+  | 'other';
+
+export const LOST_REASON_LABELS: Record<LostReason, string> = {
+  price: 'Harga tidak kompetitif',
+  competitor: 'Kalah dari kompetitor',
+  needs_mismatch: 'Kebutuhan tidak sesuai produk',
+  budget: 'Budget tidak tersedia',
+  timing: 'Timing tidak tepat',
+  no_response: 'Tidak ada respons dari customer',
+  internal_decision: 'Keputusan internal customer',
+  other: 'Lainnya',
+};
+
 export interface DealProduct {
   id: string;
   category: string;
@@ -82,6 +103,10 @@ export interface Deal {
   arStatus?: string;
   /** Last AR event timestamp */
   arLastEventAt?: string;
+  /** Alasan deal lost (diisi saat stage = 'lost') */
+  lostReason?: LostReason;
+  /** Catatan tambahan alasan lost */
+  lostNotes?: string;
 }
 
 

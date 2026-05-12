@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { KPICard } from '@/components/KPICard';
 import { StatusBadge } from '@/components/StatusBadge';
 import { useAppContext } from '@/context/AppContext';
-import { Deal, DealStage, DealProduct, formatIDRFull, formatNumIDR, formatPercent, formatDate } from '@/types/sales';
+import { Deal, DealStage, DealProduct, LostReason, formatIDRFull, formatNumIDR, formatPercent, formatDate } from '@/types/sales';
 import { supabase } from '@/integrations/supabase/client';
 import { GitBranch, TrendingUp, DollarSign, Clock, AlertTriangle, CalendarClock, ShieldAlert, ArrowUpDown, ArrowUp, ArrowDown, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,6 +13,7 @@ import { NewLeadDialog } from '@/components/pipeline/NewLeadDialog';
 import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
 import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { DealDetailDialog } from '@/components/pipeline/DealDetailDialog';
+import { LostDealAnalysis } from '@/components/pipeline/LostDealAnalysis';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
@@ -110,6 +111,8 @@ const MyPipeline = () => {
       arPaidAmount: Number((d as any).ar_paid_amount ?? 0) || 0,
       arStatus: (d as any).ar_status || '',
       arLastEventAt: (d as any).ar_last_event_at || '',
+      lostReason: (d as any).lost_reason || undefined,
+      lostNotes: (d as any).lost_notes || '',
     }));
     setDeals(mapped);
     setLocalAccounts((accountsData || []).map((a: any) => ({ id: a.id, name: a.name, picName: a.pic_name, picContact: a.pic_contact, picEmail: a.pic_email })));
@@ -228,13 +231,22 @@ const MyPipeline = () => {
     toast({ title: 'Permintaan hapus deal telah diajukan', description: 'Menunggu persetujuan Admin' });
   };
 
-  const handleStageChange = async (dealId: string, newStage: DealStage, extraData?: { poNumber: string; closeDate: string }) => {
+  const handleStageChange = async (
+    dealId: string,
+    newStage: DealStage,
+    extraData?: { poNumber?: string; closeDate?: string; lostReason?: LostReason; lostNotes?: string },
+  ) => {
     const isFinalStage = newStage === 'po_secured' || newStage === 'invoice_issued';
     const updatePayload: Record<string, any> = {
       stage: newStage,
       days_in_stage: 0,
       ...(isFinalStage ? { probability: 100 } : {}),
-      ...(extraData ? { po_number: extraData.poNumber, expected_close_date: extraData.closeDate } : {}),
+      ...(extraData?.poNumber ? { po_number: extraData.poNumber } : {}),
+      ...(extraData?.closeDate ? { expected_close_date: extraData.closeDate } : {}),
+      ...(newStage === 'lost' ? {
+        lost_reason: extraData?.lostReason ?? null,
+        lost_notes: extraData?.lostNotes ?? null,
+      } : {}),
     };
     const { error } = await supabase.from('deals').update(updatePayload).eq('id', dealId);
     if (error) {
@@ -549,6 +561,15 @@ const MyPipeline = () => {
       {editDialogOpen && editingDeal && (
         <EditDealDialog deal={editingDeal} open={true} onOpenChange={(open) => { if (!open) { setEditDialogOpen(false); setEditingDeal(null); } }} onSave={handleSaveEdit} accountOptions={accountOptions} salesId={currentUser.id} onAccountCreated={handleAccountCreated} existingDeals={deals} />
       )}
+      {/* Lost Deal Analysis */}
+      <div className="mt-2">
+        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
+          <span className="inline-block w-1 h-4 bg-destructive rounded-full" />
+          Lost Deal Analysis
+        </h2>
+        <LostDealAnalysis deals={deals} getAccountName={getAccountName} />
+      </div>
+
       <DealDetailDialog deal={detailDeal} open={!!detailDeal} onOpenChange={(open) => !open && setDetailDeal(null)} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} />
     </div>
   );

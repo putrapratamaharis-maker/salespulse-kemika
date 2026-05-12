@@ -10,7 +10,7 @@ interface StageTransitionDialogProps {
   onOpenChange: (open: boolean) => void;
   dealName: string;
   targetStage: DealStage;
-  onConfirm: (data: { poNumber: string; closeDate: string }) => void;
+  onConfirm: (data: { poNumber?: string; closeDate?: string }) => void;
 }
 
 export function StageTransitionDialog({ open, onOpenChange, dealName, targetStage, onConfirm }: StageTransitionDialogProps) {
