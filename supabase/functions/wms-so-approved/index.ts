@@ -1,8 +1,6 @@
 // Edge Function: wms-so-approved
 // POST /functions/v1/wms-so-approved
 // Webhook dipanggil oleh WMS saat Sales Order di-APPROVE.
-// Mengupdate kartu deal SalesPulse: stage -> po_secured, value, po_number,
-// wms_so_number, wms_so_date, dan koreksi nama customer.
 //
 // Authentication: Header `X-WMS-API-Key` harus cocok dengan WMS_INTEGRATION_API_KEY.
 //
@@ -11,34 +9,38 @@
 //   "reference_number": "REF-DSP-2026-0001",  // wajib, dari SalesPulse
 //   "so_number": "SO-2026-1234",              // wajib
 //   "so_date": "2026-04-21",                  // wajib (YYYY-MM-DD)
-//   "total_value": 66000000,                  // wajib (numeric)
-//   "customer_po": "SPK/123/2026",            // opsional, No. PO dari customer (SP/SPK/PO)
-//   "customer_name": "PT ABCD EFGH",          // opsional, untuk koreksi nama
-//   "items": [                                // opsional tapi DIREKOMENDASIKAN
+//   "subtotal_gross": 249900,                 // DIUTAMAKAN — subtotal sebelum PPN & shipping (DPP)
+//   "grand_total": 277389,                    // total akhir termasuk PPN & shipping (disimpan sebagai info)
+//   "total_value": 249900,                    // legacy alias untuk subtotal_gross
+//   "total_amount": 249900,                   // legacy alias untuk subtotal_gross
+//   "tax_amount": 27489,                      // opsional — nominal PPN
+//   "shipping_cost": 0,                       // opsional — biaya pengantaran
+//   "customer_po": "SPK/123/2026",            // opsional, No. PO dari customer
+//   "customer_name": "PT ABCD EFGH",          // opsional — tidak dipakai untuk overwrite nama akun
+//   "items": [
 //     {
-//       "sku": "SKU-001",                     // opsional, untuk match ke products
-//       "product_name": "Produk A",           // wajib
-//       "category": "Kategori X",             // opsional
-//       "unit": "pcs",                        // opsional, default 'pcs'
-//       "qty": 10,                            // wajib (integer >= 1)
-//       "price_per_unit": 6000000,            // wajib (number >= 0) — harga jual final SO
-//       "other_cost": 0                       // opsional, default 0
+//       "sku": "ACT300",                      // opsional, untuk match ke products master
+//       "product_name": "Actellic 300 CS",    // wajib
+//       "category": "Insektisida",            // opsional
+//       "unit": "Botol",                      // opsional, default 'pcs'
+//       "qty": 1,                             // wajib (integer >= 1)
+//       "price_per_unit": 249900,             // wajib (number >= 0) — harga satuan pre-tax
+//       "discount_pct": 0,                    // opsional — diskon per baris (%)
+//       "discount_rp": 0                      // opsional — diskon per baris (Rp), dihitung otomatis jika tidak ada
 //     }
 //   ]
 // }
 //
-// Pemetaan kolom deals:
-// - po_number       <- customer_po (No. PO/SP/SPK customer). Tidak di-overwrite jika customer_po tidak dikirim/kosong.
-// - wms_so_number   <- so_number   (No. SO internal warehouse).
-// - wms_so_date     <- so_date.
+// Logika nilai deal (deal.value):
+// - Prioritas: subtotal_gross → total_value → total_amount
+// - deal.value = pre-tax subtotal (DPP), BUKAN grand_total yang sudah include PPN
+// - Ini konsisten dengan cara salesperson input harga di SalesPulse (pre-tax)
+// - grand_total + tax_amount disimpan ke wms_sync_log payload untuk referensi
 //
-// Catatan items:
-// - Jika items[] dikirim, deal_products LAMA akan DI-REPLACE TOTAL dengan items dari WMS.
-// - Sumber NILAI deal (deal.value) SELALU diambil dari `total_amount` (alias: `total_value`/`grand_total`)
-//   yang dikirim WMS — termasuk PPN/diskon/pembulatan. Sales Pulse TIDAK menghitung ulang dari items.
-// - price_per_unit per item disimpan apa adanya dari payload (boleh net, boleh gross — tidak diubah).
-// - Jika items[] tidak dikirim/kosong, deal_products tidak diubah; deal.value tetap pakai total dari WMS.
-// }
+// Pemetaan kolom deals:
+// - po_number    <- customer_po. Tidak di-overwrite jika tidak dikirim.
+// - wms_so_number <- so_number
+// - wms_so_date  <- so_date
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -53,11 +55,14 @@ interface Payload {
   reference_number?: string;
   so_number?: string;
   so_date?: string;
-  total_value?: number;   // legacy alias
-  total_amount?: number;  // PRIMARY: total final dari WMS (termasuk PPN/diskon)
-  grand_total?: number;   // legacy alias
+  subtotal_gross?: number;  // PRIMARY: pre-tax subtotal (DPP) — ini yang masuk ke deal.value
+  total_value?: number;     // legacy alias untuk subtotal_gross
+  total_amount?: number;    // legacy alias untuk subtotal_gross
+  grand_total?: number;     // total akhir include PPN+shipping — disimpan di log, TIDAK ke deal.value
+  tax_amount?: number;      // nominal PPN (opsional, untuk info)
+  shipping_cost?: number;   // biaya pengantaran (opsional, untuk info)
   customer_po?: string;
-  customer_name?: string;
+  customer_name?: string;   // hanya dicatat di log, tidak overwrite accounts.name
   items?: WmsItem[];
 }
 
@@ -67,8 +72,9 @@ interface WmsItem {
   category?: string;
   unit?: string;
   qty?: number;
-  price_per_unit?: number;
-  other_cost?: number;
+  price_per_unit?: number;  // harga satuan pre-tax
+  discount_pct?: number;    // diskon per baris (%)
+  discount_rp?: number;     // diskon per baris (Rp)
 }
 
 Deno.serve(async (req) => {
@@ -108,15 +114,20 @@ Deno.serve(async (req) => {
     if (!body.so_date || !/^\d{4}-\d{2}-\d{2}$/.test(body.so_date)) {
       errs.push("so_date wajib (format YYYY-MM-DD)");
     }
-    // Terima total dari beberapa kemungkinan field name (kompatibilitas lintas versi WMS).
-    const wmsTotal =
-      typeof body.total_amount === "number" ? body.total_amount :
-      typeof body.grand_total === "number" ? body.grand_total :
-      typeof body.total_value === "number" ? body.total_value :
+    // Nilai pre-tax (DPP) yang masuk ke deal.value.
+    // Prioritas: subtotal_gross → total_value → total_amount
+    // grand_total TIDAK dipakai untuk deal.value karena sudah include PPN.
+    const wmsSubtotalGross =
+      typeof body.subtotal_gross === "number" ? body.subtotal_gross :
+      typeof body.total_value   === "number" ? body.total_value :
+      typeof body.total_amount  === "number" ? body.total_amount :
       undefined;
-    if (typeof wmsTotal !== "number" || !Number.isFinite(wmsTotal) || wmsTotal < 0) {
-      errs.push("total_amount wajib (number >= 0). Alias yang diterima: total_amount | grand_total | total_value");
+    if (typeof wmsSubtotalGross !== "number" || !Number.isFinite(wmsSubtotalGross) || wmsSubtotalGross < 0) {
+      errs.push("subtotal_gross wajib (number >= 0) — nilai pre-tax/DPP. Alias: subtotal_gross | total_value | total_amount");
     }
+    const wmsGrandTotal =
+      typeof body.grand_total   === "number" ? body.grand_total :
+      wmsSubtotalGross;
     // Validasi items (jika dikirim)
     if (body.items !== undefined) {
       if (!Array.isArray(body.items)) {
@@ -209,13 +220,14 @@ Deno.serve(async (req) => {
     const oldValue = Number(deal.value) || 0;
     const hasItems = Array.isArray(body.items) && body.items.length > 0;
 
-    // Sumber kebenaran nilai = total_amount dari WMS (termasuk PPN/diskon/pembulatan).
-    // Hitungan dari items hanya dipakai untuk INFO selisih, bukan untuk nilai deal.
-    const newValue = wmsTotal!;
+    // deal.value = subtotal_gross (pre-tax/DPP), BUKAN grand_total.
+    // Ini konsisten dengan cara salesperson input harga di SalesPulse.
+    const newValue = wmsSubtotalGross!;
     const itemsSum = hasItems
       ? body.items!.reduce((sum, it) => {
-          const line = (it.qty ?? 0) * (it.price_per_unit ?? 0) + (it.other_cost ?? 0);
-          return sum + line;
+          const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+          const disc  = it.discount_rp ?? (gross * (it.discount_pct ?? 0) / 100);
+          return sum + gross - disc;
         }, 0)
       : null;
 
@@ -259,15 +271,22 @@ Deno.serve(async (req) => {
       }
 
       // Insert produk baru dari payload SO
-      const rows = body.items!.map((it) => ({
-        deal_id: deal.id,
-        product_name: it.product_name!.trim(),
-        category: (it.category ?? "").trim(),
-        unit: (it.unit ?? "pcs").trim() || "pcs",
-        qty: Math.floor(it.qty!),
-        price_per_unit: it.price_per_unit!,
-        other_cost: it.other_cost ?? 0,
-      }));
+      const rows = body.items!.map((it) => {
+        const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+        const discPct = it.discount_pct ?? 0;
+        const discRp  = it.discount_rp  ?? (gross * discPct / 100);
+        return {
+          deal_id: deal.id,
+          product_name: it.product_name!.trim(),
+          category: (it.category ?? "").trim(),
+          unit: (it.unit ?? "pcs").trim() || "pcs",
+          qty: Math.floor(it.qty!),
+          price_per_unit: it.price_per_unit!,
+          discount_pct: discPct,
+          discount_rp: discRp,
+          other_cost: 0,  // legacy field — diskon kini di discount_pct/discount_rp
+        };
+      });
 
       const { error: insErr } = await supabase
         .from("deal_products")
@@ -321,10 +340,12 @@ Deno.serve(async (req) => {
         customer_po: customerPo || null,
         po_number_updated: Boolean(customerPo),
         old_value: oldValue,
-        new_value: newValue,
+        new_value: newValue,              // = subtotal_gross (pre-tax)
+        wms_grand_total: wmsGrandTotal,   // untuk info saja
+        wms_tax_amount: body.tax_amount ?? null,
+        wms_shipping_cost: body.shipping_cost ?? null,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
         wms_items_subtotal: itemsSum,
-        tax_or_adjustment: itemsSum !== null ? Number((newValue - itemsSum).toFixed(2)) : null,
         customer_name_updated: customerNameUpdated,
         items_replaced: itemsReplaced,
         synced_at: now,

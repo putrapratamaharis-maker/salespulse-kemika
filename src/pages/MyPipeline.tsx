@@ -76,7 +76,9 @@ const MyPipeline = () => {
         unit: dp.unit,
         qty: dp.qty,
         pricePerUnit: Number(dp.price_per_unit),
-        otherCost: Number(dp.other_cost),
+        discountPct: Number(dp.discount_pct ?? 0),
+        discountRp: Number(dp.discount_rp ?? 0),
+        otherCost: Number(dp.other_cost ?? 0),
       });
     });
 
@@ -157,7 +159,9 @@ const MyPipeline = () => {
           unit: p.unit,
           qty: p.qty,
           price_per_unit: p.pricePerUnit,
-          other_cost: p.otherCost,
+          discount_pct: p.discountPct ?? 0,
+          discount_rp: p.discountRp ?? 0,
+          other_cost: p.otherCost ?? 0,
         }))
       );
     }
@@ -200,7 +204,9 @@ const MyPipeline = () => {
             unit: p.unit,
             qty: p.qty,
             price_per_unit: p.pricePerUnit,
-            other_cost: p.otherCost,
+            discount_pct: p.discountPct ?? 0,
+            discount_rp: p.discountRp ?? 0,
+            other_cost: p.otherCost ?? 0,
           }))
         );
       }
@@ -293,7 +299,9 @@ const MyPipeline = () => {
           unit: p.unit,
           qty: p.qty,
           price_per_unit: p.pricePerUnit,
-          other_cost: p.otherCost,
+          discount_pct: p.discountPct ?? 0,
+          discount_rp: p.discountRp ?? 0,
+          other_cost: p.otherCost ?? 0,
         }))
       );
     }

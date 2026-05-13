@@ -32,7 +32,8 @@ interface WmsItem {
   unit?: string;
   qty?: number;
   price_per_unit?: number;
-  other_cost?: number;
+  discount_pct?: number;
+  discount_rp?: number;
 }
 
 interface Payload {
@@ -147,13 +148,17 @@ Deno.serve(async (req) => {
     const oldValue = Number(deal.value) || 0;
     const hasItems = Array.isArray(body.items) && body.items.length > 0;
 
-    // Hitung newValue: dari items kalau dikirim, kalau tidak dari total_value, kalau tidak ada juga pakai oldValue
+    // Nilai pre-tax (DPP) — pakai subtotal_gross bukan grand_total.
+    // Prioritas: subtotal_gross → total_value → total_amount → hitung dari items → oldValue
     let newValue = oldValue;
     if (hasItems) {
-      newValue = body.items!.reduce(
-        (s, it) => s + ((it.qty ?? 0) * (it.price_per_unit ?? 0)) + (it.other_cost ?? 0),
-        0,
-      );
+      newValue = body.items!.reduce((s, it) => {
+        const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+        const disc  = it.discount_rp ?? (gross * (it.discount_pct ?? 0) / 100);
+        return s + gross - disc;
+      }, 0);
+    } else if (typeof (body as any).subtotal_gross === "number") {
+      newValue = (body as any).subtotal_gross;
     } else if (typeof body.total_value === "number") {
       newValue = body.total_value;
     }
@@ -190,15 +195,22 @@ Deno.serve(async (req) => {
         await markLog(supabase, logId, "failed", delErr.message);
         return jsonError(500, "Hapus deal_products gagal");
       }
-      const rows = body.items!.map((it) => ({
-        deal_id: deal!.id,
-        product_name: it.product_name!.trim(),
-        category: (it.category ?? "").trim(),
-        unit: (it.unit ?? "pcs").trim() || "pcs",
-        qty: Math.floor(it.qty!),
-        price_per_unit: it.price_per_unit!,
-        other_cost: it.other_cost ?? 0,
-      }));
+      const rows = body.items!.map((it) => {
+        const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+        const discPct = it.discount_pct ?? 0;
+        const discRp  = it.discount_rp  ?? (gross * discPct / 100);
+        return {
+          deal_id: deal!.id,
+          product_name: it.product_name!.trim(),
+          category: (it.category ?? "").trim(),
+          unit: (it.unit ?? "pcs").trim() || "pcs",
+          qty: Math.floor(it.qty!),
+          price_per_unit: it.price_per_unit!,
+          discount_pct: discPct,
+          discount_rp: discRp,
+          other_cost: 0,
+        };
+      });
       const { error: insErr } = await supabase.from("deal_products").insert(rows);
       if (insErr) {
         await markLog(supabase, logId, "failed", insErr.message);

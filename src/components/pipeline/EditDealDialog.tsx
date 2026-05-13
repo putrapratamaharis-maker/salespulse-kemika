@@ -58,6 +58,8 @@ const emptyProduct = (): DealProduct => ({
   unit: 'pcs',
   qty: 1,
   pricePerUnit: 0,
+  discountPct: 0,
+  discountRp: 0,
   otherCost: 0,
 });
 
@@ -129,7 +131,11 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
   }, [deal, open, mastersLoaded]);
 
   const selectedAccount = accountOptions.find(a => a.id === accountId);
-  const totalValue = products.reduce((sum, p) => sum + (p.qty * p.pricePerUnit) + p.otherCost, 0);
+  const totalValue = products.reduce((sum, p) => {
+    const gross = p.qty * p.pricePerUnit;
+    const disc  = p.discountRp ?? (gross * (p.discountPct ?? 0) / 100);
+    return sum + gross - disc;
+  }, 0);
 
   const updateProduct = (index: number, field: keyof DealProduct, value: string | number) => {
     setProducts(prev => prev.map((p, i) => i === index ? { ...p, [field]: value } : p));
@@ -456,20 +462,37 @@ export function EditDealDialog({ deal, open, onOpenChange, onSave, accountOption
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs">Biaya Lainnya (Rp)</Label>
+                      <Label className="text-xs">Diskon (%)</Label>
                       <Input
                         className="h-9 text-sm"
                         type="number"
                         step="0.01"
                         min={0}
-                        value={product.otherCost || ''}
-                        onChange={e => updateProduct(idx, 'otherCost', Number(e.target.value) || 0)}
+                        max={100}
+                        value={product.discountPct || ''}
+                        onChange={e => {
+                          const pct = Math.min(100, Math.max(0, Number(e.target.value) || 0));
+                          const rp  = (product.qty * product.pricePerUnit) * pct / 100;
+                          updateProduct(idx, 'discountPct', pct);
+                          updateProduct(idx, 'discountRp', rp);
+                        }}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Diskon (Rp)</Label>
+                      <Input
+                        className="h-9 text-sm bg-muted/50"
+                        type="number"
+                        min={0}
+                        value={Math.round(product.discountRp) || ''}
+                        readOnly
                         placeholder="0"
                       />
                     </div>
                   </div>
                   <div className="text-right text-xs text-muted-foreground">
-                    Subtotal: <span className="font-semibold text-foreground">{formatRp((product.qty * product.pricePerUnit) + product.otherCost)}</span>
+                    Subtotal: <span className="font-semibold text-foreground">{formatRp((product.qty * product.pricePerUnit) * (1 - (product.discountPct ?? 0) / 100))}</span>
                   </div>
                 </div>
               ))}

@@ -33,7 +33,9 @@ export interface DealProduct {
   unit: string;
   qty: number;
   pricePerUnit: number;
-  otherCost: number;
+  discountPct: number;   // diskon per baris (%), selaras dengan WMS Line Discount (%)
+  discountRp: number;    // diskon per baris (Rp), dihitung otomatis dari discountPct
+  otherCost: number;     // legacy — tidak dipakai untuk sync WMS baru
 }
 
 export type DateRange = 'MTD' | 'QTD' | 'YTD' | 'custom';
