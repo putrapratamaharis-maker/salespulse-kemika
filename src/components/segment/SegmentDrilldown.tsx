@@ -8,22 +8,13 @@ import {
 } from 'recharts';
 
 /* ── Types ─────────────────────────────────────────────────────────────── */
-interface InvoiceRow {
-  id: string;
-  account_id: string;
-  sales_id: string;
-  segment: string;
-  net_sales: number;
-  gross_profit: number;
-  issue_date: string;
-}
-
 interface DealRow {
   id: string;
   segment: string;
   stage: string;
   value: number;
   sales_id: string;
+  account_id: string;
   expected_close_date: string;
 }
 
@@ -47,7 +38,6 @@ interface AccountRow {
 
 interface SegmentDrilldownProps {
   segment: 'B2G' | 'B2B' | 'B2C';
-  invoices: InvoiceRow[];
   deals: DealRow[];
   dealProducts: DealProductRow[];
   profiles: ProfileRow[];
@@ -77,39 +67,45 @@ function growthBadge(pct: number | null) {
 
 /* ── Main Component ─────────────────────────────────────────────────────── */
 export function SegmentDrilldown({
-  segment, invoices, deals, dealProducts, profiles, accounts,
+  segment, deals, dealProducts, profiles, accounts,
 }: SegmentDrilldownProps) {
   const now = new Date();
   const currentYear  = now.getFullYear();
   const previousYear = currentYear - 1;
 
   // Map lookups
-  const profileMap  = useMemo(() => new Map(profiles.map(p => [p.user_id, p.full_name])), [profiles]);
-  const accountMap  = useMemo(() => new Map(accounts.map(a => [a.id, a.name])), [accounts]);
+  const profileMap = useMemo(() => new Map(profiles.map(p => [p.user_id, p.full_name])), [profiles]);
+  const accountMap = useMemo(() => new Map(accounts.map(a => [a.id, a.name])), [accounts]);
 
-  // Segment invoices
-  const segInv = useMemo(() => invoices.filter(i => i.segment === segment), [invoices, segment]);
-  const segInvCY = useMemo(() => segInv.filter(i => new Date(i.issue_date).getFullYear() === currentYear), [segInv, currentYear]);
+  // Revenue = nilai deal PO Secured + Invoice Issued (bukan dari invoice.net_sales)
+  const segWonDeals = useMemo(() =>
+    deals.filter(d => d.segment === segment && WON_STAGES.includes(d.stage)),
+    [deals, segment]
+  );
+  const segWonDealsCY = useMemo(() =>
+    segWonDeals.filter(d => new Date(d.expected_close_date).getFullYear() === currentYear),
+    [segWonDeals, currentYear]
+  );
 
   /* ── Top 5 Accounts ── */
   const topAccounts = useMemo(() => {
     const map: Record<string, number> = {};
-    segInvCY.forEach(i => { map[i.account_id] = (map[i.account_id] || 0) + Number(i.net_sales); });
+    segWonDealsCY.forEach(d => { map[d.account_id] = (map[d.account_id] || 0) + Number(d.value); });
     return Object.entries(map)
       .map(([id, rev]) => ({ name: accountMap.get(id) || id, revenue: rev }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
-  }, [segInvCY, accountMap]);
+  }, [segWonDealsCY, accountMap]);
 
   /* ── Top 5 Salesperson ── */
   const topSales = useMemo(() => {
     const map: Record<string, number> = {};
-    segInvCY.forEach(i => { map[i.sales_id] = (map[i.sales_id] || 0) + Number(i.net_sales); });
+    segWonDealsCY.forEach(d => { map[d.sales_id] = (map[d.sales_id] || 0) + Number(d.value); });
     return Object.entries(map)
       .map(([id, rev]) => ({ name: profileMap.get(id) || id, revenue: rev }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 5);
-  }, [segInvCY, profileMap]);
+  }, [segWonDealsCY, profileMap]);
 
   /* ── Top 5 Products ── */
   const topProducts = useMemo(() => {
@@ -132,31 +128,32 @@ export function SegmentDrilldown({
       .slice(0, 5);
   }, [deals, dealProducts, segment, currentYear]);
 
-  /* ── Quarter-over-Quarter ── */
+  /* ── Quarter-over-Quarter (revenue = deal value PO Secured + Invoice Issued) ── */
   const qoqData = useMemo(() => {
     return QUARTERS.map(q => {
       const months = QUARTER_MONTHS[q];
-      const cyRev = segInv
-        .filter(i => {
-          const d = new Date(i.issue_date);
-          return d.getFullYear() === currentYear && months.includes(d.getMonth() + 1);
-        })
-        .reduce((s, i) => s + Number(i.net_sales), 0);
 
-      const pyRev = segInv
-        .filter(i => {
-          const d = new Date(i.issue_date);
-          return d.getFullYear() === previousYear && months.includes(d.getMonth() + 1);
+      const cyRev = segWonDeals
+        .filter(d => {
+          const dt = new Date(d.expected_close_date);
+          return dt.getFullYear() === currentYear && months.includes(dt.getMonth() + 1);
         })
-        .reduce((s, i) => s + Number(i.net_sales), 0);
+        .reduce((s, d) => s + Number(d.value), 0);
+
+      const pyRev = segWonDeals
+        .filter(d => {
+          const dt = new Date(d.expected_close_date);
+          return dt.getFullYear() === previousYear && months.includes(dt.getMonth() + 1);
+        })
+        .reduce((s, d) => s + Number(d.value), 0);
 
       const growth = pyRev > 0 ? ((cyRev - pyRev) / pyRev) * 100 : null;
       return { quarter: q, [currentYear]: cyRev, [previousYear]: pyRev, growth };
     });
-  }, [segInv, currentYear, previousYear]);
+  }, [segWonDeals, currentYear, previousYear]);
 
-  const totalCY = qoqData.reduce((s, d) => s + (d[currentYear] as number), 0);
-  const totalPY = qoqData.reduce((s, d) => s + (d[previousYear] as number), 0);
+  const totalCY = segWonDeals.filter(d => new Date(d.expected_close_date).getFullYear() === currentYear).reduce((s, d) => s + Number(d.value), 0);
+  const totalPY = segWonDeals.filter(d => new Date(d.expected_close_date).getFullYear() === previousYear).reduce((s, d) => s + Number(d.value), 0);
   const totalGrowth = totalPY > 0 ? ((totalCY - totalPY) / totalPY) * 100 : null;
 
   /* ── Render ─────────────────────────────────────────────────────────── */

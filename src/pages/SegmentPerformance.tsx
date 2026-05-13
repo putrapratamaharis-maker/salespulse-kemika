@@ -301,7 +301,6 @@ const SegmentPerformance = () => {
             <RevenueMovementChart data={movementData[seg] || emptyMovement} />
             <SegmentDrilldown
               segment={seg}
-              invoices={allInvoices}
               deals={allDeals}
               dealProducts={allDealProducts}
               profiles={profiles}
