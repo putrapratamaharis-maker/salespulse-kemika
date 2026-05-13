@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ShoppingCart, TrendingUp, BarChart3, RefreshCw, DollarSign, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
+import { SegmentDrilldown } from '@/components/segment/SegmentDrilldown';
 
 interface SegmentData {
   revenueYTD: number;
@@ -203,15 +204,30 @@ const SegmentPerformance = () => {
   const [loading, setLoading] = useState(true);
   const [segmentData, setSegmentData] = useState<Record<string, SegmentData>>({});
   const [movementData, setMovementData] = useState<Record<string, MonthlyMovement[]>>({});
+  const [allInvoices, setAllInvoices] = useState<any[]>([]);
+  const [allDeals, setAllDeals] = useState<any[]>([]);
+  const [allDealProducts, setAllDealProducts] = useState<any[]>([]);
+  const [profiles, setProfiles] = useState<{ user_id: string; full_name: string }[]>([]);
+  const [accountsList, setAccountsList] = useState<{ id: string; name: string }[]>([]);
 
   const fetchData = useCallback(async () => {
       setLoading(true);
       const year = new Date().getFullYear();
 
-      const [{ data: invoices }, { data: deals }, { data: targets }] = await Promise.all([
+      const [
+        { data: invoices },
+        { data: deals },
+        { data: targets },
+        { data: dealProducts },
+        { data: profilesData },
+        { data: accountsData },
+      ] = await Promise.all([
         supabase.rpc('get_segment_invoices'),
         supabase.rpc('get_all_deals_pipeline'),
         supabase.rpc('get_segment_targets'),
+        supabase.rpc('get_all_deal_products_pipeline'),
+        supabase.rpc('get_active_sales_profiles'),
+        supabase.rpc('get_accounts_basic'),
       ]);
 
       const now = new Date();
@@ -240,6 +256,11 @@ const SegmentPerformance = () => {
 
       setSegmentData(result);
       setMovementData(movement);
+      setAllInvoices(invoices || []);
+      setAllDeals(deals || []);
+      setAllDealProducts(dealProducts || []);
+      setProfiles(profilesData || []);
+      setAccountsList((accountsData || []).map((a: any) => ({ id: a.id, name: a.name })));
       setLoading(false);
   }, []);
 
@@ -278,6 +299,14 @@ const SegmentPerformance = () => {
           <TabsContent key={seg} value={seg} className="mt-4 space-y-4">
             <SegmentKPIs segment={seg} data={segmentData[seg] || emptySegment} />
             <RevenueMovementChart data={movementData[seg] || emptyMovement} />
+            <SegmentDrilldown
+              segment={seg}
+              invoices={allInvoices}
+              deals={allDeals}
+              dealProducts={allDealProducts}
+              profiles={profiles}
+              accounts={accountsList}
+            />
           </TabsContent>
         ))}
       </Tabs>
