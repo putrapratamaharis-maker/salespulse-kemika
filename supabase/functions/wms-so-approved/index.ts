@@ -261,6 +261,35 @@ Deno.serve(async (req) => {
     // 5b. Replace deal_products jika items dikirim
     let itemsReplaced = 0;
     if (hasItems) {
+      // Build lookup map: wms_sku → product master row
+      // Ini untuk resolve SKU WMS ke SKU internal SalesPulse
+      const wmsSkus = body.items!.map(it => it.sku).filter(Boolean) as string[];
+      type MasterRow = { id: string; sku: string | null; wms_sku: string | null; name: string; category_id: string | null; unit: string | null };
+      const masterMap = new Map<string, MasterRow>(); // key = wms_sku
+
+      if (wmsSkus.length > 0) {
+        // Cari by wms_sku dulu
+        const { data: byWmsSku } = await supabase
+          .from("products")
+          .select("id, sku, wms_sku, name, category_id, unit")
+          .in("wms_sku", wmsSkus);
+        (byWmsSku ?? []).forEach((p: MasterRow) => {
+          if (p.wms_sku) masterMap.set(p.wms_sku, p);
+        });
+
+        // Fallback: cari by sku (SalesPulse internal) untuk SKU yang belum ter-resolve
+        const unresolved = wmsSkus.filter(s => !masterMap.has(s));
+        if (unresolved.length > 0) {
+          const { data: bySku } = await supabase
+            .from("products")
+            .select("id, sku, wms_sku, name, category_id, unit")
+            .in("sku", unresolved);
+          (bySku ?? []).forEach((p: MasterRow) => {
+            if (p.sku && !masterMap.has(p.sku)) masterMap.set(p.sku, p);
+          });
+        }
+      }
+
       // Hapus semua produk lama
       const { error: delErr } = await supabase
         .from("deal_products")
@@ -270,21 +299,27 @@ Deno.serve(async (req) => {
         return jsonError(500, `Hapus deal_products gagal: ${delErr.message}`);
       }
 
-      // Insert produk baru dari payload SO
+      // Insert produk baru — gunakan data master jika SKU ter-resolve
       const rows = body.items!.map((it) => {
-        const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+        const master = it.sku ? masterMap.get(it.sku) : undefined;
+        const gross   = (it.qty ?? 0) * (it.price_per_unit ?? 0);
         const discPct = it.discount_pct ?? 0;
         const discRp  = it.discount_rp  ?? (gross * discPct / 100);
+
         return {
           deal_id: deal.id,
-          product_name: it.product_name!.trim(),
+          // Nama & kategori: prioritas dari master produk SalesPulse jika ter-resolve,
+          // fallback ke data WMS payload
+          product_name: master?.name ?? it.product_name!.trim(),
           category: (it.category ?? "").trim(),
-          unit: (it.unit ?? "pcs").trim() || "pcs",
+          unit: master?.unit ?? (it.unit ?? "pcs").trim() || "pcs",
           qty: Math.floor(it.qty!),
           price_per_unit: it.price_per_unit!,
           discount_pct: discPct,
           discount_rp: discRp,
-          other_cost: 0,  // legacy field — diskon kini di discount_pct/discount_rp
+          other_cost: 0,
+          // Simpan SKU: SalesPulse internal jika ter-resolve, WMS SKU jika tidak
+          sku: master?.sku ?? it.sku ?? null,
         };
       });
 

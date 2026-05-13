@@ -716,7 +716,8 @@ function ProductTab() {
                 {!readOnly && <TableHead className="w-10">
                   <Checkbox checked={paginatedItems.length > 0 && selectedIds.size === paginatedItems.length} onCheckedChange={toggleSelectAll} />
                 </TableHead>}
-                <TableHead className="text-xs">SKU</TableHead>
+                <TableHead className="text-xs">SKU Internal</TableHead>
+                <TableHead className="text-xs">WMS SKU</TableHead>
                 <TableHead className="text-xs">Product Name</TableHead>
                 <TableHead className="text-xs">Category</TableHead>
                 <TableHead className="text-xs">Unit</TableHead>
@@ -730,6 +731,12 @@ function ProductTab() {
                   <TableRow key={i.id} className={selectedIds.has(i.id) ? 'bg-muted/40' : ''}>
                     {!readOnly && <TableCell><Checkbox checked={selectedIds.has(i.id)} onCheckedChange={() => toggleSelect(i.id)} /></TableCell>}
                     <TableCell className="text-sm font-mono font-semibold">{i.sku || '—'}</TableCell>
+                    <TableCell className="text-xs font-mono">
+                      {i.wms_sku
+                        ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block shrink-0" />{i.wms_sku}</span>
+                        : <span className="text-muted-foreground/50">—</span>
+                      }
+                    </TableCell>
                     <TableCell>
                       <div>
                         <div className="text-sm font-medium">{i.name}</div>
@@ -801,8 +808,15 @@ function ProductTab() {
             {viewItem && (
               <div className="space-y-3 mt-2">
                 <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  <span className="text-muted-foreground">Code/SKU</span>
-                  <span className="font-medium font-mono">{viewItem.sku || '—'}</span>
+                  <span className="text-muted-foreground">SKU Internal</span>
+                  <span className="font-medium font-mono text-xs">{viewItem.sku || '—'}</span>
+                  <span className="text-muted-foreground">WMS SKU</span>
+                  <span className="font-mono text-xs flex items-center gap-1.5">
+                    {viewItem.wms_sku
+                      ? <><span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500 shrink-0" />{viewItem.wms_sku}</>
+                      : <span className="text-muted-foreground italic">Belum tersinkronisasi</span>
+                    }
+                  </span>
                   <span className="text-muted-foreground">Product Name</span>
                   <span className="font-medium">{viewItem.name}</span>
                   <span className="text-muted-foreground">Category</span>

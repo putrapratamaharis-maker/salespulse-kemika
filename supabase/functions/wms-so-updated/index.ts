@@ -189,26 +189,44 @@ Deno.serve(async (req) => {
     // Replace deal_products kalau items dikirim
     let itemsReplaced = 0;
     if (hasItems) {
+      // Resolve SKU WMS → produk master SalesPulse
+      const wmsSkus = body.items!.map((it: any) => it.sku).filter(Boolean) as string[];
+      type MasterRow = { id: string; sku: string | null; wms_sku: string | null; name: string; unit: string | null };
+      const masterMap = new Map<string, MasterRow>();
+      if (wmsSkus.length > 0) {
+        const { data: byWmsSku } = await supabase
+          .from("products").select("id, sku, wms_sku, name, unit").in("wms_sku", wmsSkus);
+        (byWmsSku ?? []).forEach((p: MasterRow) => { if (p.wms_sku) masterMap.set(p.wms_sku, p); });
+        const unresolved = wmsSkus.filter(s => !masterMap.has(s));
+        if (unresolved.length > 0) {
+          const { data: bySku } = await supabase
+            .from("products").select("id, sku, wms_sku, name, unit").in("sku", unresolved);
+          (bySku ?? []).forEach((p: MasterRow) => { if (p.sku && !masterMap.has(p.sku)) masterMap.set(p.sku, p); });
+        }
+      }
+
       const { error: delErr } = await supabase
         .from("deal_products").delete().eq("deal_id", deal.id);
       if (delErr) {
         await markLog(supabase, logId, "failed", delErr.message);
         return jsonError(500, "Hapus deal_products gagal");
       }
-      const rows = body.items!.map((it) => {
-        const gross = (it.qty ?? 0) * (it.price_per_unit ?? 0);
+      const rows = body.items!.map((it: any) => {
+        const master  = it.sku ? masterMap.get(it.sku) : undefined;
+        const gross   = (it.qty ?? 0) * (it.price_per_unit ?? 0);
         const discPct = it.discount_pct ?? 0;
         const discRp  = it.discount_rp  ?? (gross * discPct / 100);
         return {
           deal_id: deal!.id,
-          product_name: it.product_name!.trim(),
+          product_name: master?.name ?? it.product_name!.trim(),
           category: (it.category ?? "").trim(),
-          unit: (it.unit ?? "pcs").trim() || "pcs",
+          unit: master?.unit ?? (it.unit ?? "pcs").trim() || "pcs",
           qty: Math.floor(it.qty!),
           price_per_unit: it.price_per_unit!,
           discount_pct: discPct,
           discount_rp: discRp,
           other_cost: 0,
+          sku: master?.sku ?? it.sku ?? null,
         };
       });
       const { error: insErr } = await supabase.from("deal_products").insert(rows);
