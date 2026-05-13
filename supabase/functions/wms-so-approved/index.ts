@@ -115,18 +115,26 @@ Deno.serve(async (req) => {
       errs.push("so_date wajib (format YYYY-MM-DD)");
     }
     // Nilai pre-tax (DPP) yang masuk ke deal.value.
-    // Prioritas: subtotal_gross → total_value → total_amount
-    // grand_total TIDAK dipakai untuk deal.value karena sudah include PPN.
+    // Prioritas: subtotal_gross → total_value → total_amount → grand_total (fallback)
+    // grand_total idealnya TIDAK dipakai karena sudah include PPN, tapi diterima
+    // sebagai fallback sementara WMS belum kirim subtotal_gross.
     const wmsSubtotalGross =
       typeof body.subtotal_gross === "number" ? body.subtotal_gross :
       typeof body.total_value   === "number" ? body.total_value :
       typeof body.total_amount  === "number" ? body.total_amount :
+      typeof body.grand_total   === "number" ? body.grand_total :
       undefined;
+    const valueSource =
+      typeof body.subtotal_gross === "number" ? "subtotal_gross" :
+      typeof body.total_value   === "number" ? "total_value" :
+      typeof body.total_amount  === "number" ? "total_amount" :
+      typeof body.grand_total   === "number" ? "grand_total_fallback" :
+      "none";
     if (typeof wmsSubtotalGross !== "number" || !Number.isFinite(wmsSubtotalGross) || wmsSubtotalGross < 0) {
-      errs.push("subtotal_gross wajib (number >= 0) — nilai pre-tax/DPP. Alias: subtotal_gross | total_value | total_amount");
+      errs.push("Nilai wajib (number >= 0). Field yang diterima: subtotal_gross | total_value | total_amount | grand_total");
     }
     const wmsGrandTotal =
-      typeof body.grand_total   === "number" ? body.grand_total :
+      typeof body.grand_total === "number" ? body.grand_total :
       wmsSubtotalGross;
     // Validasi items (jika dikirim)
     if (body.items !== undefined) {
@@ -375,10 +383,14 @@ Deno.serve(async (req) => {
         customer_po: customerPo || null,
         po_number_updated: Boolean(customerPo),
         old_value: oldValue,
-        new_value: newValue,              // = subtotal_gross (pre-tax)
-        wms_grand_total: wmsGrandTotal,   // untuk info saja
+        new_value: newValue,
+        value_source: valueSource,        // subtotal_gross | total_value | grand_total_fallback
+        wms_grand_total: wmsGrandTotal,
         wms_tax_amount: body.tax_amount ?? null,
         wms_shipping_cost: body.shipping_cost ?? null,
+        warning: valueSource === "grand_total_fallback"
+          ? "deal.value diisi dari grand_total (include PPN). Kirim subtotal_gross untuk nilai pre-tax yang akurat."
+          : null,
         value_diff_pct: Number(valueDiffPct.toFixed(2)),
         wms_items_subtotal: itemsSum,
         customer_name_updated: customerNameUpdated,
