@@ -101,6 +101,42 @@ export type Database = {
         }
         Relationships: []
       }
+      coaching_notes: {
+        Row: {
+          category: string
+          created_at: string
+          id: string
+          is_shared: boolean
+          note: string
+          sales_id: string
+          session_date: string
+          supervisor_id: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_shared?: boolean
+          note: string
+          sales_id: string
+          session_date?: string
+          supervisor_id: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          id?: string
+          is_shared?: boolean
+          note?: string
+          sales_id?: string
+          session_date?: string
+          supervisor_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deal_deletion_requests: {
         Row: {
           created_at: string
