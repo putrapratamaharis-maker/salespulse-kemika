@@ -1,6 +1,21 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
+// Edge Function: wms-customer-upsert
+// POST /functions/v1/wms-customer-upsert
+//
+// Webhook dari WMS untuk sync data customer ke SalesPulse.
+// Lookup dilakukan dengan 3 tahap untuk mencegah duplikasi akun:
+//
+//   Step 1: Cari by wms_customer_code = body.code
+//           → ketemu → UPDATE
+//   Step 2: Tidak ketemu → cari by name exact match
+//           → ketemu → UPDATE + isi wms_customer_code (link ke WMS)
+//   Step 3: Masih tidak ketemu → INSERT akun baru
+//
+// Dengan 3 tahap ini, akun yang sudah ada di SalesPulse (meski belum
+// punya wms_customer_code) akan ter-link ke WMS tanpa membuat duplikat.
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-wms-api-key",
@@ -18,7 +33,6 @@ function clean(v: unknown, max = 255): string {
   return String(v ?? "").trim().slice(0, max);
 }
 
-// Map WMS customer_type → SalesPulse segment
 function mapSegment(customerType: string): string {
   const t = customerType.toLowerCase();
   if (t.includes("government") || t.includes("instansi") || t.includes("pemerintah")) return "B2G";
@@ -36,7 +50,6 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
-  // Authenticate via X-WMS-API-Key
   const apiKey = req.headers.get("x-wms-api-key");
   const expectedKey = Deno.env.get("WMS_INTEGRATION_API_KEY");
   if (!expectedKey) return json({ error: "Server not configured" }, 500);
@@ -51,31 +64,19 @@ serve(async (req) => {
 
   const code = clean(body.code, 50);
   const name = clean(body.name, 255);
-  if (!code) return json({ error: "code (customer code) is required" }, 400);
+  if (!code) return json({ error: "code (customer code from WMS) is required" }, 400);
   if (!name) return json({ error: "name is required" }, 400);
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const admin = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  // Cek apakah customer dengan code ini sudah ada
-  const { data: existing, error: findErr } = await admin
-    .from("accounts")
-    .select("id, name, sales_id")
-    .eq("customer_id", code)
-    .maybeSingle();
-
-  if (findErr) {
-    console.error("[wms-customer-upsert] find error:", findErr);
-    return json({ error: "Lookup failed. Contact SalesPulse administrator." }, 500);
-  }
+  const admin = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
 
   const customerType = clean(body.customer_type, 50) || "Corporate";
-  const payload: Record<string, unknown> = {
-    customer_id: code,
+  const updatePayload: Record<string, unknown> = {
     name,
+    wms_customer_code: code,
     type: mapType(customerType),
     segment: mapSegment(customerType),
     pic_name: clean(body.pic, 255),
@@ -86,53 +87,109 @@ serve(async (req) => {
     status: body.is_active === false ? "Inactive" : "Active",
   };
 
-  if (existing) {
-    // UPDATE — pertahankan sales_id existing
-    const { error: updErr } = await admin
+  // ── STEP 1: Cari by wms_customer_code ─────────────────────────────────
+  {
+    const { data, error } = await admin
       .from("accounts")
-      .update(payload)
-      .eq("id", existing.id);
+      .select("id, name")
+      .eq("wms_customer_code", code)
+      .maybeSingle();
 
-    if (updErr) {
-      console.error("[wms-customer-upsert] update error:", updErr);
-      return json({ error: "Update failed. Contact SalesPulse administrator." }, 500);
+    if (error) {
+      console.error("[wms-customer-upsert] step1 error:", error);
+      return json({ error: "Lookup failed" }, 500);
     }
 
-    return json({
-      success: true,
-      action: "updated",
-      account_id: existing.id,
-      customer_id: code,
-      name,
-    });
+    if (data) {
+      const { error: updErr } = await admin
+        .from("accounts")
+        .update(updatePayload)
+        .eq("id", data.id);
+
+      if (updErr) {
+        console.error("[wms-customer-upsert] update error:", updErr);
+        return json({ error: "Update failed" }, 500);
+      }
+
+      return json({
+        success: true,
+        action: "updated",
+        matched_by: "wms_customer_code",
+        account_id: data.id,
+        wms_customer_code: code,
+        name,
+      });
+    }
   }
 
-  // INSERT — butuh sales_id default (admin/super_admin pertama)
-  const { data: defaultSalesData, error: salesErr } = await admin.rpc("get_default_sync_sales_id");
-  if (salesErr || !defaultSalesData) {
+  // ── STEP 2: Cari by name (exact) — link akun SalesPulse yg sudah ada ──
+  {
+    const { data, error } = await admin
+      .from("accounts")
+      .select("id, name, wms_customer_code")
+      .eq("name", name)
+      .is("wms_customer_code", null)   // hanya akun yang belum ter-link
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("[wms-customer-upsert] step2 error:", error);
+      return json({ error: "Lookup failed" }, 500);
+    }
+
+    if (data) {
+      const { error: updErr } = await admin
+        .from("accounts")
+        .update(updatePayload)
+        .eq("id", data.id);
+
+      if (updErr) {
+        console.error("[wms-customer-upsert] link error:", updErr);
+        return json({ error: "Link account failed" }, 500);
+      }
+
+      return json({
+        success: true,
+        action: "linked",
+        matched_by: "name",
+        account_id: data.id,
+        wms_customer_code: code,
+        name,
+        note: "Existing SalesPulse account linked to WMS customer code. No duplicate created.",
+      });
+    }
+  }
+
+  // ── STEP 3: Tidak ada akun → INSERT baru ───────────────────────────────
+  const { data: defaultSalesId, error: salesErr } = await admin
+    .rpc("get_default_sync_sales_id");
+
+  if (salesErr || !defaultSalesId) {
     console.error("[wms-customer-upsert] no default sales user:", salesErr);
     return json({
-      error: "No default sales owner available. Set at least one active admin/super_admin user in SalesPulse.",
+      error: "No default sales owner available. Set at least one active admin/super_admin in SalesPulse.",
     }, 503);
   }
 
   const { data: inserted, error: insErr } = await admin
     .from("accounts")
-    .insert({ ...payload, sales_id: defaultSalesData })
+    .insert({ ...updatePayload, sales_id: defaultSalesId })
     .select("id")
     .single();
 
   if (insErr) {
     console.error("[wms-customer-upsert] insert error:", insErr);
-    return json({ error: "Insert failed. Contact SalesPulse administrator." }, 500);
+    return json({ error: "Insert failed" }, 500);
   }
 
   return json({
     success: true,
     action: "created",
+    matched_by: "none",
     account_id: inserted.id,
-    customer_id: code,
+    wms_customer_code: code,
     name,
-    note: "Default sales owner assigned. Reassign in SalesPulse if needed.",
+    note: "New account created. Default sales owner assigned — reassign in SalesPulse if needed.",
   }, 201);
 });

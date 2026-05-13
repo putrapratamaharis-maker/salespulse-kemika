@@ -21,6 +21,7 @@ import autoTable from 'jspdf-autotable';
 interface Account {
   id: string;
   customer_id: string;
+  wms_customer_code: string | null;
   name: string;
   segment: string;
   region: string;
@@ -608,8 +609,9 @@ export default function AccountManagement() {
                     </TableHead>
                   )}
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('customer_id')}>
-                    <span className="inline-flex items-center">Code <SortIcon col="customer_id" /></span>
+                    <span className="inline-flex items-center">CRM Code <SortIcon col="customer_id" /></span>
                   </TableHead>
+                  <TableHead className="text-xs">WMS Code</TableHead>
                   <TableHead className="cursor-pointer select-none" onClick={() => toggleSort('name')}>
                     <span className="inline-flex items-center">Name <SortIcon col="name" /></span>
                   </TableHead>
@@ -646,6 +648,12 @@ export default function AccountManagement() {
                       </TableCell>
                     )}
                     <TableCell className="text-muted-foreground text-xs font-mono">{acc.customer_id || '-'}</TableCell>
+                    <TableCell className="text-xs font-mono">
+                      {acc.wms_customer_code
+                        ? <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block shrink-0" />{acc.wms_customer_code}</span>
+                        : <span className="text-muted-foreground/50">—</span>
+                      }
+                    </TableCell>
                     <TableCell className="font-medium">{acc.name}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.type}</TableCell>
                     <TableCell className="text-muted-foreground">{acc.pic_name || '-'}</TableCell>
@@ -850,8 +858,15 @@ export default function AccountManagement() {
           {viewingAccount && (
             <div className="space-y-3 text-sm">
               <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                <div><span className="text-muted-foreground">Code:</span></div>
-                <div className="font-mono">{viewingAccount.customer_id || '-'}</div>
+                <div><span className="text-muted-foreground">CRM Code:</span></div>
+                <div className="font-mono text-xs">{viewingAccount.customer_id || '-'}</div>
+                <div><span className="text-muted-foreground">WMS Code:</span></div>
+                <div className="font-mono text-xs flex items-center gap-1.5">
+                  {viewingAccount.wms_customer_code
+                    ? <><span className="inline-block w-1.5 h-1.5 rounded-full bg-green-500" />{viewingAccount.wms_customer_code}</>
+                    : <span className="text-muted-foreground italic">Belum tersinkronisasi</span>
+                  }
+                </div>
                 <div><span className="text-muted-foreground">Name:</span></div>
                 <div className="font-medium">{viewingAccount.name}</div>
                 <div><span className="text-muted-foreground">Type:</span></div>

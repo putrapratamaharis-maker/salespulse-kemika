@@ -207,18 +207,9 @@ Deno.serve(async (req) => {
       itemsReplaced = rows.length;
     }
 
-    // Koreksi nama customer (opsional)
-    let customerNameUpdated = false;
-    if (body.customer_name?.trim()) {
-      const newName = body.customer_name.trim();
-      const { data: acc } = await supabase
-        .from("accounts").select("name").eq("id", deal.account_id).maybeSingle();
-      if (acc && acc.name !== newName) {
-        const { error: accErr } = await supabase
-          .from("accounts").update({ name: newName }).eq("id", deal.account_id);
-        if (!accErr) customerNameUpdated = true;
-      }
-    }
+    // Nama customer TIDAK di-overwrite dari WMS.
+    // customer_name dari payload hanya dicatat di wms_sync_log (via payload).
+    const customerNameUpdated = false;
 
     // Notifikasi ke sales owner
     const changes: string[] = [];
