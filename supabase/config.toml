@@ -22,6 +22,10 @@ verify_jwt = false
 [functions.wms-so-deleted]
 verify_jwt = false
 
+# wms-revert-sync: verify JWT (hanya admin/super_admin via Supabase auth)
+[functions.wms-revert-sync]
+verify_jwt = true
+
 # AP/AR Nexus Integration: skip JWT verification, autentikasi via X-APAR-API-Key header
 [functions.apar-invoice-event]
 verify_jwt = false

@@ -11,10 +11,18 @@ import { KanbanBoard } from '@/components/pipeline/KanbanBoard';
 import { AllOpenDealsTable } from '@/components/pipeline/AllOpenDealsTable';
 import { DealAgingHeatmap } from '@/components/pipeline/DealAgingHeatmap';
 import { RefreshKPIsButton } from '@/components/RefreshKPIsButton';
+import { EditDealDialog } from '@/components/pipeline/EditDealDialog';
+import { useAppContext } from '@/context/AppContext';
+import { useToast } from '@/hooks/use-toast';
 
 const Pipeline = () => {
+  const { currentUser } = useAppContext();
+  const { toast } = useToast();
+  const isAdmin = currentUser.systemRole === 'super_admin' || currentUser.systemRole === 'admin';
+
   const [salesFilter, setSalesFilter] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [editingDeal, setEditingDeal] = useState<Deal | null>(null);
 
   // DB state
   const [dbDeals, setDbDeals] = useState<Deal[]>([]);
@@ -126,6 +134,43 @@ const Pipeline = () => {
     setLocalDeals(prev => prev.map(d => d.id === dealId ? { ...d, stage: newStage, daysInStage: 0, ...(isFinalStage ? { probability: 100 } : {}) } : d));
   };
 
+  // Admin: edit deal langsung dari Pipeline view
+  const handleEditDeal = (deal: Deal) => { if (isAdmin) setEditingDeal(deal); };
+
+  const handleSaveEdit = async (updatedDeal: Deal): Promise<boolean> => {
+    const { error } = await supabase.from('deals').update({
+      name: updatedDeal.name,
+      account_id: updatedDeal.accountId,
+      segment: updatedDeal.segment,
+      stage: updatedDeal.stage,
+      value: updatedDeal.value,
+      probability: updatedDeal.probability,
+      expected_close_date: updatedDeal.expectedCloseDate,
+      po_number: updatedDeal.poNumber || '',
+      expected_margin: updatedDeal.expectedMargin || 0,
+      location: updatedDeal.location || '',
+      notes: updatedDeal.notes || '',
+      lost_reason: updatedDeal.stage === 'lost' ? (updatedDeal.lostReason ?? null) : null,
+      lost_notes: updatedDeal.stage === 'lost' ? (updatedDeal.lostNotes ?? null) : null,
+    }).eq('id', updatedDeal.id);
+    if (error) { toast({ title: 'Gagal memperbarui deal', description: error.message, variant: 'destructive' }); return false; }
+    if (updatedDeal.products) {
+      await supabase.from('deal_products').delete().eq('deal_id', updatedDeal.id);
+      if (updatedDeal.products.length > 0) {
+        await supabase.from('deal_products').insert(
+          updatedDeal.products.map(p => ({
+            deal_id: updatedDeal.id, category: p.category, product_name: p.productName,
+            unit: p.unit, qty: p.qty, price_per_unit: p.pricePerUnit,
+            discount_pct: p.discountPct ?? 0, discount_rp: p.discountRp ?? 0, other_cost: p.otherCost ?? 0,
+          }))
+        );
+      }
+    }
+    toast({ title: 'Deal berhasil diperbarui' });
+    fetchData();
+    return true;
+  };
+
   const getSalesName = (salesId: string) =>
     salesUsers.find(u => u.id === salesId)?.name || salesId;
 
@@ -220,7 +265,8 @@ const Pipeline = () => {
         getAccountName={getAccountName}
         getAccountPIC={getAccountPIC}
         getSalesName={getSalesName}
-        readOnly
+        readOnly={!isAdmin}
+        onEdit={isAdmin ? handleEditDeal : undefined}
       />
 
       {/* Sales Comparison Bar Chart */}
@@ -288,6 +334,18 @@ const Pipeline = () => {
         getAccountPIC={getAccountPIC}
         salesPersons={salesUsers}
       />
+      {/* Admin: Edit Deal Dialog */}
+      {isAdmin && editingDeal && (
+        <EditDealDialog
+          deal={editingDeal}
+          open={!!editingDeal}
+          onOpenChange={(open) => { if (!open) setEditingDeal(null); }}
+          onSave={handleSaveEdit}
+          accountOptions={Array.from(accountMap.entries()).map(([id, name]) => ({ id, name }))}
+          salesId={currentUser.id}
+          existingDeals={allDeals}
+        />
+      )}
     </div>
   );
 };

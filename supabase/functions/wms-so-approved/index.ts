@@ -64,6 +64,7 @@ interface Payload {
   customer_po?: string;
   customer_name?: string;   // hanya dicatat di log, tidak overwrite accounts.name
   items?: WmsItem[];
+  dry_run?: boolean;        // jika true → preview saja, TIDAK ada perubahan ke DB
 }
 
 interface WmsItem {
@@ -221,6 +222,52 @@ Deno.serve(async (req) => {
         409,
         `Deal sudah berstatus ${deal.stage}, tidak bisa di-sync`,
       );
+    }
+
+    // 4b. DRY RUN — preview saja, tidak ada perubahan ke DB
+    if (body.dry_run === true) {
+      // Ambil produk existing untuk perbandingan
+      const { data: existingProducts } = await supabase
+        .from("deal_products")
+        .select("product_name, qty, unit, price_per_unit, sku")
+        .eq("deal_id", deal.id);
+
+      const existingNames = (existingProducts ?? []).map(p => p.product_name.toLowerCase());
+      const incomingNames = (body.items ?? []).map(it => (it.product_name ?? "").toLowerCase());
+      const mismatched = incomingNames.filter(n => !existingNames.includes(n));
+      const removed    = existingNames.filter(n => !incomingNames.includes(n));
+
+      const { data: accInfo } = await supabase
+        .from("accounts").select("name").eq("id", deal.account_id).maybeSingle();
+      const { data: salesInfo } = await supabase
+        .from("profiles").select("full_name").eq("user_id", deal.sales_id).maybeSingle();
+
+      return new Response(JSON.stringify({
+        dry_run: true,
+        status: "preview",
+        deal: {
+          id: deal.id,
+          reference_number: refNum,
+          current_stage: deal.stage,
+          will_change_to_stage: "po_secured",
+          account_name: accInfo?.name ?? "-",
+          sales_name: salesInfo?.full_name ?? "-",
+          current_value: Number(deal.value),
+          new_value: wmsSubtotalGross,
+          wms_grand_total: wmsGrandTotal,
+        },
+        items_comparison: {
+          existing_products: existingProducts ?? [],
+          incoming_products: body.items ?? [],
+          new_items: mismatched.length > 0 ? mismatched : null,
+          removed_items: removed.length > 0 ? removed : null,
+          has_mismatch: mismatched.length > 0 || removed.length > 0,
+        },
+        warning: (mismatched.length > 0 || removed.length > 0)
+          ? `⚠️ Produk tidak sesuai! Item baru dari WMS: [${mismatched.join(", ")}]. Item yang akan dihapus: [${removed.join(", ")}]. Pastikan REF ${refNum} sudah benar sebelum konfirmasi.`
+          : null,
+        confirmation_message: `Deal "${deal.id}" milik ${salesInfo?.full_name ?? deal.sales_id} akan dipindahkan ke PO Secured. Kirim ulang tanpa dry_run:true untuk mengkonfirmasi.`,
+      }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // 5. Update deal
