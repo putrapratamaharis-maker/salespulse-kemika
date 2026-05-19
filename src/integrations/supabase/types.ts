@@ -30,6 +30,7 @@ export type Database = {
           status: string
           type: string
           updated_at: string
+          wms_customer_code: string | null
         }
         Insert: {
           city?: string | null
@@ -46,6 +47,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+          wms_customer_code?: string | null
         }
         Update: {
           city?: string | null
@@ -62,6 +64,7 @@ export type Database = {
           status?: string
           type?: string
           updated_at?: string
+          wms_customer_code?: string | null
         }
         Relationships: []
       }
@@ -192,33 +195,42 @@ export type Database = {
           category: string
           created_at: string
           deal_id: string
+          discount_pct: number
+          discount_rp: number
           id: string
           other_cost: number
           price_per_unit: number
           product_name: string
           qty: number
+          sku: string | null
           unit: string
         }
         Insert: {
           category?: string
           created_at?: string
           deal_id: string
+          discount_pct?: number
+          discount_rp?: number
           id?: string
           other_cost?: number
           price_per_unit?: number
           product_name?: string
           qty?: number
+          sku?: string | null
           unit?: string
         }
         Update: {
           category?: string
           created_at?: string
           deal_id?: string
+          discount_pct?: number
+          discount_rp?: number
           id?: string
           other_cost?: number
           price_per_unit?: number
           product_name?: string
           qty?: number
+          sku?: string | null
           unit?: string
         }
         Relationships: [
@@ -1089,6 +1101,7 @@ export type Database = {
           sku: string | null
           unit: string | null
           updated_at: string
+          wms_sku: string | null
         }
         Insert: {
           category_id?: string | null
@@ -1102,6 +1115,7 @@ export type Database = {
           sku?: string | null
           unit?: string | null
           updated_at?: string
+          wms_sku?: string | null
         }
         Update: {
           category_id?: string | null
@@ -1115,6 +1129,7 @@ export type Database = {
           sku?: string | null
           unit?: string | null
           updated_at?: string
+          wms_sku?: string | null
         }
         Relationships: [
           {
@@ -1409,11 +1424,14 @@ export type Database = {
           category: string
           created_at: string
           deal_id: string
+          discount_pct: number
+          discount_rp: number
           id: string
           other_cost: number
           price_per_unit: number
           product_name: string
           qty: number
+          sku: string | null
           unit: string
         }[]
         SetofOptions: {
