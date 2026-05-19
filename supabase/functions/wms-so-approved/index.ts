@@ -352,7 +352,8 @@ Deno.serve(async (req) => {
       const { error: delErr } = await supabase
         .from("deal_products")
         .delete()
-        .eq("deal_id", deal.id);
+        .eq("deal_id", deal.id)
+        .select("id"); // defensive: explicit scope log
       if (delErr) {
         return jsonError(500, `Hapus deal_products gagal: ${delErr.message}`);
       }
@@ -381,13 +382,15 @@ Deno.serve(async (req) => {
         };
       });
 
+      // Defensive: paksa setiap row punya deal_id = deal.id (tidak mungkin nyasar ke deal lain)
+      const safeRows = rows.map((r) => ({ ...r, deal_id: deal.id }));
       const { error: insErr } = await supabase
         .from("deal_products")
-        .insert(rows);
+        .insert(safeRows);
       if (insErr) {
         return jsonError(500, `Insert deal_products gagal: ${insErr.message}`);
       }
-      itemsReplaced = rows.length;
+      itemsReplaced = safeRows.length;
     }
 
     // 6. Nama customer TIDAK di-overwrite dari WMS.
