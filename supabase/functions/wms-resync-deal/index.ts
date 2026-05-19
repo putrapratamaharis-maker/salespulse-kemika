@@ -233,22 +233,39 @@ Deno.serve(async (req) => {
       itemsReplaced = rows.length;
     }
 
-    // 5. Koreksi nama customer (jika dikirim)
+    // 5. Koreksi nama customer — HANYA jika nama akun masih kosong/default
+    // (placeholder seperti customer_id, "Unknown", atau "-").
+    // Akun yang sudah punya nama meaningful TIDAK akan ditimpa untuk
+    // mencegah identitas akun berubah karena salah pilih account_id di deal.
     let customerNameUpdated = false;
     if (payload.customer_name && payload.customer_name.trim()) {
       const newName = payload.customer_name.trim();
       const { data: acc } = await admin
         .from("accounts")
-        .select("name")
+        .select("name, customer_id, wms_customer_code")
         .eq("id", deal.account_id)
         .maybeSingle();
 
-      if (acc && acc.name !== newName) {
+      const currentName = (acc?.name ?? "").trim();
+      const isDefaultName =
+        currentName === "" ||
+        currentName === "-" ||
+        currentName.toLowerCase() === "unknown" ||
+        currentName.toLowerCase() === "new customer" ||
+        (acc?.customer_id && currentName === acc.customer_id) ||
+        (acc?.wms_customer_code && currentName === acc.wms_customer_code);
+
+      if (acc && currentName !== newName && isDefaultName) {
         const { error: accErr } = await admin
           .from("accounts")
           .update({ name: newName })
           .eq("id", deal.account_id);
         if (!accErr) customerNameUpdated = true;
+      } else if (acc && currentName !== newName) {
+        console.log(
+          `[wms-resync-deal] Skip rename account ${deal.account_id}: ` +
+          `current="${currentName}" payload="${newName}" (not default).`,
+        );
       }
     }
 
