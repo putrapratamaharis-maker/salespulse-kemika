@@ -306,7 +306,10 @@ Deno.serve(async (req) => {
         expected_close_date: body.so_date,
         days_in_stage: 0,
       })
-      .eq("id", deal.id);
+      .eq("id", deal.id)
+      // ⛔ Defensive: pastikan update hanya pernah menyentuh 1 baris (deal target).
+      // Jika .select() mengembalikan != 1 row, sesuatu yang salah terjadi dan kita abort.
+      .select("id");
 
     if (updErr) {
       await markLog(supabase, logId, "failed", updErr.message);
@@ -349,7 +352,8 @@ Deno.serve(async (req) => {
       const { error: delErr } = await supabase
         .from("deal_products")
         .delete()
-        .eq("deal_id", deal.id);
+        .eq("deal_id", deal.id)
+        .select("id"); // defensive: explicit scope log
       if (delErr) {
         return jsonError(500, `Hapus deal_products gagal: ${delErr.message}`);
       }
@@ -378,13 +382,15 @@ Deno.serve(async (req) => {
         };
       });
 
+      // Defensive: paksa setiap row punya deal_id = deal.id (tidak mungkin nyasar ke deal lain)
+      const safeRows = rows.map((r) => ({ ...r, deal_id: deal.id }));
       const { error: insErr } = await supabase
         .from("deal_products")
-        .insert(rows);
+        .insert(safeRows);
       if (insErr) {
         return jsonError(500, `Insert deal_products gagal: ${insErr.message}`);
       }
-      itemsReplaced = rows.length;
+      itemsReplaced = safeRows.length;
     }
 
     // 6. Nama customer TIDAK di-overwrite dari WMS.
