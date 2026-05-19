@@ -59,6 +59,8 @@ const Pipeline = () => {
           qty: dp.qty,
           pricePerUnit: Number(dp.price_per_unit),
           otherCost: Number(dp.other_cost),
+          discountPct: Number(dp.discount_pct ?? 0),
+          discountRp: Number(dp.discount_rp ?? 0),
         });
       });
 
