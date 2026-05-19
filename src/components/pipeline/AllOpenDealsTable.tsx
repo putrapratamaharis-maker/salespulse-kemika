@@ -159,7 +159,9 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
       result = result.filter(d =>
         d.name.toLowerCase().includes(q) ||
         getAccountName(d.accountId).toLowerCase().includes(q) ||
-        getSalesName(d.salesId).toLowerCase().includes(q)
+        getSalesName(d.salesId).toLowerCase().includes(q) ||
+        (d.referenceNumber || '').toLowerCase().includes(q) ||
+        (d.wmsSoNumber || '').toLowerCase().includes(q)
       );
     }
     if (stageFilter.length > 0) result = result.filter(d => stageFilter.includes(d.stage));
@@ -287,7 +289,7 @@ export function AllOpenDealsTable({ deals, getSalesName, getAccountName, getAcco
             <div className="relative flex-1 min-w-[180px] max-w-xs">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search deal, account, or sales..."
+                placeholder="Cari deal, akun, sales, atau No. REF..."
                 value={search}
                 onChange={e => setSearchAndReset(e.target.value)}
                 className="h-8 pl-8 text-xs"
