@@ -306,7 +306,10 @@ Deno.serve(async (req) => {
         expected_close_date: body.so_date,
         days_in_stage: 0,
       })
-      .eq("id", deal.id);
+      .eq("id", deal.id)
+      // ⛔ Defensive: pastikan update hanya pernah menyentuh 1 baris (deal target).
+      // Jika .select() mengembalikan != 1 row, sesuatu yang salah terjadi dan kita abort.
+      .select("id");
 
     if (updErr) {
       await markLog(supabase, logId, "failed", updErr.message);
