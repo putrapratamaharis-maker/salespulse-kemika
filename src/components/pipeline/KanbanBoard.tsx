@@ -9,7 +9,7 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Pencil, Trash2, GripVertical, Search, Filter, X, Copy, ChevronDown, Check } from 'lucide-react';
+import { Pencil, Trash2, GripVertical, Search, Filter, X, Copy, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
   DropdownMenuCheckboxItem, DropdownMenuSeparator, DropdownMenuItem,
