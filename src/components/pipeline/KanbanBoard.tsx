@@ -9,8 +9,12 @@ import { StatusBadge } from '@/components/StatusBadge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, GripVertical, Search, Filter, X, Copy } from 'lucide-react';
+import { Pencil, Trash2, GripVertical, Search, Filter, X, Copy, ChevronDown, Check } from 'lucide-react';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuTrigger,
+  DropdownMenuCheckboxItem, DropdownMenuSeparator, DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -74,6 +78,7 @@ interface KanbanBoardProps {
   getAccountName: (accountId: string) => string;
   getAccountPIC?: (accountId: string) => AccountPIC | undefined;
   getSalesName?: (salesId: string) => string;
+  salesPersons?: { id: string; name: string }[];
   onEdit?: (deal: Deal) => void;
   onDelete?: (deal: Deal, reason: string) => void;
   onDuplicate?: (deal: Deal) => void;
@@ -81,24 +86,75 @@ interface KanbanBoardProps {
   readOnly?: boolean;
 }
 
-const segmentOptions: { value: string; label: string }[] = [
-  { value: 'all', label: 'All Segments' },
+const segmentOptions = [
   { value: 'B2G', label: 'B2G' },
   { value: 'B2B', label: 'B2B' },
   { value: 'B2C', label: 'B2C/e-Commerce' },
 ];
 
-const valueRanges = [
-  { value: 'all', label: 'All Values' },
-  { value: 'under50', label: '< Rp 50 Jt' },
-  { value: '50to200', label: 'Rp 50–200 Jt' },
-  { value: 'above200', label: '> Rp 200 Jt' },
-];
+const stageFilterOptions = stageOrder.map(s => ({ value: s, label: stageLabels[s] }));
 
-const stageFilterOptions = [
-  { value: 'all', label: 'All Stages' },
-  ...stageOrder.map(s => ({ value: s, label: stageLabels[s] })),
-];
+// ── Multi-select checklist dropdown ─────────────────────────────────────────
+function MultiSelectFilter({
+  label, icon, options, selected, onToggle, onClear, width = 'w-[160px]',
+}: {
+  label: string;
+  icon?: React.ReactNode;
+  options: { value: string; label: string }[];
+  selected: string[];
+  onToggle: (v: string) => void;
+  onClear: () => void;
+  width?: string;
+}) {
+  const count = selected.length;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className={`h-8 ${width} text-xs justify-between gap-1 font-normal`}
+        >
+          <span className="flex items-center gap-1 truncate">
+            {icon}
+            <span className="truncate">{label}</span>
+          </span>
+          <span className="flex items-center gap-1 shrink-0">
+            {count > 0 && (
+              <Badge className="h-4 px-1.5 text-[10px] bg-primary text-primary-foreground border-0">
+                {count}
+              </Badge>
+            )}
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </span>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-[160px]">
+        {options.map(opt => (
+          <DropdownMenuCheckboxItem
+            key={opt.value}
+            checked={selected.includes(opt.value)}
+            onCheckedChange={() => onToggle(opt.value)}
+            className="text-xs"
+          >
+            {opt.label}
+          </DropdownMenuCheckboxItem>
+        ))}
+        {count > 0 && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={onClear}
+              className="text-xs text-muted-foreground justify-center"
+            >
+              <X className="h-3 w-3 mr-1" /> Hapus filter
+            </DropdownMenuItem>
+          </>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 function getMonthOptions(): { value: string; label: string }[] {
   const months = [];
@@ -112,7 +168,7 @@ function getMonthOptions(): { value: string; label: string }[] {
   return months;
 }
 
-export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
+export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName, salesPersons = [], onEdit, onDelete, onDuplicate, onStageChange, readOnly }: KanbanBoardProps) {
   // Generate stable color map per sales person
   const salesColorMap = useMemo(() => {
     const palette = [
@@ -137,10 +193,13 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
   const [deleteTarget, setDeleteTarget] = useState<Deal | null>(null);
   const [detailDeal, setDetailDeal] = useState<Deal | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [segmentFilter, setSegmentFilter] = useState('all');
-  const [valueFilter, setValueFilter] = useState('all');
-  const [stageFilter, setStageFilter] = useState('all');
-  const [monthFilter, setMonthFilter] = useState('all');
+  const [segmentFilter, setSegmentFilter] = useState<string[]>([]);
+  const [stageFilter, setStageFilter] = useState<string[]>([]);
+  const [monthFilter, setMonthFilter] = useState<string[]>([]);
+  const [salesFilter, setSalesFilter] = useState<string[]>([]);
+
+  const toggle = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (v: string) =>
+    setter(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
   const [stageConfirm, setStageConfirm] = useState<{ deal: Deal; targetStage: DealStage } | null>(null);
   const dragDealId = useRef<string | null>(null);
 
@@ -156,24 +215,22 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
         const matchSO      = (d.wmsSoNumber || '').toLowerCase().includes(q);
         if (!matchName && !matchAccount && !matchRef && !matchSO) return false;
       }
-      if (segmentFilter !== 'all' && d.segment !== segmentFilter) return false;
-      if (valueFilter === 'under50' && d.value >= 50_000_000) return false;
-      if (valueFilter === '50to200' && (d.value < 50_000_000 || d.value > 200_000_000)) return false;
-      if (valueFilter === 'above200' && d.value <= 200_000_000) return false;
-      if (stageFilter !== 'all' && d.stage !== stageFilter) return false;
-      if (monthFilter !== 'all') {
+      if (segmentFilter.length > 0 && !segmentFilter.includes(d.segment)) return false;
+      if (stageFilter.length > 0 && !stageFilter.includes(d.stage)) return false;
+      if (salesFilter.length > 0 && !salesFilter.includes(d.salesId)) return false;
+      if (monthFilter.length > 0) {
         const dealDate = d.expectedCloseDate || d.createdAt;
         if (dealDate) {
           const dt = new Date(dealDate);
           const dealMonth = `${dt.getFullYear()}-${String(dt.getMonth() + 1).padStart(2, '0')}`;
-          if (dealMonth !== monthFilter) return false;
+          if (!monthFilter.includes(dealMonth)) return false;
         }
       }
       return true;
     });
-  }, [deals, searchQuery, segmentFilter, valueFilter, stageFilter, monthFilter, getAccountName]);
+  }, [deals, searchQuery, segmentFilter, stageFilter, salesFilter, monthFilter, getAccountName]);
 
-  const hasActiveFilters = searchQuery || segmentFilter !== 'all' || valueFilter !== 'all' || stageFilter !== 'all' || monthFilter !== 'all';
+  const hasActiveFilters = searchQuery || segmentFilter.length > 0 || stageFilter.length > 0 || salesFilter.length > 0 || monthFilter.length > 0;
 
   const kanbanData = stageOrder.map(stage => {
     const stageDeals = filteredDeals.filter(d => d.stage === stage);
@@ -242,51 +299,47 @@ export function KanbanBoard({ deals, getAccountName, getAccountPIC, getSalesName
                   className="h-8 pl-8 text-xs"
                 />
               </div>
-              <Select value={segmentFilter} onValueChange={setSegmentFilter}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <Filter className="h-3 w-3 mr-1 text-muted-foreground" />
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {segmentOptions.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={valueFilter} onValueChange={setValueFilter}>
-                <SelectTrigger className="h-8 w-[150px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {valueRanges.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={stageFilter} onValueChange={setStageFilter}>
-                <SelectTrigger className="h-8 w-[150px] text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {stageFilterOptions.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={monthFilter} onValueChange={setMonthFilter}>
-                <SelectTrigger className="h-8 w-[140px] text-xs">
-                  <SelectValue placeholder="All Months" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all" className="text-xs">All Months</SelectItem>
-                  {monthOptions.map(o => (
-                    <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <MultiSelectFilter
+                label={segmentFilter.length === 0 ? 'Semua Segment' : segmentFilter.join(', ')}
+                icon={<Filter className="h-3 w-3 text-muted-foreground shrink-0" />}
+                options={segmentOptions}
+                selected={segmentFilter}
+                onToggle={toggle(setSegmentFilter)}
+                onClear={() => setSegmentFilter([])}
+                width="w-[150px]"
+              />
+              <MultiSelectFilter
+                label={stageFilter.length === 0 ? 'Semua Stage' : `${stageFilter.length} stage`}
+                options={stageFilterOptions}
+                selected={stageFilter}
+                onToggle={toggle(setStageFilter)}
+                onClear={() => setStageFilter([])}
+                width="w-[140px]"
+              />
+              {salesPersons.length > 0 && (
+                <MultiSelectFilter
+                  label={salesFilter.length === 0 ? 'Semua Sales' : `${salesFilter.length} sales`}
+                  options={salesPersons.map(s => ({ value: s.id, label: s.name }))}
+                  selected={salesFilter}
+                  onToggle={toggle(setSalesFilter)}
+                  onClear={() => setSalesFilter([])}
+                  width="w-[150px]"
+                />
+              )}
+              <MultiSelectFilter
+                label={monthFilter.length === 0 ? 'Semua Bulan' : `${monthFilter.length} bulan`}
+                options={monthOptions}
+                selected={monthFilter}
+                onToggle={toggle(setMonthFilter)}
+                onClear={() => setMonthFilter([])}
+                width="w-[140px]"
+              />
               {hasActiveFilters && (
-                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => { setSearchQuery(''); setSegmentFilter('all'); setValueFilter('all'); setStageFilter('all'); setMonthFilter('all'); }}>
-                  <X className="h-3 w-3 mr-1" /> Clear
+                <Button variant="ghost" size="sm" className="h-8 px-2 text-xs" onClick={() => {
+                  setSearchQuery(''); setSegmentFilter([]); setStageFilter([]);
+                  setSalesFilter([]); setMonthFilter([]);
+                }}>
+                  <X className="h-3 w-3 mr-1" /> Clear All
                 </Button>
               )}
             </div>

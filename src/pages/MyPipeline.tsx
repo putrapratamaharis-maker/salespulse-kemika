@@ -369,7 +369,16 @@ const MyPipeline = () => {
         <KPICard label="Stuck Deals (>14D)" value={String(stuckDeals14.length)} changeLabel={stuckDeals14.length > 0 ? formatIDRFull(stuckDeals14.reduce((s, d) => s + d.value, 0)) + ' at risk' : 'All clear!'} icon={ShieldAlert} status={stuckDeals14.length > 0 ? 'red' : 'green'} autoFitText className="bg-gradient-to-br from-rose-500 to-rose-400" tooltip="Jumlah deal aktif yang sudah > 14 hari tanpa perubahan stage" />
       </div>
 
-      <KanbanBoard deals={deals} getAccountName={getAccountName} getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }} onEdit={handleEditDeal} onDelete={handleDeleteDeal} onDuplicate={handleDuplicateDeal} onStageChange={handleStageChange} />
+      <KanbanBoard
+        deals={deals}
+        getAccountName={getAccountName}
+        getAccountPIC={(accountId: string) => { const a = localAccounts.find(x => x.id === accountId); return a ? { picName: a.picName, picEmail: a.picEmail, picContact: a.picContact } : undefined; }}
+        salesPersons={[{ id: currentUser.id, name: currentUser.name }]}
+        onEdit={handleEditDeal}
+        onDelete={handleDeleteDeal}
+        onDuplicate={handleDuplicateDeal}
+        onStageChange={handleStageChange}
+      />
 
       <Card>
         <CardHeader className="pb-3">

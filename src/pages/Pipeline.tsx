@@ -267,6 +267,7 @@ const Pipeline = () => {
         getAccountName={getAccountName}
         getAccountPIC={getAccountPIC}
         getSalesName={getSalesName}
+        salesPersons={salesUsers}
         readOnly={!isAdmin}
         onEdit={isAdmin ? handleEditDeal : undefined}
       />
